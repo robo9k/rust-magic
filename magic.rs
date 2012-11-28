@@ -9,27 +9,27 @@ use str::as_c_str;
 
 export open;
 
-enum magic {}
+enum Magic {}
 
 extern mod magic {
-  fn magic_open(flags: c_int) -> *magic;
-  fn magic_close(cookie: *magic);
-  fn magic_error(cookie: *magic) -> *c_char;
-  fn magic_errno(cookie: *magic) -> c_int;
-  fn magic_descriptor(cookie: *magic, fd: c_int) -> *c_char;
-  fn magic_file(cookie: *magic, filename: *c_char) -> *c_char;
-  fn magic_buffer(cookie: *magic, buffer: *u8, length: size_t) -> *c_char;
-  fn magic_setflags(cookie: *magic, flags: c_int) -> c_int;
-  fn magic_check(cookie: *magic, filename: *c_char) -> c_int;
-  fn magic_compile(cookie: *magic, filename: *c_char) -> c_int;
-  fn magic_list(cookie: *magic, filename: *c_char) -> c_int;
-  fn magic_load(cookie: *magic, filename: *c_char) -> c_int;
+  fn magic_open(flags: c_int) -> *Magic;
+  fn magic_close(cookie: *Magic);
+  fn magic_error(cookie: *Magic) -> *c_char;
+  fn magic_errno(cookie: *Magic) -> c_int;
+  fn magic_descriptor(cookie: *Magic, fd: c_int) -> *c_char;
+  fn magic_file(cookie: *Magic, filename: *c_char) -> *c_char;
+  fn magic_buffer(cookie: *Magic, buffer: *u8, length: size_t) -> *c_char;
+  fn magic_setflags(cookie: *Magic, flags: c_int) -> c_int;
+  fn magic_check(cookie: *Magic, filename: *c_char) -> c_int;
+  fn magic_compile(cookie: *Magic, filename: *c_char) -> c_int;
+  fn magic_list(cookie: *Magic, filename: *c_char) -> c_int;
+  fn magic_load(cookie: *Magic, filename: *c_char) -> c_int;
 }
 
 use magic::*;
 
 struct Cookie {
-  priv cookie: *magic,
+  priv cookie: *Magic,
 
   drop {
     magic_close(self.cookie);
