@@ -5,6 +5,7 @@ use libc::size_t;
 use libc::c_char;
 use libc::c_void;
 use ptr::is_null;
+use str::as_c_str;
 
 export open;
 
@@ -38,9 +39,7 @@ struct Cookie {
 impl Cookie {
   fn file(&self, filename: &str) -> Option<~str> unsafe {
     let cookie = self.cookie;
-    let text = str::as_c_str(filename, {
-       |filename| magic_file(cookie, filename)
-    });
+    let text = as_c_str(filename, { |filename| magic_file(cookie, filename) });
 
     if is_null(text) {
       None
@@ -70,34 +69,22 @@ impl Cookie {
 
   fn check(&self, filename: &str) -> bool {
     let cookie = self.cookie;
-    let ret = str::as_c_str(filename, {
-      |filename| magic_check(cookie, filename)
-    });
-    ret == 0
+    as_c_str(filename, { |filename| magic_check(cookie, filename) }) == 0
   }
 
   fn compile(&self, filename: &str) -> bool {
     let cookie = self.cookie;
-    let ret = str::as_c_str(filename, {
-      |filename| magic_compile(cookie, filename)
-    });
-    ret == 0
+    as_c_str(filename, { |filename| magic_compile(cookie, filename) }) == 0
   }
 
   fn list(&self, filename: &str) -> bool {
     let cookie = self.cookie;
-    let ret = str::as_c_str(filename, {
-      |filename| magic_list(cookie, filename)
-    });
-    ret == 0
+    as_c_str(filename, { |filename| magic_list(cookie, filename) }) == 0
   }
 
   fn load(&self, filename: &str) -> bool {
     let cookie = self.cookie;
-    let ret = str::as_c_str(filename, {
-      |filename| magic_load(self.cookie, filename)
-    });
-    ret == 0
+    as_c_str(filename, { |filename| magic_load(cookie, filename) }) == 0
   }
 }
 
