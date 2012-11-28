@@ -71,6 +71,10 @@ impl Cookie {
   fn error() -> ~str unsafe {
     str::raw::from_c_str(magic_error(self.cookie))
   }
+
+  fn setflags(&self, flags: int) {
+    magic_setflags(self.cookie, flags as c_int);
+  }
 }
 
 fn open(flags: int) -> Option<Cookie> {
