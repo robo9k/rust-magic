@@ -67,6 +67,10 @@ impl Cookie {
       Some(str::raw::from_c_str(text))
     }
   }
+
+  fn error() -> ~str unsafe {
+    str::raw::from_c_str(magic_error(self.cookie))
+  }
 }
 
 fn open(flags: int) -> Option<Cookie> {
@@ -98,5 +102,14 @@ mod tests {
       cookie.buffer(*bytes)
     }));
     assert(text == ~"Python script, ASCII text executable");
+  }
+  #[test]
+  fn file_error() {
+    let cookie = option::unwrap(open(0));
+    assert(cookie.load("/usr/share/file/magic"));
+
+    let ret = cookie.file("non-existent_file.txt");
+    assert(ret.is_none());
+    assert(cookie.error() == ~"cannot open `non-existent_file.txt' (No such file or directory)");
   }
 }
