@@ -36,25 +36,6 @@ struct Cookie {
 }
 
 impl Cookie {
-  fn load(&self, filename: &str) -> bool unsafe {
-    let cookie = self.cookie;
-    let ret = str::as_c_str(filename, {
-      |filename| magic_load(cookie, filename)
-    });
-    ret == 0
-  }
-
-  fn buffer(&self, buffer: &[u8]) -> Option<~str> unsafe {
-    let buffer_len = vec::len(buffer) as size_t;
-    let pbuffer = vec::raw::to_ptr(buffer);
-    let text = magic_buffer(self.cookie, pbuffer, buffer_len);
-    if is_null(text) {
-      None
-    } else {
-      Some(str::raw::from_c_str(text))
-    }
-  }
-
   fn file(&self, filename: &str) -> Option<~str> unsafe {
     let cookie = self.cookie;
     let text = str::as_c_str(filename, {
@@ -68,12 +49,55 @@ impl Cookie {
     }
   }
 
+  fn buffer(&self, buffer: &[u8]) -> Option<~str> unsafe {
+    let buffer_len = vec::len(buffer) as size_t;
+    let pbuffer = vec::raw::to_ptr(buffer);
+    let text = magic_buffer(self.cookie, pbuffer, buffer_len);
+    if is_null(text) {
+      None
+    } else {
+      Some(str::raw::from_c_str(text))
+    }
+  }
+
   fn error() -> ~str unsafe {
     str::raw::from_c_str(magic_error(self.cookie))
   }
 
   fn setflags(&self, flags: int) {
     magic_setflags(self.cookie, flags as c_int);
+  }
+
+  fn check(&self, filename: &str) -> bool {
+    let cookie = self.cookie;
+    let ret = str::as_c_str(filename, {
+      |filename| magic_check(cookie, filename)
+    });
+    ret == 0
+  }
+
+  fn compile(&self, filename: &str) -> bool {
+    let cookie = self.cookie;
+    let ret = str::as_c_str(filename, {
+      |filename| magic_compile(cookie, filename)
+    });
+    ret == 0
+  }
+
+  fn list(&self, filename: &str) -> bool {
+    let cookie = self.cookie;
+    let ret = str::as_c_str(filename, {
+      |filename| magic_list(cookie, filename)
+    });
+    ret == 0
+  }
+
+  fn load(&self, filename: &str) -> bool {
+    let cookie = self.cookie;
+    let ret = str::as_c_str(filename, {
+      |filename| magic_load(self.cookie, filename)
+    });
+    ret == 0
   }
 }
 
