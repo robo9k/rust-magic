@@ -7,11 +7,9 @@ use libc::c_void;
 use ptr::is_null;
 use str::as_c_str;
 
-export open;
-
 enum Magic {}
 
-enum MagicFlag {
+pub enum MagicFlag {
   /// No flags
   MAGIC_NONE              = 0x000000,
   /// Turn on debugging
@@ -81,7 +79,7 @@ extern mod magic {
 
 use magic::*;
 
-struct Cookie {
+pub struct Cookie {
   priv cookie: *Magic,
 
   drop {
@@ -146,7 +144,7 @@ impl Cookie {
   }
 }
 
-fn open(flags: &[MagicFlag]) -> Option<Cookie> {
+pub fn open(flags: &[MagicFlag]) -> Option<Cookie> {
   let cookie = magic_open(combine_flags(flags));
   if is_null(cookie) {
     None
