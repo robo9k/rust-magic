@@ -110,7 +110,7 @@ impl Cookie {
     }
   }
 
-  fn error() -> Option<~str> unsafe {
+  fn error(&self) -> Option<~str> unsafe {
     let text = magic_error(self.cookie);
     if is_null(text) {
       None
