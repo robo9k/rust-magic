@@ -157,47 +157,47 @@ impl Cookie {
 mod tests {
   #[test]
   fn file() {
-    let cookie = option::unwrap(Cookie::open([MAGIC_NONE]));
-    assert(cookie.load("/usr/share/file/magic"));
+    let cookie = Cookie::open([MAGIC_NONE]).unwrap();
+    assert cookie.load("/usr/share/file/magic");
 
-    assert(option::unwrap(cookie.file("rust-logo-128x128-blk.png")) ==
-           ~"PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced");
+    assert option::unwrap(cookie.file("rust-logo-128x128-blk.png")) ==
+           ~"PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced";
 
     cookie.setflags([MAGIC_MIME_TYPE]);
-    assert(option::unwrap(cookie.file("rust-logo-128x128-blk.png")) ==
-           ~"image/png");
+    assert option::unwrap(cookie.file("rust-logo-128x128-blk.png")) ==
+           ~"image/png";
 
     cookie.setflags([MAGIC_MIME_TYPE, MAGIC_MIME_ENCODING]);
-    assert(option::unwrap(cookie.file("rust-logo-128x128-blk.png")) ==
-           ~"image/png; charset=binary");
+    assert option::unwrap(cookie.file("rust-logo-128x128-blk.png")) ==
+           ~"image/png; charset=binary";
   }
 
   #[test]
   fn buffer() {
-    let cookie = option::unwrap(Cookie::open([MAGIC_NONE]));
-    assert(cookie.load("/usr/share/file/magic"));
+    let cookie = Cookie::open([MAGIC_NONE]).unwrap();
+    assert cookie.load("/usr/share/file/magic");
 
     let s = ~"#!/usr/bin/env python3\nprint('Hello, world!')";
     let text = option::unwrap(str::as_bytes(&s, |bytes| {
       cookie.buffer(*bytes)
     }));
-    assert(text == ~"Python script, ASCII text executable");
+    assert text == ~"Python script, ASCII text executable";
 
     cookie.setflags([MAGIC_MIME_TYPE]);
     let text = option::unwrap(str::as_bytes(&s, |bytes| {
       cookie.buffer(*bytes)
     }));
-    assert(text == ~"text/x-python");
+    assert text == ~"text/x-python";
   }
 
   #[test]
   fn file_error() {
-    let cookie = option::unwrap(Cookie::open([MAGIC_NONE]));
-    assert(cookie.load("/usr/share/file/magic"));
+    let cookie = Cookie::open([MAGIC_NONE]).unwrap();
+    assert cookie.load("/usr/share/file/magic");
 
     let ret = cookie.file("non-existent_file.txt");
-    assert(ret.is_none());
-    assert(option::unwrap(cookie.error()) ==
-           ~"cannot open `non-existent_file.txt' (No such file or directory)");
+    assert ret.is_none();
+    assert cookie.error().unwrap() ==
+           ~"cannot open `non-existent_file.txt' (No such file or directory)";
   }
 }
