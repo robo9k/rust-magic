@@ -142,14 +142,14 @@ impl Cookie {
     let cookie = self.cookie;
     as_c_str(filename, { |filename| magic_load(cookie, filename) }) == 0
   }
-}
 
-pub fn open(flags: &[MagicFlag]) -> Option<Cookie> {
-  let cookie = magic_open(combine_flags(flags));
-  if is_null(cookie) {
-    None
-  } else {
-    Some(Cookie { cookie: cookie })
+  static fn open(flags: &[MagicFlag]) -> Option<Cookie> {
+      let cookie = magic_open(combine_flags(flags));
+      if is_null(cookie) {
+          None
+      } else {
+          Some(Cookie { cookie: cookie })
+      }
   }
 }
 
@@ -157,7 +157,7 @@ pub fn open(flags: &[MagicFlag]) -> Option<Cookie> {
 mod tests {
   #[test]
   fn file() {
-    let cookie = option::unwrap(open([MAGIC_NONE]));
+    let cookie = option::unwrap(Cookie::open([MAGIC_NONE]));
     assert(cookie.load("/usr/share/file/magic"));
 
     assert(option::unwrap(cookie.file("rust-logo-128x128-blk.png")) ==
@@ -174,7 +174,7 @@ mod tests {
 
   #[test]
   fn buffer() {
-    let cookie = option::unwrap(open([MAGIC_NONE]));
+    let cookie = option::unwrap(Cookie::open([MAGIC_NONE]));
     assert(cookie.load("/usr/share/file/magic"));
 
     let s = ~"#!/usr/bin/env python3\nprint('Hello, world!')";
@@ -192,7 +192,7 @@ mod tests {
 
   #[test]
   fn file_error() {
-    let cookie = option::unwrap(open([MAGIC_NONE]));
+    let cookie = option::unwrap(Cookie::open([MAGIC_NONE]));
     assert(cookie.load("/usr/share/file/magic"));
 
     let ret = cookie.file("non-existent_file.txt");
