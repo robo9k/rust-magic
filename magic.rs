@@ -3,7 +3,6 @@ extern mod std;
 use libc::c_int;
 use libc::size_t;
 use libc::c_char;
-use libc::c_void;
 use ptr::is_null;
 use str::as_c_str;
 
