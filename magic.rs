@@ -158,16 +158,14 @@ mod tests {
         assert cookie.load("/usr/share/file/magic");
 
         let s = ~"#!/usr/bin/env python3\nprint('Hello, world!')";
-        let s = str::as_bytes(&s, |bytes| {
+        assert str::as_bytes(&s, |bytes| {
           cookie.buffer(*bytes)
-        }).unwrap();
-        assert s == ~"Python script, ASCII text executable";
+        }).unwrap() == ~"Python script, ASCII text executable";
 
         cookie.setflags([MAGIC_MIME_TYPE]);
-        let s = str::as_bytes(&s, |bytes| {
+        assert str::as_bytes(&s, |bytes| {
           cookie.buffer(*bytes)
-        }).unwrap();
-        assert s == ~"text/x-python";
+        }).unwrap() == ~"text/x-python";
     }
 
     #[test]
