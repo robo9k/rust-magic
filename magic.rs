@@ -59,7 +59,7 @@ pub enum MagicFlag {
 }
 
 fn combine_flags(flags: &[MagicFlag]) -> c_int {
-  vec::foldl(0 as c_int, flags, { |a: c_int, b: &MagicFlag| a | (*b as c_int) })
+  vec::foldl(0, flags, |a: c_int, b: &MagicFlag| a | (*b as c_int))
 }
 
 extern mod magic {
@@ -100,7 +100,7 @@ impl Cookie {
   }
 
   fn buffer(&self, buffer: &[u8]) -> Option<~str> unsafe {
-    let buffer_len = vec::len(buffer) as size_t;
+    let buffer_len = buffer.len() as size_t;
     let pbuffer = vec::raw::to_ptr(buffer);
     let text = magic_buffer(self.cookie, pbuffer, buffer_len);
     if is_null(text) {
@@ -160,15 +160,15 @@ mod tests {
     let cookie = Cookie::open([MAGIC_NONE]).unwrap();
     assert cookie.load("/usr/share/file/magic");
 
-    assert option::unwrap(cookie.file("rust-logo-128x128-blk.png")) ==
+    assert cookie.file("rust-logo-128x128-blk.png").unwrap() ==
            ~"PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced";
 
     cookie.setflags([MAGIC_MIME_TYPE]);
-    assert option::unwrap(cookie.file("rust-logo-128x128-blk.png")) ==
+    assert cookie.file("rust-logo-128x128-blk.png").unwrap() ==
            ~"image/png";
 
     cookie.setflags([MAGIC_MIME_TYPE, MAGIC_MIME_ENCODING]);
-    assert option::unwrap(cookie.file("rust-logo-128x128-blk.png")) ==
+    assert cookie.file("rust-logo-128x128-blk.png").unwrap() ==
            ~"image/png; charset=binary";
   }
 
@@ -178,15 +178,15 @@ mod tests {
     assert cookie.load("/usr/share/file/magic");
 
     let s = ~"#!/usr/bin/env python3\nprint('Hello, world!')";
-    let text = option::unwrap(str::as_bytes(&s, |bytes| {
+    let text = str::as_bytes(&s, |bytes| {
       cookie.buffer(*bytes)
-    }));
+    }).unwrap();
     assert text == ~"Python script, ASCII text executable";
 
     cookie.setflags([MAGIC_MIME_TYPE]);
-    let text = option::unwrap(str::as_bytes(&s, |bytes| {
+    let text = str::as_bytes(&s, |bytes| {
       cookie.buffer(*bytes)
-    }));
+    }).unwrap();
     assert text == ~"text/x-python";
   }
 
