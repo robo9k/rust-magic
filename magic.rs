@@ -81,10 +81,10 @@ use magic::*;
 
 pub struct Cookie {
   priv cookie: *Magic,
+}
 
-  drop {
-    magic_close(self.cookie);
-  }
+impl Cookie: Drop {
+  fn finalize(&self) { magic_close(self.cookie) }
 }
 
 impl Cookie {
