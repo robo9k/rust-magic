@@ -59,7 +59,7 @@ fn combine_flags(flags: &[MagicFlag]) -> c_int {
   vec::foldl(0, flags, |a: c_int, b: &MagicFlag| a | (*b as c_int))
 }
 
-extern mod magic {
+extern "C" mod magic {
   fn magic_open(flags: c_int) -> *Magic;
   fn magic_close(cookie: *Magic);
   fn magic_error(cookie: *Magic) -> *c_char;
