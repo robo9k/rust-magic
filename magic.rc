@@ -89,7 +89,7 @@ pub struct Cookie {
     priv cookie: *Magic,
 }
 
-impl Cookie: Drop {
+impl Drop for Cookie {
     fn finalize(&self) { unsafe { magic_close(self.cookie) } }
 }
 
