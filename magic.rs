@@ -1,5 +1,5 @@
 #[link(name = "magic",
-       vers = "0.1",
+       vers = "0.1.0",
        uuid = "201abfd3-0d07-41ab-a6c5-9eb94b318383",
        url = "https://github.com/thestinger/rust-magic")];
 
