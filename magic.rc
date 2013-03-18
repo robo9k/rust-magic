@@ -162,47 +162,49 @@ impl Cookie {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
     #[test]
     fn file() {
         let cookie = Cookie::open([MAGIC_NONE]).unwrap();
-        assert cookie.load("/usr/share/file/magic");
+        fail_unless!(cookie.load("/usr/share/file/misc/magic.mgc"));
 
-        assert cookie.file("rust-logo-128x128-blk.png").unwrap() ==
-               ~"PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced";
+        fail_unless!(cookie.file("rust-logo-128x128-blk.png").unwrap() ==
+            ~"PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced");
 
         cookie.setflags([MAGIC_MIME_TYPE]);
-        assert cookie.file("rust-logo-128x128-blk.png").unwrap() ==
-               ~"image/png";
+        fail_unless!(cookie.file("rust-logo-128x128-blk.png").unwrap() ==
+            ~"image/png");
 
         cookie.setflags([MAGIC_MIME_TYPE, MAGIC_MIME_ENCODING]);
-        assert cookie.file("rust-logo-128x128-blk.png").unwrap() ==
-               ~"image/png; charset=binary";
+        fail_unless!(cookie.file("rust-logo-128x128-blk.png").unwrap() ==
+            ~"image/png; charset=binary");
     }
 
     #[test]
     fn buffer() {
         let cookie = Cookie::open([MAGIC_NONE]).unwrap();
-        assert cookie.load("/usr/share/file/magic");
+        fail_unless!(cookie.load("/usr/share/file/misc/magic.mgc"));
 
         let s = ~"#!/usr/bin/env python3\nprint('Hello, world!')";
-        assert str::as_bytes(&s, |bytes| {
+        fail_unless!(str::as_bytes(&s, |bytes| {
           cookie.buffer(*bytes)
-        }).unwrap() == ~"Python script, ASCII text executable";
+        }).unwrap() == ~"Python script, ASCII text executable");
 
         cookie.setflags([MAGIC_MIME_TYPE]);
-        assert str::as_bytes(&s, |bytes| {
+        fail_unless!(str::as_bytes(&s, |bytes| {
           cookie.buffer(*bytes)
-        }).unwrap() == ~"text/x-python";
+        }).unwrap() == ~"text/x-python");
     }
 
     #[test]
     fn file_error() {
         let cookie = Cookie::open([MAGIC_NONE]).unwrap();
-        assert cookie.load("/usr/share/file/magic");
+        fail_unless!(cookie.load("/usr/share/file/misc/magic.mgc"));
 
         let ret = cookie.file("non-existent_file.txt");
-        assert ret.is_none();
-        assert cookie.error().unwrap() ==
-               ~"cannot open `non-existent_file.txt' (No such file or directory)";
+        fail_unless!(ret.is_none());
+        fail_unless!(cookie.error().unwrap() ==
+            ~"cannot open `non-existent_file.txt' (No such file or directory)");
     }
 }
