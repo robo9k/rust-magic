@@ -68,7 +68,8 @@ fn combine_flags(flags: &[MagicFlag]) -> c_int {
     vec::foldl(0, flags, |a: c_int, b: &MagicFlag| a | (*b as c_int))
 }
 
-extern "C" mod magic {
+#[link_args = "-lmagic"]
+extern "C" {
     fn magic_open(flags: c_int) -> *Magic;
     fn magic_close(cookie: *Magic);
     fn magic_error(cookie: *Magic) -> *c_char;
@@ -82,8 +83,6 @@ extern "C" mod magic {
     fn magic_list(cookie: *Magic, filename: *c_char) -> c_int;
     fn magic_load(cookie: *Magic, filename: *c_char) -> c_int;
 }
-
-use magic::*;
 
 pub struct Cookie {
     priv cookie: *Magic,
