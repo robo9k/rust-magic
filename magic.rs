@@ -151,7 +151,7 @@ impl Cookie {
         }
     }
 
-    static fn open(flags: &[MagicFlag]) -> Option<Cookie> {
+    fn open(flags: &[MagicFlag]) -> Option<Cookie> {
         unsafe {
             let cookie = magic_open(combine_flags(flags));
             if is_null(cookie) { None } else { Some(Cookie{cookie: cookie,}) }
