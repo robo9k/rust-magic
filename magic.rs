@@ -92,7 +92,7 @@ impl Drop for Cookie {
     fn finalize(&self) { unsafe { magic_close(self.cookie) } }
 }
 
-impl Cookie {
+pub impl Cookie {
     fn file(&self, filename: &str) -> Option<~str> {
         unsafe {
             let cookie = self.cookie;
