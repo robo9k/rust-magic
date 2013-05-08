@@ -15,58 +15,84 @@ use core::str::as_c_str;
 
 enum Magic {}
 
-pub enum MagicFlag {
-    /// No flags
-    MAGIC_NONE              = 0x000000,
-    /// Turn on debugging
-    MAGIC_DEBUG             = 0x000001,
-    /// Follow symlinks
-    MAGIC_SYMLINK           = 0x000002,
-    /// Check inside compressed files
-    MAGIC_COMPRESS          = 0x000004,
-    /// Look at the contents of devices
-    MAGIC_DEVICES           = 0x000008,
-    /// Return the MIME type
-    MAGIC_MIME_TYPE         = 0x000010,
-    /// Return all matches
-    MAGIC_CONTINUE          = 0x000020,
-    /// Print warnings to stderr
-    MAGIC_CHECK             = 0x000040,
-    /// Restore access time on exit
-    MAGIC_PRESERVE_ATIME    = 0x000080,
-    /// Don't translate unprintable chars
-    MAGIC_RAW               = 0x000100,
-    /// Handle ENOENT etc as real errors
-    MAGIC_ERROR             = 0x000200,
-    /// Return the MIME encoding
-    MAGIC_MIME_ENCODING     = 0x000400,
-    /// `MAGIC_MIME_TYPE` and `MAGIC_MIME_ENCODING`
-    MAGIC_MIME              = 0x000410,
-    /// Return the Apple creator and type
-    MAGIC_APPLE             = 0x000800,
-    /// Don't check for compressed files
-    MAGIC_NO_CHECK_COMPRESS = 0x001000,
-    /// Don't check for tar files
-    MAGIC_NO_CHECK_TAR      = 0x002000,
-    /// Don't check magic entries
-    MAGIC_NO_CHECK_SOFT     = 0x004000,
-    /// Don't check application type
-    MAGIC_NO_CHECK_APPTYPE  = 0x008000,
-    /// Don't check for elf details
-    MAGIC_NO_CHECK_ELF      = 0x010000,
-    /// Don't check for text files
-    MAGIC_NO_CHECK_TEXT     = 0x020000,
-    /// Don't check for cdf files
-    MAGIC_NO_CHECK_CDF      = 0x040000,
-    /// Don't check tokens
-    MAGIC_NO_CHECK_TOKENS   = 0x100000,
-    /// Don't check text encodings
-    MAGIC_NO_CHECK_ENCODING = 0x200000,
+pub struct MagicFlag {
+    priv flag: c_int
 }
 
-fn combine_flags(flags: &[MagicFlag]) -> c_int {
-    vec::foldl(0, flags, |a: c_int, b: &MagicFlag| a | (*b as c_int))
+impl BitOr<MagicFlag, MagicFlag> for MagicFlag {
+    fn bitor(&self, other: &MagicFlag) -> MagicFlag {
+        MagicFlag{flag: self.flag | other.flag}
+    }
 }
+
+/// No flags
+pub static MAGIC_NONE: MagicFlag = MagicFlag{flag: 0x000000};
+
+/// Turn on debugging
+pub static MAGIC_DEBUG: MagicFlag = MagicFlag{flag: 0x000001};
+
+/// Follow symlinks
+pub static MAGIC_SYMLINK: MagicFlag = MagicFlag{flag: 0x000002};
+
+/// Check inside compressed files
+pub static MAGIC_COMPRESS: MagicFlag = MagicFlag{flag: 0x000004};
+
+/// Look at the contents of devices
+pub static MAGIC_DEVICES: MagicFlag = MagicFlag{flag: 0x000008};
+
+/// Return the MIME type
+pub static MAGIC_MIME_TYPE: MagicFlag = MagicFlag{flag: 0x000010};
+
+/// Return all matches
+pub static MAGIC_CONTINUE: MagicFlag = MagicFlag{flag: 0x000020};
+
+/// Print warnings to stderr
+pub static MAGIC_CHECK: MagicFlag = MagicFlag{flag: 0x000040};
+
+/// Restore access time on exit
+pub static MAGIC_PRESERVE_ATIME: MagicFlag = MagicFlag{flag: 0x000080};
+
+/// Don't translate unprintable chars
+pub static MAGIC_RAW: MagicFlag = MagicFlag{flag: 0x000100};
+
+/// Handle ENOENT etc as real errors
+pub static MAGIC_ERROR: MagicFlag = MagicFlag{flag: 0x000200};
+
+/// Return the MIME encoding
+pub static MAGIC_MIME_ENCODING: MagicFlag = MagicFlag{flag: 0x000400};
+
+/// `MAGIC_MIME_TYPE` and `MAGIC_MIME_ENCODING`
+pub static MAGIC_MIME: MagicFlag = MagicFlag{flag: 0x000410};
+
+/// Return the Apple creator and type
+pub static MAGIC_APPLE: MagicFlag = MagicFlag{flag: 0x000800};
+
+/// Don't check for compressed files
+pub static MAGIC_NO_CHECK_COMPRESS: MagicFlag = MagicFlag{flag: 0x001000};
+
+/// Don't check for tar files
+pub static MAGIC_NO_CHECK_TAR: MagicFlag = MagicFlag{flag: 0x002000};
+
+/// Don't check magic entries
+pub static MAGIC_NO_CHECK_SOFT: MagicFlag = MagicFlag{flag: 0x004000};
+
+/// Don't check application type
+pub static MAGIC_NO_CHECK_APPTYPE: MagicFlag = MagicFlag{flag: 0x008000};
+
+/// Don't check for elf details
+pub static MAGIC_NO_CHECK_ELF: MagicFlag = MagicFlag{flag: 0x010000};
+
+/// Don't check for text files
+pub static MAGIC_NO_CHECK_TEXT: MagicFlag = MagicFlag{flag: 0x020000};
+
+/// Don't check for cdf files
+pub static MAGIC_NO_CHECK_CDF: MagicFlag = MagicFlag{flag: 0x040000};
+
+/// Don't check tokens
+pub static MAGIC_NO_CHECK_TOKENS: MagicFlag = MagicFlag{flag: 0x100000};
+
+/// Don't check text encodings
+pub static MAGIC_NO_CHECK_ENCODING: MagicFlag = MagicFlag{flag: 0x200000};
 
 #[link_args = "-lmagic"]
 extern "C" {
@@ -117,9 +143,9 @@ pub impl Cookie {
         }
     }
 
-    fn setflags(&self, flags: &[MagicFlag]) {
+    fn setflags(&self, flags: MagicFlag) {
         unsafe {
-            magic_setflags(self.cookie, combine_flags(flags));
+            magic_setflags(self.cookie, flags.flag);
         }
     }
 
@@ -151,9 +177,9 @@ pub impl Cookie {
         }
     }
 
-    fn open(flags: &[MagicFlag]) -> Option<Cookie> {
+    fn open(flags: MagicFlag) -> Option<Cookie> {
         unsafe {
-            let cookie = magic_open(combine_flags(flags));
+            let cookie = magic_open(flags.flag);
             if is_null(cookie) { None } else { Some(Cookie{cookie: cookie,}) }
         }
     }
@@ -165,24 +191,24 @@ mod tests {
 
     #[test]
     fn file() {
-        let cookie = Cookie::open([MAGIC_NONE]).unwrap();
+        let cookie = Cookie::open(MAGIC_NONE).unwrap();
         assert!(cookie.load("/usr/share/file/misc/magic.mgc"));
 
         assert!(cookie.file("rust-logo-128x128-blk.png").unwrap() ==
                 ~"PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced");
 
-        cookie.setflags([MAGIC_MIME_TYPE]);
+        cookie.setflags(MAGIC_MIME_TYPE);
         assert!(cookie.file("rust-logo-128x128-blk.png").unwrap() ==
                 ~"image/png");
 
-        cookie.setflags([MAGIC_MIME_TYPE, MAGIC_MIME_ENCODING]);
+        cookie.setflags(MAGIC_MIME_TYPE | MAGIC_MIME_ENCODING);
         assert!(cookie.file("rust-logo-128x128-blk.png").unwrap() ==
                 ~"image/png; charset=binary");
     }
 
     #[test]
     fn buffer() {
-        let cookie = Cookie::open([MAGIC_NONE]).unwrap();
+        let cookie = Cookie::open(MAGIC_NONE).unwrap();
         assert!(cookie.load("/usr/share/file/misc/magic.mgc"));
 
         let s = ~"#!/usr/bin/env python3\nprint('Hello, world!')";
@@ -190,7 +216,7 @@ mod tests {
           cookie.buffer(*bytes)
         }).unwrap() == ~"Python script, ASCII text executable");
 
-        cookie.setflags([MAGIC_MIME_TYPE]);
+        cookie.setflags(MAGIC_MIME_TYPE);
         assert!(str::as_bytes(&s, |bytes| {
           cookie.buffer(*bytes)
         }).unwrap() == ~"text/x-python");
@@ -198,7 +224,7 @@ mod tests {
 
     #[test]
     fn file_error() {
-        let cookie = Cookie::open([MAGIC_NONE]).unwrap();
+        let cookie = Cookie::open(MAGIC_NONE).unwrap();
         assert!(cookie.load("/usr/share/file/misc/magic.mgc"));
 
         let ret = cookie.file("non-existent_file.txt");
