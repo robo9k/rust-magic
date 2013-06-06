@@ -7,11 +7,10 @@
 #[license = "MIT"];
 #[crate_type = "lib"];
 
-extern mod std;
-
-use core::libc::{c_char, c_int, size_t};
-use core::ptr::is_null;
-use core::str::as_c_str;
+use std::libc::{c_char, c_int, size_t};
+use std::ptr::is_null;
+use std::str::as_c_str;
+use std::{str, vec};
 
 enum Magic {}
 
@@ -118,8 +117,8 @@ impl Drop for Cookie {
     fn finalize(&self) { unsafe { magic_close(self.cookie) } }
 }
 
-pub impl Cookie {
-    fn file(&self, filename: &str) -> Option<~str> {
+impl Cookie {
+    pub fn file(&self, filename: &str) -> Option<~str> {
         unsafe {
             let cookie = self.cookie;
             let s = as_c_str(filename, |filename| magic_file(cookie, filename));
@@ -127,7 +126,7 @@ pub impl Cookie {
         }
     }
 
-    fn buffer(&self, buffer: &[u8]) -> Option<~str> {
+    pub fn buffer(&self, buffer: &[u8]) -> Option<~str> {
         unsafe {
             let buffer_len = buffer.len() as size_t;
             let pbuffer = vec::raw::to_ptr(buffer);
@@ -136,48 +135,48 @@ pub impl Cookie {
         }
     }
 
-    fn error(&self) -> Option<~str> {
+    pub fn error(&self) -> Option<~str> {
         unsafe {
             let s = magic_error(self.cookie);
             if is_null(s) { None } else { Some(str::raw::from_c_str(s)) }
         }
     }
 
-    fn setflags(&self, flags: MagicFlag) {
+    pub fn setflags(&self, flags: MagicFlag) {
         unsafe {
             magic_setflags(self.cookie, flags.flag);
         }
     }
 
-    fn check(&self, filename: &str) -> bool {
+    pub fn check(&self, filename: &str) -> bool {
         unsafe {
             let cookie = self.cookie;
             as_c_str(filename, |filename| magic_check(cookie, filename)) == 0
         }
     }
 
-    fn compile(&self, filename: &str) -> bool {
+    pub fn compile(&self, filename: &str) -> bool {
         unsafe {
             let cookie = self.cookie;
             as_c_str(filename, |filename| magic_compile(cookie, filename)) == 0
         }
     }
 
-    fn list(&self, filename: &str) -> bool {
+    pub fn list(&self, filename: &str) -> bool {
         unsafe {
             let cookie = self.cookie;
             as_c_str(filename, |filename| magic_list(cookie, filename)) == 0
         }
     }
 
-    fn load(&self, filename: &str) -> bool {
+    pub fn load(&self, filename: &str) -> bool {
         unsafe {
             let cookie = self.cookie;
             as_c_str(filename, |filename| magic_load(cookie, filename)) == 0
         }
     }
 
-    fn open(flags: MagicFlag) -> Option<Cookie> {
+    pub fn open(flags: MagicFlag) -> Option<Cookie> {
         unsafe {
             let cookie = magic_open(flags.flag);
             if is_null(cookie) { None } else { Some(Cookie{cookie: cookie,}) }
@@ -188,6 +187,7 @@ pub impl Cookie {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::str;
 
     #[test]
     fn file() {
