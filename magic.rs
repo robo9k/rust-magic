@@ -4,6 +4,7 @@
 #[license = "MIT"];
 
 use std::libc::{c_char, c_int, size_t};
+use std::path::Path;
 use std::str;
 
 enum Magic {}
@@ -113,7 +114,7 @@ impl Drop for Cookie {
 }
 
 impl Cookie {
-    pub fn file(&self, filename: &str) -> Option<~str> {
+    pub fn file(&self, filename: &Path) -> Option<~str> {
         unsafe {
             let cookie = self.cookie;
             let s = filename.with_c_str(|filename| magic_file(cookie, filename));
@@ -143,28 +144,28 @@ impl Cookie {
         }
     }
 
-    pub fn check(&self, filename: &str) -> bool {
+    pub fn check(&self, filename: &Path) -> bool {
         unsafe {
             let cookie = self.cookie;
             filename.with_c_str(|filename| magic_check(cookie, filename)) == 0
         }
     }
 
-    pub fn compile(&self, filename: &str) -> bool {
+    pub fn compile(&self, filename: &Path) -> bool {
         unsafe {
             let cookie = self.cookie;
             filename.with_c_str(|filename| magic_compile(cookie, filename)) == 0
         }
     }
 
-    pub fn list(&self, filename: &str) -> bool {
+    pub fn list(&self, filename: &Path) -> bool {
         unsafe {
             let cookie = self.cookie;
             filename.with_c_str(|filename| magic_list(cookie, filename)) == 0
         }
     }
 
-    pub fn load(&self, filename: &str) -> bool {
+    pub fn load(&self, filename: &Path) -> bool {
         unsafe {
             let cookie = self.cookie;
             filename.with_c_str(|filename| magic_load(cookie, filename)) == 0
@@ -186,22 +187,24 @@ mod tests {
     #[test]
     fn file() {
         let cookie = Cookie::open(MAGIC_NONE).unwrap();
-        assert!(cookie.load("/usr/share/file/misc/magic.mgc"));
+        assert!(cookie.load(&Path::new("/usr/share/file/misc/magic.mgc")));
 
-        assert_eq!(cookie.file("rust-logo-128x128-blk.png").unwrap(),
+        let path = Path::new("rust-logo-128x128-blk.png");
+
+        assert_eq!(cookie.file(&path).unwrap(),
                    ~"PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced");
 
         cookie.setflags(MAGIC_MIME_TYPE);
-        assert_eq!(cookie.file("rust-logo-128x128-blk.png").unwrap(), ~"image/png");
+        assert_eq!(cookie.file(&path).unwrap(), ~"image/png");
 
         cookie.setflags(MAGIC_MIME_TYPE | MAGIC_MIME_ENCODING);
-        assert_eq!(cookie.file("rust-logo-128x128-blk.png").unwrap(), ~"image/png; charset=binary");
+        assert_eq!(cookie.file(&path).unwrap(), ~"image/png; charset=binary");
     }
 
     #[test]
     fn buffer() {
         let cookie = Cookie::open(MAGIC_NONE).unwrap();
-        assert!(cookie.load("/usr/share/file/misc/magic.mgc"));
+        assert!(cookie.load(&Path::new("/usr/share/file/misc/magic.mgc")));
 
         let s = bytes!("#!/usr/bin/env python3\nprint('Hello, world!')");
         assert_eq!(cookie.buffer(s).unwrap(), ~"Python script, ASCII text executable");
@@ -213,9 +216,9 @@ mod tests {
     #[test]
     fn file_error() {
         let cookie = Cookie::open(MAGIC_NONE | MAGIC_ERROR).unwrap();
-        assert!(cookie.load("/usr/share/file/misc/magic.mgc"));
+        assert!(cookie.load(&Path::new("/usr/share/file/misc/magic.mgc")));
 
-        let ret = cookie.file("non-existent_file.txt");
+        let ret = cookie.file(&Path::new("non-existent_file.txt"));
         assert_eq!(ret, None);
         assert_eq!(cookie.error().unwrap(), ~"cannot stat `non-existent_file.txt' (No such file or directory)");
     }
