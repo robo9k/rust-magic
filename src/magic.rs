@@ -184,39 +184,38 @@ mod tests {
     #[test]
     fn file() {
         let cookie = Cookie::open(MAGIC_NONE).unwrap();
-        assert!(cookie.load(&Path::new("/usr/share/file/misc/magic.mgc")));
+        assert!(cookie.load(&Path::new("/usr/local//Cellar/libmagic/5.19/share/misc/magic.mgc")));
 
-        let path = Path::new("rust-logo-128x128-blk.png");
+        let path = Path::new("assets/rust-logo-128x128-blk.png");
 
-        assert_eq!(cookie.file(&path).unwrap(),
-                   ~"PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced");
+        assert_eq!(cookie.file(&path).unwrap(), "PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced");
 
         cookie.setflags(MAGIC_MIME_TYPE);
-        assert_eq!(cookie.file(&path).unwrap(), ~"image/png");
+        assert_eq!(cookie.file(&path).unwrap(), "image/png");
 
         cookie.setflags(MAGIC_MIME_TYPE | MAGIC_MIME_ENCODING);
-        assert_eq!(cookie.file(&path).unwrap(), ~"image/png; charset=binary");
+        assert_eq!(cookie.file(&path).unwrap(), "image/png; charset=binary");
     }
 
     #[test]
     fn buffer() {
         let cookie = Cookie::open(MAGIC_NONE).unwrap();
-        assert!(cookie.load(&Path::new("/usr/share/file/misc/magic.mgc")));
+        assert!(cookie.load(&Path::new("/usr/local//Cellar/libmagic/5.19/share/misc/magic.mgc")));
 
-        let s = bytes!("#!/usr/bin/env python3\nprint('Hello, world!')");
-        assert_eq!(cookie.buffer(s).unwrap(), ~"Python script, ASCII text executable");
+        let s = b"#!/usr/bin/env python\nprint('Hello, world!')";
+        assert_eq!(cookie.buffer(s).unwrap(), "Python script, ASCII text executable");
 
         cookie.setflags(MAGIC_MIME_TYPE);
-        assert_eq!(cookie.buffer(s).unwrap(), ~"text/x-python");
+        assert_eq!(cookie.buffer(s).unwrap(), "text/x-python");
     }
 
     #[test]
     fn file_error() {
         let cookie = Cookie::open(MAGIC_NONE | MAGIC_ERROR).unwrap();
-        assert!(cookie.load(&Path::new("/usr/share/file/misc/magic.mgc")));
+        assert!(cookie.load(&Path::new("/usr/local//Cellar/libmagic/5.19/share/misc/magic.mgc")));
 
         let ret = cookie.file(&Path::new("non-existent_file.txt"));
         assert_eq!(ret, None);
-        assert_eq!(cookie.error().unwrap(), ~"cannot stat `non-existent_file.txt' (No such file or directory)");
+        assert_eq!(cookie.error().unwrap(), "cannot stat `non-existent_file.txt' (No such file or directory)");
     }
 }
