@@ -1,16 +1,13 @@
-#[crate_id = "magic"];
-#[crate_type = "lib"];
-#[comment = "libmagic bindings"];
-#[license = "MIT"];
+extern crate libc;
 
-use std::libc::{c_char, c_int, size_t};
+use libc::types::os::arch::c95::{c_char, c_int, size_t};
 use std::path::Path;
 use std::str;
 
 enum Magic {}
 
 pub struct MagicFlag {
-    priv flag: c_int
+    flag: c_int
 }
 
 impl BitOr<MagicFlag, MagicFlag> for MagicFlag {
@@ -106,7 +103,7 @@ extern "C" {
 }
 
 pub struct Cookie {
-    priv cookie: *Magic,
+    cookie: *Magic,
 }
 
 impl Drop for Cookie {
@@ -114,7 +111,7 @@ impl Drop for Cookie {
 }
 
 impl Cookie {
-    pub fn file(&self, filename: &Path) -> Option<~str> {
+    pub fn file(&self, filename: &Path) -> Option<String> {
         unsafe {
             let cookie = self.cookie;
             let s = filename.with_c_str(|filename| magic_file(cookie, filename));
@@ -122,7 +119,7 @@ impl Cookie {
         }
     }
 
-    pub fn buffer(&self, buffer: &[u8]) -> Option<~str> {
+    pub fn buffer(&self, buffer: &[u8]) -> Option<String> {
         unsafe {
             let buffer_len = buffer.len() as size_t;
             let pbuffer = buffer.as_ptr();
@@ -131,7 +128,7 @@ impl Cookie {
         }
     }
 
-    pub fn error(&self) -> Option<~str> {
+    pub fn error(&self) -> Option<String> {
         unsafe {
             let s = magic_error(self.cookie);
             if s.is_null() { None } else { Some(str::raw::from_c_str(s)) }
