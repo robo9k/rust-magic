@@ -88,22 +88,22 @@ pub static MAGIC_NO_CHECK_ENCODING: MagicFlag = MagicFlag{flag: 0x200000};
 #[allow(dead_code)]
 #[link(name = "magic")]
 extern "C" {
-    fn magic_open(flags: c_int) -> *Magic;
-    fn magic_close(cookie: *Magic);
-    fn magic_error(cookie: *Magic) -> *c_char;
-    fn magic_errno(cookie: *Magic) -> c_int;
-    fn magic_descriptor(cookie: *Magic, fd: c_int) -> *c_char;
-    fn magic_file(cookie: *Magic, filename: *c_char) -> *c_char;
-    fn magic_buffer(cookie: *Magic, buffer: *u8, length: size_t) -> *c_char;
-    fn magic_setflags(cookie: *Magic, flags: c_int) -> c_int;
-    fn magic_check(cookie: *Magic, filename: *c_char) -> c_int;
-    fn magic_compile(cookie: *Magic, filename: *c_char) -> c_int;
-    fn magic_list(cookie: *Magic, filename: *c_char) -> c_int;
-    fn magic_load(cookie: *Magic, filename: *c_char) -> c_int;
+    fn magic_open(flags: c_int) -> *const Magic;
+    fn magic_close(cookie: *const Magic);
+    fn magic_error(cookie: *const Magic) -> *const c_char;
+    fn magic_errno(cookie: *const Magic) -> *const c_int;
+    fn magic_descriptor(cookie: *const Magic, fd: c_int) -> *const c_char;
+    fn magic_file(cookie: *const Magic, filename: *const c_char) -> *const c_char;
+    fn magic_buffer(cookie: *const Magic, buffer: *const u8, length: size_t) -> *const c_char;
+    fn magic_setflags(cookie: *const Magic, flags: c_int) -> c_int;
+    fn magic_check(cookie: *const Magic, filename: *const c_char) -> c_int;
+    fn magic_compile(cookie: *const Magic, filename: *const c_char) -> c_int;
+    fn magic_list(cookie: *const Magic, filename: *const c_char) -> c_int;
+    fn magic_load(cookie: *const Magic, filename: *const c_char) -> c_int;
 }
 
 pub struct Cookie {
-    cookie: *Magic,
+    cookie: *const Magic,
 }
 
 impl Drop for Cookie {
