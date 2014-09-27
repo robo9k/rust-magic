@@ -1,8 +1,8 @@
 extern crate libc;
 
-use libc::types::os::arch::c95::{c_char, c_int, size_t};
+use libc::{c_char, c_int, size_t};
 use std::path::Path;
-use std::str;
+use std::string;
 
 enum Magic {}
 
@@ -115,7 +115,7 @@ impl Cookie {
         unsafe {
             let cookie = self.cookie;
             let s = filename.with_c_str(|filename| magic_file(cookie, filename));
-            if s.is_null() { None } else { Some(str::raw::from_c_str(s)) }
+            if s.is_null() { None } else { Some(string::raw::from_buf(s as *const u8)) }
         }
     }
 
@@ -124,14 +124,14 @@ impl Cookie {
             let buffer_len = buffer.len() as size_t;
             let pbuffer = buffer.as_ptr();
             let s = magic_buffer(self.cookie, pbuffer, buffer_len);
-            if s.is_null() { None } else { Some(str::raw::from_c_str(s)) }
+            if s.is_null() { None } else { Some(string::raw::from_buf(s as *const u8)) }
         }
     }
 
     pub fn error(&self) -> Option<String> {
         unsafe {
             let s = magic_error(self.cookie);
-            if s.is_null() { None } else { Some(str::raw::from_c_str(s)) }
+            if s.is_null() { None } else { Some(string::raw::from_buf(s as *const u8)) }
         }
     }
 
