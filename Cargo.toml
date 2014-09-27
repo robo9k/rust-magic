@@ -4,6 +4,6 @@ name = "magic"
 version = "0.1.0"
 authors = ["Daniel Micay <danielmicay@gmail.com>"]
 
-[[lib]]
+[lib]
 
 name = "magic"
