@@ -206,7 +206,7 @@ mod tests {
         assert_eq!(cookie.buffer(s).unwrap().as_slice(), "a python script, ASCII text executable");
 
         cookie.setflags(MAGIC_MIME_TYPE);
-        assert_eq!(cookie.buffer(s).unwrap().as_slice(), "text/x-python");
+        assert_eq!(cookie.buffer(s).unwrap().as_slice(), "text/plain");
     }
 
     #[test]
