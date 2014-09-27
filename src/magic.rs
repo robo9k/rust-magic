@@ -203,7 +203,7 @@ mod tests {
         assert!(cookie.load(&Path::new("/usr/share/misc/magic")));
 
         let s = b"#!/usr/bin/env python\nprint('Hello, world!')";
-        assert_eq!(cookie.buffer(s).unwrap().as_slice(), "Python script, ASCII text executable");
+        assert_eq!(cookie.buffer(s).unwrap().as_slice(), "a python script, ASCII text executable");
 
         cookie.setflags(MAGIC_MIME_TYPE);
         assert_eq!(cookie.buffer(s).unwrap().as_slice(), "text/x-python");
