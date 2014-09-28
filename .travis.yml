@@ -6,9 +6,9 @@ before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -qq libmagic1 libmagic-dev
 script:
-  - cargo build
-  - cargo test
-  - cargo doc
+  - cargo build --verbose
+  - cargo test --verbose
+  - cargo doc --verbose
 after_script:
   # the doc directory needs to be in the root for rust-ci
   - mv target/doc doc
