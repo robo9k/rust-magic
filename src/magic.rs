@@ -59,6 +59,13 @@ extern "C" {
     fn magic_compile(cookie: *const Magic, filename: *const c_char) -> c_int;
     fn magic_list(cookie: *const Magic, filename: *const c_char) -> c_int;
     fn magic_load(cookie: *const Magic, filename: *const c_char) -> c_int;
+    fn magic_version() -> c_int;
+}
+
+pub fn version() -> c_int {
+    unsafe {
+        magic_version()
+    }
 }
 
 pub struct Cookie {
@@ -176,5 +183,11 @@ mod tests {
         let ret = cookie.file(&Path::new("non-existent_file.txt"));
         assert_eq!(ret, None);
         assert_eq!(cookie.error().unwrap().as_slice(), "cannot stat `non-existent_file.txt' (No such file or directory)");
+    }
+
+    #[test]
+    fn version() {
+        let version = ::version();
+		assert!(version >= 513);
     }
 }
