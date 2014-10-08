@@ -7,7 +7,7 @@ use std::string;
 enum Magic {}
 
 bitflags! {
-    flags Flags: c_int {
+    flags CookieFlags: c_int {
         #[doc = "No flags"]
         static MAGIC_NONE              = 0x000000,
 
@@ -141,7 +141,7 @@ impl Cookie {
         }
     }
 
-    pub fn setflags(&self, flags: Flags) {
+    pub fn setflags(&self, flags: CookieFlags) {
         unsafe {
             magic_setflags(self.cookie, flags.bits);
         }
@@ -175,7 +175,7 @@ impl Cookie {
         }
     }
 
-    pub fn open(flags: Flags) -> Option<Cookie> {
+    pub fn open(flags: CookieFlags) -> Option<Cookie> {
         unsafe {
             let cookie = magic_open(flags.bits | MAGIC_ERROR.bits);
             if cookie.is_null() { None } else { Some(Cookie{cookie: cookie,}) }
