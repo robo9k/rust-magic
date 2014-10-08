@@ -4,92 +4,99 @@ use libc::{c_char, c_int, size_t};
 use std::path::Path;
 use std::string;
 
-enum Magic {}
+/// Bitmask flags which control `libmagic` behaviour
+pub mod flags {
+    use libc::c_int;
 
-bitflags! {
-    flags CookieFlags: c_int {
-        #[doc = "No flags"]
-        static MAGIC_NONE              = 0x000000,
+    bitflags! {
+        #[doc = "Bitmask flags that specify how `Cookie` functions should behave"]
+        flags CookieFlags: c_int {
+            #[doc = "No flags"]
+            static MAGIC_NONE              = 0x000000,
 
-        #[doc = "Turn on debugging"]
-        static MAGIC_DEBUG             = 0x000001,
+            #[doc = "Turn on debugging"]
+            static MAGIC_DEBUG             = 0x000001,
 
-        #[doc = "Follow symlinks"]
-        static MAGIC_SYMLINK           = 0x000002,
+            #[doc = "Follow symlinks"]
+            static MAGIC_SYMLINK           = 0x000002,
 
-        #[doc = "Check inside compressed files"]
-        static MAGIC_COMPRESS          = 0x000004,
+            #[doc = "Check inside compressed files"]
+            static MAGIC_COMPRESS          = 0x000004,
 
-        #[doc = "Look at the contents of devices"]
-        static MAGIC_DEVICES           = 0x000008,
+            #[doc = "Look at the contents of devices"]
+            static MAGIC_DEVICES           = 0x000008,
 
-        #[doc = "Return the MIME type"]
-        static MAGIC_MIME_TYPE         = 0x000010,
+            #[doc = "Return the MIME type"]
+            static MAGIC_MIME_TYPE         = 0x000010,
 
-        #[doc = "Return all matches"]
-        static MAGIC_CONTINUE          = 0x000020,
+            #[doc = "Return all matches"]
+            static MAGIC_CONTINUE          = 0x000020,
 
-        #[doc = "Print warnings to stderr"]
-        static MAGIC_CHECK             = 0x000040,
+            #[doc = "Print warnings to stderr"]
+            static MAGIC_CHECK             = 0x000040,
 
-        #[doc = "Restore access time on exit"]
-        static MAGIC_PRESERVE_ATIME    = 0x000080,
+            #[doc = "Restore access time on exit"]
+            static MAGIC_PRESERVE_ATIME    = 0x000080,
 
-        #[doc = "Don't translate unprintable chars"]
-        static MAGIC_RAW               = 0x000100,
+            #[doc = "Don't translate unprintable chars"]
+            static MAGIC_RAW               = 0x000100,
 
-        #[doc = "Handle ENOENT etc as real errors"]
-        static MAGIC_ERROR             = 0x000200,
+            #[doc = "Handle `ENOENT` etc as real errors"]
+            static MAGIC_ERROR             = 0x000200,
 
-        #[doc = "Return the MIME encoding"]
-        static MAGIC_MIME_ENCODING     = 0x000400,
+            #[doc = "Return the MIME encoding"]
+            static MAGIC_MIME_ENCODING     = 0x000400,
 
-        #[doc = "Return the MIME type and encoding"]
-        static MAGIC_MIME              = MAGIC_MIME_TYPE.bits
-                                       | MAGIC_MIME_ENCODING.bits,
+            #[doc = "Return the MIME type and encoding"]
+            static MAGIC_MIME              = MAGIC_MIME_TYPE.bits
+                                           | MAGIC_MIME_ENCODING.bits,
 
-        #[doc = "Return the Apple creator and type"]
-        static MAGIC_APPLE             = 0x000800,
+            #[doc = "Return the Apple creator and type"]
+            static MAGIC_APPLE             = 0x000800,
 
-        #[doc = "Don't check for compressed files"]
-        static MAGIC_NO_CHECK_COMPRESS = 0x001000,
+            #[doc = "Don't check for compressed files"]
+            static MAGIC_NO_CHECK_COMPRESS = 0x001000,
 
-        #[doc = "Don't check for tar files"]
-        static MAGIC_NO_CHECK_TAR      = 0x002000,
+            #[doc = "Don't check for tar files"]
+            static MAGIC_NO_CHECK_TAR      = 0x002000,
 
-        #[doc = "Don't check magic entries"]
-        static MAGIC_NO_CHECK_SOFT     = 0x004000,
+            #[doc = "Don't check magic entries"]
+            static MAGIC_NO_CHECK_SOFT     = 0x004000,
 
-        #[doc = "Don't check application type"]
-        static MAGIC_NO_CHECK_APPTYPE  = 0x008000,
+            #[doc = "Don't check application type"]
+            static MAGIC_NO_CHECK_APPTYPE  = 0x008000,
 
-        #[doc = "Don't check for elf details"]
-        static MAGIC_NO_CHECK_ELF      = 0x010000,
+            #[doc = "Don't check for elf details"]
+            static MAGIC_NO_CHECK_ELF      = 0x010000,
 
-        #[doc = "Don't check for text files"]
-        static MAGIC_NO_CHECK_TEXT     = 0x020000,
+            #[doc = "Don't check for text files"]
+            static MAGIC_NO_CHECK_TEXT     = 0x020000,
 
-        #[doc = "Don't check for cdf files"]
-        static MAGIC_NO_CHECK_CDF      = 0x040000,
+            #[doc = "Don't check for cdf files"]
+            static MAGIC_NO_CHECK_CDF      = 0x040000,
 
-        #[doc = "Don't check tokens"]
-        static MAGIC_NO_CHECK_TOKENS   = 0x100000,
+            #[doc = "Don't check tokens"]
+            static MAGIC_NO_CHECK_TOKENS   = 0x100000,
 
-        #[doc = "Don't check text encodings"]
-        static MAGIC_NO_CHECK_ENCODING = 0x200000,
+            #[doc = "Don't check text encodings"]
+            static MAGIC_NO_CHECK_ENCODING = 0x200000,
 
-        #[doc = "No built-in tests; only consult the magic file"]
-        static MAGIC_NO_CHECK_BUILTIN  = MAGIC_NO_CHECK_COMPRESS.bits
-                                       | MAGIC_NO_CHECK_TAR.bits
-                                       | MAGIC_NO_CHECK_APPTYPE.bits
-                                       | MAGIC_NO_CHECK_ELF.bits
-                                       | MAGIC_NO_CHECK_TEXT.bits
-                                       | MAGIC_NO_CHECK_CDF.bits
-                                       | MAGIC_NO_CHECK_TOKENS.bits
-                                       | MAGIC_NO_CHECK_ENCODING.bits
-                                       | 0,
-	}
+            #[doc = "No built-in tests; only consult the magic file"]
+            static MAGIC_NO_CHECK_BUILTIN  = MAGIC_NO_CHECK_COMPRESS.bits
+                                           | MAGIC_NO_CHECK_TAR.bits
+                                           | MAGIC_NO_CHECK_APPTYPE.bits
+                                           | MAGIC_NO_CHECK_ELF.bits
+                                           | MAGIC_NO_CHECK_TEXT.bits
+                                           | MAGIC_NO_CHECK_CDF.bits
+                                           | MAGIC_NO_CHECK_TOKENS.bits
+                                           | MAGIC_NO_CHECK_ENCODING.bits
+                                           | 0,
+	    }
+    }
 }
+
+
+enum Magic {}
 
 #[allow(dead_code)]
 #[link(name = "magic")]
@@ -107,6 +114,7 @@ extern "C" {
     fn magic_list(cookie: *const Magic, filename: *const c_char) -> c_int;
     fn magic_load(cookie: *const Magic, filename: *const c_char) -> c_int;
 }
+
 
 pub struct Cookie {
     cookie: *const Magic,
@@ -141,9 +149,9 @@ impl Cookie {
         }
     }
 
-    pub fn setflags(&self, flags: CookieFlags) {
+    pub fn setflags(&self, flags: flags::CookieFlags) {
         unsafe {
-            magic_setflags(self.cookie, flags.bits);
+            magic_setflags(self.cookie, flags.bits());
         }
     }
 
@@ -175,9 +183,9 @@ impl Cookie {
         }
     }
 
-    pub fn open(flags: CookieFlags) -> Option<Cookie> {
+    pub fn open(flags: flags::CookieFlags) -> Option<Cookie> {
         unsafe {
-            let cookie = magic_open(flags.bits | MAGIC_ERROR.bits);
+            let cookie = magic_open((flags | flags::MAGIC_ERROR).bits());
             if cookie.is_null() { None } else { Some(Cookie{cookie: cookie,}) }
         }
     }
@@ -185,39 +193,40 @@ impl Cookie {
 
 #[cfg(test)]
 mod tests {
-    use super::{Cookie, MAGIC_NONE, MAGIC_MIME_TYPE, MAGIC_MIME_ENCODING, MAGIC_ERROR};
+    use super::Cookie;
+	use super::flags;
 
     #[test]
     fn file() {
-        let cookie = Cookie::open(MAGIC_NONE).unwrap();
+        let cookie = Cookie::open(flags::MAGIC_NONE).unwrap();
         assert!(cookie.load(&Path::new("/usr/share/misc/magic")));
 
         let path = Path::new("assets/rust-logo-128x128-blk.png");
 
         assert_eq!(cookie.file(&path).unwrap().as_slice(), "PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced");
 
-        cookie.setflags(MAGIC_MIME_TYPE);
+        cookie.setflags(flags::MAGIC_MIME_TYPE);
         assert_eq!(cookie.file(&path).unwrap().as_slice(), "image/png");
 
-        cookie.setflags(MAGIC_MIME_TYPE | MAGIC_MIME_ENCODING);
+        cookie.setflags(flags::MAGIC_MIME_TYPE | flags::MAGIC_MIME_ENCODING);
         assert_eq!(cookie.file(&path).unwrap().as_slice(), "image/png; charset=binary");
     }
 
     #[test]
     fn buffer() {
-        let cookie = Cookie::open(MAGIC_NONE).unwrap();
+        let cookie = Cookie::open(flags::MAGIC_NONE).unwrap();
         assert!(cookie.load(&Path::new("/usr/share/misc/magic")));
 
         let s = b"#!/usr/bin/env python\nprint('Hello, world!')";
         assert_eq!(cookie.buffer(s).unwrap().as_slice(), "a python script, ASCII text executable");
 
-        cookie.setflags(MAGIC_MIME_TYPE);
+        cookie.setflags(flags::MAGIC_MIME_TYPE);
         assert_eq!(cookie.buffer(s).unwrap().as_slice(), "text/plain");
     }
 
     #[test]
     fn file_error() {
-        let cookie = Cookie::open(MAGIC_NONE | MAGIC_ERROR).unwrap();
+        let cookie = Cookie::open(flags::MAGIC_NONE | flags::MAGIC_ERROR).unwrap();
         assert!(cookie.load(&Path::new("/usr/share/misc/magic")));
 
         let ret = cookie.file(&Path::new("non-existent_file.txt"));
