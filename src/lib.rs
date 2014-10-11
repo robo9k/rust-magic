@@ -5,6 +5,7 @@ use std::path::Path;
 use std::string;
 
 /// Bitmask flags which control `libmagic` behaviour
+#[unstable]
 pub mod flags {
     use libc::c_int;
 
@@ -120,14 +121,17 @@ mod ffi {
 }
 
 
+#[unstable]
 pub struct Cookie {
     cookie: *const self::ffi::Magic,
 }
 
+#[unstable]
 impl Drop for Cookie {
     fn drop(&mut self) { unsafe { self::ffi::magic_close(self.cookie) } }
 }
 
+#[experimental]
 impl Cookie {
     pub fn file(&self, filename: &Path) -> Option<String> {
         unsafe {
