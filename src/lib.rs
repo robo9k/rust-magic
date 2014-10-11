@@ -12,77 +12,77 @@ pub mod flags {
         #[doc = "Bitmask flags that specify how `Cookie` functions should behave"]
         flags CookieFlags: c_int {
             #[doc = "No flags"]
-            static NONE              = 0x000000,
+            const NONE              = 0x000000,
 
             #[doc = "Turn on debugging"]
-            static DEBUG             = 0x000001,
+            const DEBUG             = 0x000001,
 
             #[doc = "Follow symlinks"]
-            static SYMLINK           = 0x000002,
+            const SYMLINK           = 0x000002,
 
             #[doc = "Check inside compressed files"]
-            static COMPRESS          = 0x000004,
+            const COMPRESS          = 0x000004,
 
             #[doc = "Look at the contents of devices"]
-            static DEVICES           = 0x000008,
+            const DEVICES           = 0x000008,
 
             #[doc = "Return the MIME type"]
-            static MIME_TYPE         = 0x000010,
+            const MIME_TYPE         = 0x000010,
 
             #[doc = "Return all matches"]
-            static CONTINUE          = 0x000020,
+            const CONTINUE          = 0x000020,
 
             #[doc = "Print warnings to stderr"]
-            static CHECK             = 0x000040,
+            const CHECK             = 0x000040,
 
             #[doc = "Restore access time on exit"]
-            static PRESERVE_ATIME    = 0x000080,
+            const PRESERVE_ATIME    = 0x000080,
 
             #[doc = "Don't translate unprintable chars"]
-            static RAW               = 0x000100,
+            const RAW               = 0x000100,
 
             #[doc = "Handle `ENOENT` etc as real errors"]
-            static ERROR             = 0x000200,
+            const ERROR             = 0x000200,
 
             #[doc = "Return the MIME encoding"]
-            static MIME_ENCODING     = 0x000400,
+            const MIME_ENCODING     = 0x000400,
 
             #[doc = "Return the MIME type and encoding"]
-            static MIME              = MIME_TYPE.bits
+            const MIME              = MIME_TYPE.bits
                                      | MIME_ENCODING.bits,
 
             #[doc = "Return the Apple creator and type"]
-            static APPLE             = 0x000800,
+            const APPLE             = 0x000800,
 
             #[doc = "Don't check for compressed files"]
-            static NO_CHECK_COMPRESS = 0x001000,
+            const NO_CHECK_COMPRESS = 0x001000,
 
             #[doc = "Don't check for tar files"]
-            static NO_CHECK_TAR      = 0x002000,
+            const NO_CHECK_TAR      = 0x002000,
 
             #[doc = "Don't check magic entries"]
-            static NO_CHECK_SOFT     = 0x004000,
+            const NO_CHECK_SOFT     = 0x004000,
 
             #[doc = "Don't check application type"]
-            static NO_CHECK_APPTYPE  = 0x008000,
+            const NO_CHECK_APPTYPE  = 0x008000,
 
             #[doc = "Don't check for elf details"]
-            static NO_CHECK_ELF      = 0x010000,
+            const NO_CHECK_ELF      = 0x010000,
 
             #[doc = "Don't check for text files"]
-            static NO_CHECK_TEXT     = 0x020000,
+            const NO_CHECK_TEXT     = 0x020000,
 
             #[doc = "Don't check for cdf files"]
-            static NO_CHECK_CDF      = 0x040000,
+            const NO_CHECK_CDF      = 0x040000,
 
             #[doc = "Don't check tokens"]
-            static NO_CHECK_TOKENS   = 0x100000,
+            const NO_CHECK_TOKENS   = 0x100000,
 
             #[doc = "Don't check text encodings"]
-            static NO_CHECK_ENCODING = 0x200000,
+            const NO_CHECK_ENCODING = 0x200000,
 
             #[doc = "No built-in tests; only consult the magic file"]
-            static NO_CHECK_BUILTIN  = NO_CHECK_COMPRESS.bits
+            const NO_CHECK_BUILTIN  = NO_CHECK_COMPRESS.bits
                                      | NO_CHECK_TAR.bits
                                      | NO_CHECK_APPTYPE.bits
                                      | NO_CHECK_ELF.bits
