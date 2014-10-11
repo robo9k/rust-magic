@@ -253,6 +253,6 @@ mod tests {
     #[test]
     fn load_default() {
         let cookie = Cookie::open(flags::NONE).unwrap();
-		assert!(cookie.load_default());
+        assert!(cookie.load_default());
     }
 }
