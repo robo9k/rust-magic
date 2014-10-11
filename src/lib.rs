@@ -1,6 +1,6 @@
 extern crate libc;
 
-use libc::{c_char, c_int, size_t};
+use libc::size_t;
 use std::path::Path;
 use std::string;
 
@@ -96,39 +96,43 @@ pub mod flags {
 }
 
 
-enum Magic {}
+mod ffi {
+    use libc::{c_char, c_int, size_t};
 
-#[allow(dead_code)]
-#[link(name = "magic")]
-extern "C" {
-    fn magic_open(flags: c_int) -> *const Magic;
-    fn magic_close(cookie: *const Magic);
-    fn magic_error(cookie: *const Magic) -> *const c_char;
-    fn magic_errno(cookie: *const Magic) -> *const c_int;
-    fn magic_descriptor(cookie: *const Magic, fd: c_int) -> *const c_char;
-    fn magic_file(cookie: *const Magic, filename: *const c_char) -> *const c_char;
-    fn magic_buffer(cookie: *const Magic, buffer: *const u8, length: size_t) -> *const c_char;
-    fn magic_setflags(cookie: *const Magic, flags: c_int) -> c_int;
-    fn magic_check(cookie: *const Magic, filename: *const c_char) -> c_int;
-    fn magic_compile(cookie: *const Magic, filename: *const c_char) -> c_int;
-    fn magic_list(cookie: *const Magic, filename: *const c_char) -> c_int;
-    fn magic_load(cookie: *const Magic, filename: *const c_char) -> c_int;
+    pub enum Magic {}
+
+    #[allow(dead_code)]
+    #[link(name = "magic")]
+    extern "C" {
+        pub fn magic_open(flags: c_int) -> *const Magic;
+        pub fn magic_close(cookie: *const Magic);
+        pub fn magic_error(cookie: *const Magic) -> *const c_char;
+        pub fn magic_errno(cookie: *const Magic) -> *const c_int;
+        pub fn magic_descriptor(cookie: *const Magic, fd: c_int) -> *const c_char;
+        pub fn magic_file(cookie: *const Magic, filename: *const c_char) -> *const c_char;
+        pub fn magic_buffer(cookie: *const Magic, buffer: *const u8, length: size_t) -> *const c_char;
+        pub fn magic_setflags(cookie: *const Magic, flags: c_int) -> c_int;
+        pub fn magic_check(cookie: *const Magic, filename: *const c_char) -> c_int;
+        pub fn magic_compile(cookie: *const Magic, filename: *const c_char) -> c_int;
+        pub fn magic_list(cookie: *const Magic, filename: *const c_char) -> c_int;
+        pub fn magic_load(cookie: *const Magic, filename: *const c_char) -> c_int;
+    }
 }
 
 
 pub struct Cookie {
-    cookie: *const Magic,
+    cookie: *const self::ffi::Magic,
 }
 
 impl Drop for Cookie {
-    fn drop(&mut self) { unsafe { magic_close(self.cookie) } }
+    fn drop(&mut self) { unsafe { self::ffi::magic_close(self.cookie) } }
 }
 
 impl Cookie {
     pub fn file(&self, filename: &Path) -> Option<String> {
         unsafe {
             let cookie = self.cookie;
-            let s = filename.with_c_str(|filename| magic_file(cookie, filename));
+            let s = filename.with_c_str(|filename| self::ffi::magic_file(cookie, filename));
             if s.is_null() { None } else { Some(string::raw::from_buf(s as *const u8)) }
         }
     }
@@ -137,55 +141,55 @@ impl Cookie {
         unsafe {
             let buffer_len = buffer.len() as size_t;
             let pbuffer = buffer.as_ptr();
-            let s = magic_buffer(self.cookie, pbuffer, buffer_len);
+            let s = self::ffi::magic_buffer(self.cookie, pbuffer, buffer_len);
             if s.is_null() { None } else { Some(string::raw::from_buf(s as *const u8)) }
         }
     }
 
     pub fn error(&self) -> Option<String> {
         unsafe {
-            let s = magic_error(self.cookie);
+            let s = self::ffi::magic_error(self.cookie);
             if s.is_null() { None } else { Some(string::raw::from_buf(s as *const u8)) }
         }
     }
 
     pub fn setflags(&self, flags: self::flags::CookieFlags) {
         unsafe {
-            magic_setflags(self.cookie, flags.bits());
+            self::ffi::magic_setflags(self.cookie, flags.bits());
         }
     }
 
     pub fn check(&self, filename: &Path) -> bool {
         unsafe {
             let cookie = self.cookie;
-            filename.with_c_str(|filename| magic_check(cookie, filename)) == 0
+            filename.with_c_str(|filename| self::ffi::magic_check(cookie, filename)) == 0
         }
     }
 
     pub fn compile(&self, filename: &Path) -> bool {
         unsafe {
             let cookie = self.cookie;
-            filename.with_c_str(|filename| magic_compile(cookie, filename)) == 0
+            filename.with_c_str(|filename| self::ffi::magic_compile(cookie, filename)) == 0
         }
     }
 
     pub fn list(&self, filename: &Path) -> bool {
         unsafe {
             let cookie = self.cookie;
-            filename.with_c_str(|filename| magic_list(cookie, filename)) == 0
+            filename.with_c_str(|filename| self::ffi::magic_list(cookie, filename)) == 0
         }
     }
 
     pub fn load(&self, filename: &Path) -> bool {
         unsafe {
             let cookie = self.cookie;
-            filename.with_c_str(|filename| magic_load(cookie, filename)) == 0
+            filename.with_c_str(|filename| self::ffi::magic_load(cookie, filename)) == 0
         }
     }
 
     pub fn open(flags: self::flags::CookieFlags) -> Option<Cookie> {
         unsafe {
-            let cookie = magic_open((flags | self::flags::ERROR).bits());
+            let cookie = self::ffi::magic_open((flags | self::flags::ERROR).bits());
             if cookie.is_null() { None } else { Some(Cookie{cookie: cookie,}) }
         }
     }
