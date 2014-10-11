@@ -149,7 +149,7 @@ impl Cookie {
         }
     }
 
-    pub fn setflags(&self, flags: flags::CookieFlags) {
+    pub fn setflags(&self, flags: self::flags::CookieFlags) {
         unsafe {
             magic_setflags(self.cookie, flags.bits());
         }
@@ -183,9 +183,9 @@ impl Cookie {
         }
     }
 
-    pub fn open(flags: flags::CookieFlags) -> Option<Cookie> {
+    pub fn open(flags: self::flags::CookieFlags) -> Option<Cookie> {
         unsafe {
-            let cookie = magic_open((flags | flags::ERROR).bits());
+            let cookie = magic_open((flags | self::flags::ERROR).bits());
             if cookie.is_null() { None } else { Some(Cookie{cookie: cookie,}) }
         }
     }
