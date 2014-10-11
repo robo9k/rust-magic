@@ -3,6 +3,7 @@ extern crate libc;
 use libc::size_t;
 use std::path::Path;
 use std::string;
+use std::ptr;
 
 /// Bitmask flags which control `libmagic` behaviour
 #[unstable]
@@ -191,6 +192,13 @@ impl Cookie {
         }
     }
 
+    pub fn load_default(&self) -> bool {
+        unsafe {
+            let cookie = self.cookie;
+            self::ffi::magic_load(cookie, ptr::null()) == 0
+        }
+    }
+
     pub fn open(flags: self::flags::CookieFlags) -> Option<Cookie> {
         unsafe {
             let cookie = self::ffi::magic_open((flags | self::flags::ERROR).bits());
@@ -240,5 +248,11 @@ mod tests {
         let ret = cookie.file(&Path::new("non-existent_file.txt"));
         assert_eq!(ret, None);
         assert_eq!(cookie.error().unwrap().as_slice(), "cannot stat `non-existent_file.txt' (No such file or directory)");
+    }
+
+    #[test]
+    fn load_default() {
+        let cookie = Cookie::open(flags::NONE).unwrap();
+		assert!(cookie.load_default());
     }
 }
