@@ -138,20 +138,20 @@ impl Drop for Cookie {
 
 #[experimental]
 impl Cookie {
-    pub fn file(&self, filename: &Path) -> Option<String> {
+    pub fn file(&self, filename: &Path) -> Result<String, MagicError> {
         unsafe {
             let cookie = self.cookie;
             let s = filename.with_c_str(|filename| self::ffi::magic_file(cookie, filename));
-            if s.is_null() { None } else { Some(string::raw::from_buf(s as *const u8)) }
+            if s.is_null() { Err(self::MagicError) } else { Ok(string::raw::from_buf(s as *const u8)) }
         }
     }
 
-    pub fn buffer(&self, buffer: &[u8]) -> Option<String> {
+    pub fn buffer(&self, buffer: &[u8]) -> Result<String, MagicError> {
         unsafe {
             let buffer_len = buffer.len() as size_t;
             let pbuffer = buffer.as_ptr();
             let s = self::ffi::magic_buffer(self.cookie, pbuffer, buffer_len);
-            if s.is_null() { None } else { Some(string::raw::from_buf(s as *const u8)) }
+            if s.is_null() { Err(self::MagicError) } else { Ok(string::raw::from_buf(s as *const u8)) }
         }
     }
 
@@ -228,13 +228,13 @@ mod tests {
 
         let path = Path::new("assets/rust-logo-128x128-blk.png");
 
-        assert_eq!(cookie.file(&path).unwrap().as_slice(), "PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced");
+        assert_eq!(cookie.file(&path).ok().unwrap().as_slice(), "PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced");
 
         cookie.set_flags(flags::MIME_TYPE);
-        assert_eq!(cookie.file(&path).unwrap().as_slice(), "image/png");
+        assert_eq!(cookie.file(&path).ok().unwrap().as_slice(), "image/png");
 
         cookie.set_flags(flags::MIME_TYPE | flags::MIME_ENCODING);
-        assert_eq!(cookie.file(&path).unwrap().as_slice(), "image/png; charset=binary");
+        assert_eq!(cookie.file(&path).ok().unwrap().as_slice(), "image/png; charset=binary");
     }
 
     #[test]
@@ -243,10 +243,10 @@ mod tests {
         assert!(cookie.load(&Path::new("/usr/share/misc/magic")).is_ok());
 
         let s = b"#!/usr/bin/env python\nprint('Hello, world!')";
-        assert_eq!(cookie.buffer(s).unwrap().as_slice(), "a python script, ASCII text executable");
+        assert_eq!(cookie.buffer(s).ok().unwrap().as_slice(), "a python script, ASCII text executable");
 
         cookie.set_flags(flags::MIME_TYPE);
-        assert_eq!(cookie.buffer(s).unwrap().as_slice(), "text/plain");
+        assert_eq!(cookie.buffer(s).ok().unwrap().as_slice(), "text/plain");
     }
 
     #[test]
@@ -254,7 +254,7 @@ mod tests {
         let cookie = Cookie::open(flags::NONE | flags::ERROR).unwrap();
         assert!(cookie.load(&Path::new("/usr/share/misc/magic")).is_ok());
 
-        let ret = cookie.file(&Path::new("non-existent_file.txt"));
+        let ret = cookie.file(&Path::new("non-existent_file.txt")).ok();
         assert_eq!(ret, None);
         assert_eq!(cookie.error().unwrap().as_slice(), "cannot stat `non-existent_file.txt' (No such file or directory)");
     }
