@@ -208,10 +208,10 @@ impl Cookie {
         }
     }
 
-    pub fn open(flags: self::flags::CookieFlags) -> Option<Cookie> {
+    pub fn open(flags: self::flags::CookieFlags) -> Result<Cookie, MagicError> {
         unsafe {
             let cookie = self::ffi::magic_open((flags | self::flags::ERROR).bits());
-            if cookie.is_null() { None } else { Some(Cookie{cookie: cookie,}) }
+            if cookie.is_null() { Err(self::MagicError) } else { Ok(Cookie {cookie: cookie,}) }
         }
     }
 }
@@ -223,7 +223,7 @@ mod tests {
 
     #[test]
     fn file() {
-        let cookie = Cookie::open(flags::NONE).unwrap();
+        let cookie = Cookie::open(flags::NONE).ok().unwrap();
         assert!(cookie.load(&Path::new("/usr/share/misc/magic")).is_ok());
 
         let path = Path::new("assets/rust-logo-128x128-blk.png");
@@ -239,7 +239,7 @@ mod tests {
 
     #[test]
     fn buffer() {
-        let cookie = Cookie::open(flags::NONE).unwrap();
+        let cookie = Cookie::open(flags::NONE).ok().unwrap();
         assert!(cookie.load(&Path::new("/usr/share/misc/magic")).is_ok());
 
         let s = b"#!/usr/bin/env python\nprint('Hello, world!')";
@@ -251,7 +251,7 @@ mod tests {
 
     #[test]
     fn file_error() {
-        let cookie = Cookie::open(flags::NONE | flags::ERROR).unwrap();
+        let cookie = Cookie::open(flags::NONE | flags::ERROR).ok().unwrap();
         assert!(cookie.load(&Path::new("/usr/share/misc/magic")).is_ok());
 
         let ret = cookie.file(&Path::new("non-existent_file.txt")).ok();
@@ -261,7 +261,7 @@ mod tests {
 
     #[test]
     fn load_default() {
-        let cookie = Cookie::open(flags::NONE).unwrap();
+        let cookie = Cookie::open(flags::NONE).ok().unwrap();
         assert!(cookie.load_default().is_ok());
     }
 }
