@@ -122,6 +122,10 @@ mod ffi {
 }
 
 
+#[experimental]
+pub struct MagicError;
+
+
 #[unstable]
 pub struct Cookie {
     cookie: *const self::ffi::Magic,
@@ -185,10 +189,11 @@ impl Cookie {
         }
     }
 
-    pub fn load(&self, filename: &Path) -> bool {
+    pub fn load(&self, filename: &Path) -> Result<(), MagicError> {
         unsafe {
             let cookie = self.cookie;
-            filename.with_c_str(|filename| self::ffi::magic_load(cookie, filename)) == 0
+            let ret = filename.with_c_str(|filename| self::ffi::magic_load(cookie, filename));
+            if 0 == ret { Ok(()) } else { Err(self::MagicError) }
         }
     }
 
@@ -215,7 +220,7 @@ mod tests {
     #[test]
     fn file() {
         let cookie = Cookie::open(flags::NONE).unwrap();
-        assert!(cookie.load(&Path::new("/usr/share/misc/magic")));
+        assert!(cookie.load(&Path::new("/usr/share/misc/magic")).is_ok());
 
         let path = Path::new("assets/rust-logo-128x128-blk.png");
 
@@ -231,7 +236,7 @@ mod tests {
     #[test]
     fn buffer() {
         let cookie = Cookie::open(flags::NONE).unwrap();
-        assert!(cookie.load(&Path::new("/usr/share/misc/magic")));
+        assert!(cookie.load(&Path::new("/usr/share/misc/magic")).is_ok());
 
         let s = b"#!/usr/bin/env python\nprint('Hello, world!')";
         assert_eq!(cookie.buffer(s).unwrap().as_slice(), "a python script, ASCII text executable");
@@ -243,7 +248,7 @@ mod tests {
     #[test]
     fn file_error() {
         let cookie = Cookie::open(flags::NONE | flags::ERROR).unwrap();
-        assert!(cookie.load(&Path::new("/usr/share/misc/magic")));
+        assert!(cookie.load(&Path::new("/usr/share/misc/magic")).is_ok());
 
         let ret = cookie.file(&Path::new("non-existent_file.txt"));
         assert_eq!(ret, None);
