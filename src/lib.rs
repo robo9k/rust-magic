@@ -168,24 +168,27 @@ impl Cookie {
         }
     }
 
-    pub fn check(&self, filename: &Path) -> bool {
+    pub fn check(&self, filename: &Path) -> Result<(), MagicError> {
         unsafe {
             let cookie = self.cookie;
-            filename.with_c_str(|filename| self::ffi::magic_check(cookie, filename)) == 0
+            let ret = filename.with_c_str(|filename| self::ffi::magic_check(cookie, filename));
+            if 0 == ret { Ok(()) } else { Err(self::MagicError) }
         }
     }
 
-    pub fn compile(&self, filename: &Path) -> bool {
+    pub fn compile(&self, filename: &Path) -> Result<(), MagicError> {
         unsafe {
             let cookie = self.cookie;
-            filename.with_c_str(|filename| self::ffi::magic_compile(cookie, filename)) == 0
+            let ret = filename.with_c_str(|filename| self::ffi::magic_compile(cookie, filename));
+            if 0 == ret { Ok(()) } else { Err(self::MagicError) }
         }
     }
 
-    pub fn list(&self, filename: &Path) -> bool {
+    pub fn list(&self, filename: &Path) -> Result<(), MagicError> {
         unsafe {
             let cookie = self.cookie;
-            filename.with_c_str(|filename| self::ffi::magic_list(cookie, filename)) == 0
+            let ret = filename.with_c_str(|filename| self::ffi::magic_list(cookie, filename));
+            if 0 == ret { Ok(()) } else { Err(self::MagicError) }
         }
     }
 
@@ -197,10 +200,11 @@ impl Cookie {
         }
     }
 
-    pub fn load_default(&self) -> bool {
+    pub fn load_default(&self) -> Result<(), MagicError> {
         unsafe {
             let cookie = self.cookie;
-            self::ffi::magic_load(cookie, ptr::null()) == 0
+            let ret = self::ffi::magic_load(cookie, ptr::null());
+            if 0 == ret { Ok(()) } else { Err(self::MagicError) }
         }
     }
 
@@ -258,6 +262,6 @@ mod tests {
     #[test]
     fn load_default() {
         let cookie = Cookie::open(flags::NONE).unwrap();
-        assert!(cookie.load_default());
+        assert!(cookie.load_default().is_ok());
     }
 }
