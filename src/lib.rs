@@ -162,9 +162,9 @@ impl Cookie {
         }
     }
 
-    pub fn setflags(&self, flags: self::flags::CookieFlags) {
+    pub fn set_flags(&self, flags: self::flags::CookieFlags) -> bool {
         unsafe {
-            self::ffi::magic_setflags(self.cookie, flags.bits());
+            self::ffi::magic_setflags(self.cookie, flags.bits()) != -1
         }
     }
 
@@ -230,10 +230,10 @@ mod tests {
 
         assert_eq!(cookie.file(&path).unwrap().as_slice(), "PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced");
 
-        cookie.setflags(flags::MIME_TYPE);
+        cookie.set_flags(flags::MIME_TYPE);
         assert_eq!(cookie.file(&path).unwrap().as_slice(), "image/png");
 
-        cookie.setflags(flags::MIME_TYPE | flags::MIME_ENCODING);
+        cookie.set_flags(flags::MIME_TYPE | flags::MIME_ENCODING);
         assert_eq!(cookie.file(&path).unwrap().as_slice(), "image/png; charset=binary");
     }
 
@@ -245,7 +245,7 @@ mod tests {
         let s = b"#!/usr/bin/env python\nprint('Hello, world!')";
         assert_eq!(cookie.buffer(s).unwrap().as_slice(), "a python script, ASCII text executable");
 
-        cookie.setflags(flags::MIME_TYPE);
+        cookie.set_flags(flags::MIME_TYPE);
         assert_eq!(cookie.buffer(s).unwrap().as_slice(), "text/plain");
     }
 
