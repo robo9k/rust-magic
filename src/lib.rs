@@ -123,7 +123,9 @@ mod ffi {
 
 
 #[experimental]
-pub struct MagicError;
+pub struct MagicError {
+    pub desc: String,
+}
 
 
 #[unstable]
@@ -138,11 +140,31 @@ impl Drop for Cookie {
 
 #[experimental]
 impl Cookie {
+    fn last_error(&self) -> Option<MagicError> {
+        let cookie = self.cookie;
+
+        unsafe {
+            let e = self::ffi::magic_error(cookie);
+            if e.is_null() {
+                None
+            } else {
+                Some(self::MagicError{desc: string::raw::from_buf(e as *const u8),})
+            }
+        }
+    }
+
+    fn magic_failure(&self) -> MagicError {
+        match self.last_error() {
+            Some(e) => e,
+            None => self::MagicError{desc: "unknown error".to_string(),}
+        }
+    }
+
     pub fn file(&self, filename: &Path) -> Result<String, MagicError> {
         unsafe {
             let cookie = self.cookie;
             let s = filename.with_c_str(|filename| self::ffi::magic_file(cookie, filename));
-            if s.is_null() { Err(self::MagicError) } else { Ok(string::raw::from_buf(s as *const u8)) }
+            if s.is_null() { Err(self.magic_failure()) } else { Ok(string::raw::from_buf(s as *const u8)) }
         }
     }
 
@@ -151,7 +173,7 @@ impl Cookie {
             let buffer_len = buffer.len() as size_t;
             let pbuffer = buffer.as_ptr();
             let s = self::ffi::magic_buffer(self.cookie, pbuffer, buffer_len);
-            if s.is_null() { Err(self::MagicError) } else { Ok(string::raw::from_buf(s as *const u8)) }
+            if s.is_null() { Err(self.magic_failure()) } else { Ok(string::raw::from_buf(s as *const u8)) }
         }
     }
 
@@ -172,7 +194,7 @@ impl Cookie {
         unsafe {
             let cookie = self.cookie;
             let ret = filename.with_c_str(|filename| self::ffi::magic_check(cookie, filename));
-            if 0 == ret { Ok(()) } else { Err(self::MagicError) }
+            if 0 == ret { Ok(()) } else { Err(self.magic_failure()) }
         }
     }
 
@@ -180,7 +202,7 @@ impl Cookie {
         unsafe {
             let cookie = self.cookie;
             let ret = filename.with_c_str(|filename| self::ffi::magic_compile(cookie, filename));
-            if 0 == ret { Ok(()) } else { Err(self::MagicError) }
+            if 0 == ret { Ok(()) } else { Err(self.magic_failure()) }
         }
     }
 
@@ -188,7 +210,7 @@ impl Cookie {
         unsafe {
             let cookie = self.cookie;
             let ret = filename.with_c_str(|filename| self::ffi::magic_list(cookie, filename));
-            if 0 == ret { Ok(()) } else { Err(self::MagicError) }
+            if 0 == ret { Ok(()) } else { Err(self.magic_failure()) }
         }
     }
 
@@ -196,7 +218,7 @@ impl Cookie {
         unsafe {
             let cookie = self.cookie;
             let ret = filename.with_c_str(|filename| self::ffi::magic_load(cookie, filename));
-            if 0 == ret { Ok(()) } else { Err(self::MagicError) }
+            if 0 == ret { Ok(()) } else { Err(self.magic_failure()) }
         }
     }
 
@@ -204,14 +226,14 @@ impl Cookie {
         unsafe {
             let cookie = self.cookie;
             let ret = self::ffi::magic_load(cookie, ptr::null());
-            if 0 == ret { Ok(()) } else { Err(self::MagicError) }
+            if 0 == ret { Ok(()) } else { Err(self.magic_failure()) }
         }
     }
 
     pub fn open(flags: self::flags::CookieFlags) -> Result<Cookie, MagicError> {
         unsafe {
             let cookie = self::ffi::magic_open((flags | self::flags::ERROR).bits());
-            if cookie.is_null() { Err(self::MagicError) } else { Ok(Cookie {cookie: cookie,}) }
+            if cookie.is_null() { Err(self::MagicError{desc: "errno".to_string(),}) } else { Ok(Cookie {cookie: cookie,}) }
         }
     }
 }
@@ -254,9 +276,9 @@ mod tests {
         let cookie = Cookie::open(flags::NONE | flags::ERROR).ok().unwrap();
         assert!(cookie.load(&Path::new("/usr/share/misc/magic")).is_ok());
 
-        let ret = cookie.file(&Path::new("non-existent_file.txt")).ok();
-        assert_eq!(ret, None);
-        assert_eq!(cookie.error().unwrap().as_slice(), "cannot stat `non-existent_file.txt' (No such file or directory)");
+        let ret = cookie.file(&Path::new("non-existent_file.txt"));
+        assert!(ret.is_err());
+        assert_eq!(ret.err().unwrap().desc.as_slice(), "cannot stat `non-existent_file.txt' (No such file or directory)");
     }
 
     #[test]
