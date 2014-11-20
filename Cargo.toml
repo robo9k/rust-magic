@@ -1,8 +1,14 @@
 [package]
 
 name = "magic"
-version = "0.1.0"
+description = "libmagic bindings"
+readme = "README.md"
+keywords = ["magic", "binding", "file"]
+homepage = "https://github.com/robo9k/rust-magic"
+repository = "https://github.com/robo9k/rust-magic"
+documentation = "http://rust-ci.org/robo9k/rust-magic/doc/magic/"
 authors = ["Daniel Micay <danielmicay@gmail.com>"]
+version = "0.2.0"
 
 [lib]
 
