@@ -1,0 +1,7 @@
+[package]
+
+name = "magic-sys"
+version = "0.0.1"
+authors = ["robo9k <robo@9k.lv>"]
+links = "magic"
+build = "build.rs"
