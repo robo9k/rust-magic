@@ -2,7 +2,6 @@ extern crate libc;
 
 use libc::size_t;
 use std::path::Path;
-use std::string;
 use std::ptr;
 
 /// Bitmask flags which control `libmagic` behaviour
@@ -148,7 +147,7 @@ impl Cookie {
             if e.is_null() {
                 None
             } else {
-                Some(self::MagicError{desc: string::raw::from_buf(e as *const u8),})
+                Some(self::MagicError{desc: String::from_raw_buf(e as *const u8),})
             }
         }
     }
@@ -164,7 +163,7 @@ impl Cookie {
         unsafe {
             let cookie = self.cookie;
             let s = filename.with_c_str(|filename| self::ffi::magic_file(cookie, filename));
-            if s.is_null() { Err(self.magic_failure()) } else { Ok(string::raw::from_buf(s as *const u8)) }
+            if s.is_null() { Err(self.magic_failure()) } else { Ok(String::from_raw_buf(s as *const u8)) }
         }
     }
 
@@ -173,14 +172,14 @@ impl Cookie {
             let buffer_len = buffer.len() as size_t;
             let pbuffer = buffer.as_ptr();
             let s = self::ffi::magic_buffer(self.cookie, pbuffer, buffer_len);
-            if s.is_null() { Err(self.magic_failure()) } else { Ok(string::raw::from_buf(s as *const u8)) }
+            if s.is_null() { Err(self.magic_failure()) } else { Ok(String::from_raw_buf(s as *const u8)) }
         }
     }
 
     pub fn error(&self) -> Option<String> {
         unsafe {
             let s = self::ffi::magic_error(self.cookie);
-            if s.is_null() { None } else { Some(string::raw::from_buf(s as *const u8)) }
+            if s.is_null() { None } else { Some(String::from_raw_buf(s as *const u8)) }
         }
     }
 
