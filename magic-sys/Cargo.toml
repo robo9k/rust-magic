@@ -1,6 +1,9 @@
 [package]
 
 name = "magic-sys"
+description = "Low-level native bindings to the `magic` library"
+homepage = "https://github.com/robo9k/rust-magic"
+license = "MIT"
 version = "0.0.1"
 authors = ["robo9k <robo@9k.lv>"]
 links = "magic"
