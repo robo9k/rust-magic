@@ -3,11 +3,16 @@
 name = "magic"
 description = "libmagic bindings"
 readme = "README.md"
+license = "MIT"
 keywords = ["magic", "binding", "file"]
 homepage = "https://github.com/robo9k/rust-magic"
-repository = "https://github.com/robo9k/rust-magic"
+repository = "https://github.com/robo9k/rust-magic.git"
 documentation = "http://rust-ci.org/robo9k/rust-magic/doc/magic/"
-authors = ["Daniel Micay <danielmicay@gmail.com>"]
+authors = [
+    "Daniel Micay <danielmicay@gmail.com>",
+    "Petar Radošević <petar@wunki.org>",
+    "robo9k <robo@9k.lv>",
+]
 version = "0.3.0"
 
 [lib]
@@ -16,4 +21,4 @@ name = "magic"
 
 [dependencies.magic-sys]
 path = "magic-sys"
-version = "0.0.1"
+version = "0.0.2"
