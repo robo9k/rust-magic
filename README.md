@@ -31,10 +31,10 @@ Add a dependency to your `Cargo.toml` (see [cargo doc](http://doc.crates.io/guid
 
 ```toml
 [dependencies.magic]
-version = "0.3.0"
+version = "0.5.0"
 ```
 
-Then use the `magic` crate like this (in your `src/main.rs`):
+Then use the [`magic` crate](https://crates.io/crates/magic) like this (in your `src/main.rs`):
 
 ```rust
 extern crate magic;
