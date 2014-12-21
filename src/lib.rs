@@ -1,5 +1,6 @@
 extern crate libc;
 extern crate "magic-sys" as ffi;
+extern crate regex;
 
 use libc::size_t;
 use std::path::Path;
@@ -102,18 +103,14 @@ pub mod flags {
 /// Returns the version of this crate in the format `MAJOR.MINOR.PATCH`.
 #[unstable]
 pub fn version() -> String {
+    // TODO: There's also an optional _PRE part
     let (maj, min, pat) = (
-        option_env!("CARGO_PKG_VERSION_MAJOR"),
-        option_env!("CARGO_PKG_VERSION_MINOR"),
-        option_env!("CARGO_PKG_VERSION_PATCH"),
+        env!("CARGO_PKG_VERSION_MAJOR"),
+        env!("CARGO_PKG_VERSION_MINOR"),
+        env!("CARGO_PKG_VERSION_PATCH"),
     );
-    match (maj, min, pat) {
-        (Some(maj), Some(min), Some(pat)) =>
-            format!("{}.{}.{}", maj, min, pat),
 
-        // This should never happen, thus we even test for it
-        _ => "".to_string(),
-    }
+    format!("{}.{}.{}", maj, min, pat)
 }
 
 
@@ -245,6 +242,8 @@ impl Cookie {
 
 #[cfg(test)]
 mod tests {
+    use regex;
+
     use super::Cookie;
 	use super::flags;
 
@@ -297,7 +296,6 @@ mod tests {
 
     #[test]
     fn version() {
-        let version = super::version();
-        assert!(!version.is_empty());
+        assert!(regex::is_match(r"\d+\.\d+.\d+", super::version().as_slice()).ok().unwrap());
     }
 }
