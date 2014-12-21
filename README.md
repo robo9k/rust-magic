@@ -14,7 +14,6 @@ assets/rust-logo-128x128-blk.png: PNG image data, 128 x 128, 8-bit/color RGBA, n
 
 This project provides `libmagic` Rust bindings (NOT the `file` command from the example).
 Documentation is [rust-magic](http://rust-ci.org/robo9k/rust-magic/doc/magic/) on Rust CI.
-Licensed under the MIT license (see `LICENSE`).
 
 
 # Usage
@@ -54,3 +53,12 @@ $ cargo run
      Running `target/magic-usage`
 It's a kind of magic: PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced
 ```
+
+# License
+
+This project is licensed under the MIT license (see `LICENSE`).
+
+The `magic-sys` crate being used is licensed under the MIT license as well (see `LICENSE`).
+
+The `file`/`libmagic` project is licensed under a modified BSD license (see `COPYING`).
+This crate contains snippets from its magic databases (`rust-magic/data/tests/db-images-png` is from `file/magic/Magdir/images`, `rust-magic/data/tests/db-python` is from `file/magic/Magdir/python`).

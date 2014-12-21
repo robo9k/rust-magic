@@ -1,0 +1,8 @@
+0	search/1/w	#!\ /usr/bin/python	Python script text executable
+!:mime text/x-python
+0	search/1/w	#!\ /usr/local/bin/python	Python script text executable
+!:mime text/x-python
+0	search/1	#!/usr/bin/env\ python	Python script text executable
+!:mime text/x-python
+0	search/1	#!\ /usr/bin/env\ python	Python script text executable
+!:mime text/x-python
