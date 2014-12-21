@@ -12,7 +12,9 @@ $ file assets/rust-logo-128x128-blk.png
 assets/rust-logo-128x128-blk.png: PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced
 ```
 
-This project provides `libmagic` Rust bindings (NOT the `file` command from the example). Documentation is [rust-magic](http://rust-ci.org/robo9k/rust-magic/doc/magic/) on Rust CI and `$ man 3 libmagic`.
+This project provides `libmagic` Rust bindings (NOT the `file` command from the example).
+Documentation is [rust-magic](http://rust-ci.org/robo9k/rust-magic/doc/magic/) on Rust CI.
+Licensed under the MIT license (see `LICENSE`).
 
 
 # Usage
