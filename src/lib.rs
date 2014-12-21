@@ -253,7 +253,8 @@ mod tests {
         let cookie = Cookie::open(flags::NONE).ok().unwrap();
         assert!(cookie.load(&Path::new("/usr/share/misc/magic")).is_ok());
 
-        let path = Path::new("assets/rust-logo-128x128-blk.png");
+        // TODO: Do not use a relative path here
+        let path = Path::new("data/tests/rust-logo-128x128-blk.png");
 
         assert_eq!(cookie.file(&path).ok().unwrap().as_slice(), "PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced");
 
