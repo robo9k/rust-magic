@@ -98,6 +98,24 @@ pub mod flags {
 }
 
 
+/// Returns the version of this crate in the format `MAJOR.MINOR.PATCH`.
+#[unstable]
+pub fn version() -> String {
+    let (maj, min, pat) = (
+        option_env!("CARGO_PKG_VERSION_MAJOR"),
+        option_env!("CARGO_PKG_VERSION_MINOR"),
+        option_env!("CARGO_PKG_VERSION_PATCH"),
+    );
+    match (maj, min, pat) {
+        (Some(maj), Some(min), Some(pat)) =>
+            format!("{}.{}.{}", maj, min, pat),
+
+        // This should never happen, thus we even test for it
+        _ => "".to_string(),
+    }
+}
+
+
 #[experimental]
 pub struct MagicError {
     pub desc: String,
@@ -261,5 +279,11 @@ mod tests {
     fn load_default() {
         let cookie = Cookie::open(flags::NONE).ok().unwrap();
         assert!(cookie.load_default().is_ok());
+    }
+
+    #[test]
+    fn version() {
+        let version = super::version();
+        assert!(!version.is_empty());
     }
 }
