@@ -247,13 +247,15 @@ mod tests {
     use super::Cookie;
 	use super::flags;
 
+    // Using relative paths to test files should be fine, since cargo doc
+    // http://doc.crates.io/build-script.html#inputs-to-the-build-script
+    // states that cwd == CARGO_MANIFEST_DIR
+
     #[test]
     fn file() {
         let cookie = Cookie::open(flags::NONE).ok().unwrap();
-        // TODO: Do not use a relative path here
         assert!(cookie.load(&Path::new("data/tests/db-images-png")).is_ok());
 
-        // TODO: Do not use a relative path here
         let path = Path::new("data/tests/rust-logo-128x128-blk.png");
 
         assert_eq!(cookie.file(&path).ok().unwrap().as_slice(), "PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced");
@@ -268,7 +270,6 @@ mod tests {
     #[test]
     fn buffer() {
         let cookie = Cookie::open(flags::NONE).ok().unwrap();
-        // TODO: Do not use a relative path here
         assert!(cookie.load(&Path::new("data/tests/db-python")).is_ok());
 
         let s = b"#!/usr/bin/env python\nprint('Hello, world!')";
