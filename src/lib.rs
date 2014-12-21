@@ -4,6 +4,7 @@ extern crate "magic-sys" as ffi;
 use libc::size_t;
 use std::path::Path;
 use std::ptr;
+use std::error;
 
 /// Bitmask flags which control `libmagic` behaviour
 #[unstable]
@@ -116,9 +117,19 @@ pub fn version() -> String {
 }
 
 
+/// Represents a magic error.
+/// For the most part you should be using the `Error` trait
+/// to interact with rather than this struct.
 #[experimental]
+#[deriving(PartialEq, Eq, Clone, Show)]
 pub struct MagicError {
     pub desc: String,
+}
+
+impl error::Error for MagicError {
+    fn description(&self) -> &str {
+        self.desc.as_slice()
+    }
 }
 
 
