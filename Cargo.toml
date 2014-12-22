@@ -23,5 +23,5 @@ exclude = [
 
 name = "magic"
 
-[dependencies.magic-sys]
-version = "0.0.5"
+[dependencies]
+magic-sys = "0.0.5"
