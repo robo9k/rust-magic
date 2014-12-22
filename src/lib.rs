@@ -192,26 +192,44 @@ impl Cookie {
         }
     }
 
-    pub fn check(&self, filename: &Path) -> Result<(), MagicError> {
+    pub fn check(&self, filenames: &[Path]) -> Result<(), MagicError> {
         unsafe {
             let cookie = self.cookie;
-            let ret = filename.with_c_str(|filename| self::ffi::magic_check(cookie, filename));
+
+            let ret = match filenames.len() {
+                0 => self::ffi::magic_load(cookie, ptr::null()),
+                1 => filenames[0].with_c_str(|filename| self::ffi::magic_check(cookie, filename)),
+                _ => unimplemented!(),
+            };
+
             if 0 == ret { Ok(()) } else { Err(self.magic_failure()) }
         }
     }
 
-    pub fn compile(&self, filename: &Path) -> Result<(), MagicError> {
+    pub fn compile(&self, filenames: &[Path]) -> Result<(), MagicError> {
         unsafe {
             let cookie = self.cookie;
-            let ret = filename.with_c_str(|filename| self::ffi::magic_compile(cookie, filename));
+
+            let ret = match filenames.len() {
+                0 => self::ffi::magic_load(cookie, ptr::null()),
+                1 => filenames[0].with_c_str(|filename| self::ffi::magic_compile(cookie, filename)),
+                _ => unimplemented!(),
+            };
+
             if 0 == ret { Ok(()) } else { Err(self.magic_failure()) }
         }
     }
 
-    pub fn list(&self, filename: &Path) -> Result<(), MagicError> {
+    pub fn list(&self, filenames: &[Path]) -> Result<(), MagicError> {
         unsafe {
             let cookie = self.cookie;
-            let ret = filename.with_c_str(|filename| self::ffi::magic_list(cookie, filename));
+
+            let ret = match filenames.len() {
+                0 => self::ffi::magic_load(cookie, ptr::null()),
+                1 => filenames[0].with_c_str(|filename| self::ffi::magic_list(cookie, filename)),
+                _ => unimplemented!(),
+            };
+
             if 0 == ret { Ok(()) } else { Err(self.magic_failure()) }
         }
     }
