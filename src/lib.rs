@@ -192,6 +192,9 @@ impl Cookie {
         }
     }
 
+    // TODO: check, compile, list and load mostly do the same, refactor!
+    // TODO: ^ also needs to implement multiple databases, possibly waiting for the Path reform
+
     pub fn check(&self, filenames: &[Path]) -> Result<(), MagicError> {
         unsafe {
             let cookie = self.cookie;
