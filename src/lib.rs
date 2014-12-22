@@ -216,18 +216,16 @@ impl Cookie {
         }
     }
 
-    pub fn load(&self, filename: &Path) -> Result<(), MagicError> {
+    pub fn load(&self, filenames: &[Path]) -> Result<(), MagicError> {
         unsafe {
             let cookie = self.cookie;
-            let ret = filename.with_c_str(|filename| self::ffi::magic_load(cookie, filename));
-            if 0 == ret { Ok(()) } else { Err(self.magic_failure()) }
-        }
-    }
 
-    pub fn load_default(&self) -> Result<(), MagicError> {
-        unsafe {
-            let cookie = self.cookie;
-            let ret = self::ffi::magic_load(cookie, ptr::null());
+            let ret = match filenames.len() {
+                0 => self::ffi::magic_load(cookie, ptr::null()),
+                1 => filenames[0].with_c_str(|filename| self::ffi::magic_load(cookie, filename)),
+                _ => unimplemented!(),
+            };
+
             if 0 == ret { Ok(()) } else { Err(self.magic_failure()) }
         }
     }
@@ -254,7 +252,7 @@ mod tests {
     #[test]
     fn file() {
         let cookie = Cookie::open(flags::NONE).ok().unwrap();
-        assert!(cookie.load(&Path::new("data/tests/db-images-png")).is_ok());
+        assert!(cookie.load(vec![Path::new("data/tests/db-images-png")].as_slice()).is_ok());
 
         let path = Path::new("data/tests/rust-logo-128x128-blk.png");
 
@@ -270,7 +268,7 @@ mod tests {
     #[test]
     fn buffer() {
         let cookie = Cookie::open(flags::NONE).ok().unwrap();
-        assert!(cookie.load(&Path::new("data/tests/db-python")).is_ok());
+        assert!(cookie.load(vec![Path::new("data/tests/db-python")].as_slice()).is_ok());
 
         let s = b"#!/usr/bin/env python\nprint('Hello, world!')";
         assert_eq!(cookie.buffer(s).ok().unwrap().as_slice(), "Python script, ASCII text executable");
@@ -282,7 +280,7 @@ mod tests {
     #[test]
     fn file_error() {
         let cookie = Cookie::open(flags::NONE | flags::ERROR).ok().unwrap();
-        assert!(cookie.load(&Path::new("/usr/share/misc/magic")).is_ok());
+        assert!(cookie.load(vec![].as_slice()).is_ok());
 
         let ret = cookie.file(&Path::new("non-existent_file.txt"));
         assert!(ret.is_err());
@@ -291,8 +289,25 @@ mod tests {
 
     #[test]
     fn load_default() {
-        let cookie = Cookie::open(flags::NONE).ok().unwrap();
-        assert!(cookie.load_default().is_ok());
+        let cookie = Cookie::open(flags::NONE | flags::ERROR).ok().unwrap();
+        assert!(cookie.load(vec![].as_slice()).is_ok());
+    }
+
+    #[test]
+    fn load_one() {
+        let cookie = Cookie::open(flags::NONE | flags::ERROR).ok().unwrap();
+        assert!(cookie.load(vec![
+                                    Path::new("data/tests/db-images-png")
+                                ].as_slice()).is_ok());
+    }
+
+    #[test]
+    fn load_multiple() {
+        let cookie = Cookie::open(flags::NONE | flags::ERROR).ok().unwrap();
+        assert!(cookie.load(vec![
+                                Path::new("data/tests/db-images-png"),
+                                Path::new("data/tests/db-python"),
+                            ].as_slice()).is_ok());
     }
 
     #[test]
