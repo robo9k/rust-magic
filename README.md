@@ -29,8 +29,8 @@ $ $EDITOR src/main.rs
 Add a dependency to your `Cargo.toml` (see [cargo doc](http://doc.crates.io/guide.html#adding-dependencies)):
 
 ```toml
-[dependencies.magic]
-version = "0.5.0"
+[dependencies]
+magic = "0.6.0"
 ```
 
 Then use the [`magic` crate](https://crates.io/crates/magic) like this (in your `src/main.rs`):
