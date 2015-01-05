@@ -4,6 +4,7 @@ extern crate regex;
 
 use libc::size_t;
 use std::path::Path;
+use std::c_str::ToCStr;
 use std::ptr;
 use std::error;
 
