@@ -118,7 +118,7 @@ pub fn version() -> String {
 /// For the most part you should be using the `Error` trait
 /// to interact with rather than this struct.
 #[experimental]
-#[deriving(PartialEq, Eq, Clone, Show)]
+#[derive(PartialEq, Eq, Clone, Show)]
 pub struct MagicError {
     pub desc: String,
 }
