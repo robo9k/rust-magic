@@ -4,7 +4,7 @@ extern crate regex;
 
 use libc::size_t;
 use std::path::Path;
-use std::c_str::ToCStr;
+use std::str;
 use std::ptr;
 use std::error;
 
@@ -151,7 +151,8 @@ impl Cookie {
             if e.is_null() {
                 None
             } else {
-                Some(self::MagicError{desc: String::from_raw_buf(e as *const u8),})
+                let slice = std::ffi::c_str_to_bytes(&e);
+                Some(self::MagicError{desc: str::from_utf8(slice).unwrap().to_string(),})
             }
         }
     }
@@ -166,8 +167,14 @@ impl Cookie {
     pub fn file(&self, filename: &Path) -> Result<String, MagicError> {
         unsafe {
             let cookie = self.cookie;
-            let s = filename.with_c_str(|filename| self::ffi::magic_file(cookie, filename));
-            if s.is_null() { Err(self.magic_failure()) } else { Ok(String::from_raw_buf(s as *const u8)) }
+            let f = std::ffi::CString::from_slice(filename.as_vec());
+            let str = self::ffi::magic_file(cookie, f.as_ptr());
+            if str.is_null() {
+                Err(self.magic_failure())
+            } else {
+                let slice = std::ffi::c_str_to_bytes(&str);
+                Ok(str::from_utf8(slice).unwrap().to_string())
+            }
         }
     }
 
@@ -175,15 +182,25 @@ impl Cookie {
         unsafe {
             let buffer_len = buffer.len() as size_t;
             let pbuffer = buffer.as_ptr();
-            let s = self::ffi::magic_buffer(self.cookie, pbuffer, buffer_len);
-            if s.is_null() { Err(self.magic_failure()) } else { Ok(String::from_raw_buf(s as *const u8)) }
+            let str = self::ffi::magic_buffer(self.cookie, pbuffer, buffer_len);
+            if str.is_null() {
+                Err(self.magic_failure())
+            } else {
+                let slice = std::ffi::c_str_to_bytes(&str);
+                Ok(str::from_utf8(slice).unwrap().to_string())
+            }
         }
     }
 
     pub fn error(&self) -> Option<String> {
         unsafe {
-            let s = self::ffi::magic_error(self.cookie);
-            if s.is_null() { None } else { Some(String::from_raw_buf(s as *const u8)) }
+            let str = self::ffi::magic_error(self.cookie);
+            if str.is_null() {
+                None
+            } else {
+                let slice = std::ffi::c_str_to_bytes(&str);
+                Some(str::from_utf8(slice).unwrap().to_string())
+            }
         }
     }
 
@@ -201,8 +218,8 @@ impl Cookie {
             let cookie = self.cookie;
 
             let ret = match filenames.len() {
-                0 => self::ffi::magic_load(cookie, ptr::null()),
-                1 => filenames[0].with_c_str(|filename| self::ffi::magic_check(cookie, filename)),
+                0 => self::ffi::magic_check(cookie, ptr::null()),
+                1 => self::ffi::magic_check(cookie, std::ffi::CString::from_slice(filenames[0].as_vec()).as_ptr()),
                 _ => unimplemented!(),
             };
 
@@ -215,8 +232,8 @@ impl Cookie {
             let cookie = self.cookie;
 
             let ret = match filenames.len() {
-                0 => self::ffi::magic_load(cookie, ptr::null()),
-                1 => filenames[0].with_c_str(|filename| self::ffi::magic_compile(cookie, filename)),
+                0 => self::ffi::magic_compile(cookie, ptr::null()),
+                1 => self::ffi::magic_compile(cookie, std::ffi::CString::from_slice(filenames[0].as_vec()).as_ptr()),
                 _ => unimplemented!(),
             };
 
@@ -229,8 +246,8 @@ impl Cookie {
             let cookie = self.cookie;
 
             let ret = match filenames.len() {
-                0 => self::ffi::magic_load(cookie, ptr::null()),
-                1 => filenames[0].with_c_str(|filename| self::ffi::magic_list(cookie, filename)),
+                0 => self::ffi::magic_list(cookie, ptr::null()),
+                1 => self::ffi::magic_list(cookie, std::ffi::CString::from_slice(filenames[0].as_vec()).as_ptr()),
                 _ => unimplemented!(),
             };
 
@@ -244,8 +261,7 @@ impl Cookie {
 
             let ret = match filenames.len() {
                 0 => self::ffi::magic_load(cookie, ptr::null()),
-                1 => filenames[0].with_c_str(|filename| self::ffi::magic_load(cookie, filename)),
-                _ => unimplemented!(),
+                1 => self::ffi::magic_load(cookie, std::ffi::CString::from_slice(filenames[0].as_vec()).as_ptr()),                _ => unimplemented!(),
             };
 
             if 0 == ret { Ok(()) } else { Err(self.magic_failure()) }
