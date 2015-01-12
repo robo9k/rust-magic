@@ -1,6 +1,5 @@
 extern crate libc;
 extern crate "magic-sys" as ffi;
-extern crate regex;
 
 use libc::size_t;
 use std::path::Path;
@@ -278,7 +277,7 @@ impl Cookie {
 
 #[cfg(test)]
 mod tests {
-    use regex;
+    extern crate regex;
 
     use super::Cookie;
 	use super::flags;
