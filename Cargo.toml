@@ -25,4 +25,6 @@ name = "magic"
 
 [dependencies]
 magic-sys = "0.0.5"
+
+[dev-dependencies]
 regex = "0.1.10"
