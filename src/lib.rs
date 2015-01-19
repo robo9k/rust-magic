@@ -1,5 +1,7 @@
 extern crate libc;
 extern crate "magic-sys" as ffi;
+#[macro_use]
+extern crate bitflags;
 
 use libc::size_t;
 use std::path::Path;

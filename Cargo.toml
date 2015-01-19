@@ -25,6 +25,7 @@ name = "magic"
 
 [dependencies]
 magic-sys = "0.0.5"
+bitflags = "0.1"
 
 [dev-dependencies]
 regex = "0.1.10"
