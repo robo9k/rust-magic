@@ -7,13 +7,13 @@ license = "MIT"
 keywords = ["magic", "binding", "file"]
 homepage = "https://github.com/robo9k/rust-magic"
 repository = "https://github.com/robo9k/rust-magic.git"
-documentation = "http://rust-ci.org/robo9k/rust-magic/doc/magic/"
+documentation = "https://robo9k.github.io/rust-magic/magic/"
 authors = [
     "Daniel Micay <danielmicay@gmail.com>",
     "Petar Radošević <petar@wunki.org>",
     "robo9k <robo@9k.lv>",
 ]
-version = "0.6.2"
+version = "0.6.3"
 exclude = [
     ".gitignore",
     ".travis.yml",

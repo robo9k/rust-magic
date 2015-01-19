@@ -13,7 +13,7 @@ assets/rust-logo-128x128-blk.png: PNG image data, 128 x 128, 8-bit/color RGBA, n
 ```
 
 This project provides `libmagic` Rust bindings (NOT the `file` command from the example).
-Documentation is [rust-magic](http://rust-ci.org/robo9k/rust-magic/doc/magic/) on Rust CI.
+Documentation is [rust-magic](https://robo9k.github.io/rust-magic/magic/) on GitHub Pages.
 
 
 # Usage
@@ -30,7 +30,7 @@ Add a dependency to your `Cargo.toml` (see [cargo doc](http://doc.crates.io/guid
 
 ```toml
 [dependencies]
-magic = "0.6.0"
+magic = "0.6.3"
 ```
 
 Then use the [`magic` crate](https://crates.io/crates/magic) like this (in your `src/main.rs`):
