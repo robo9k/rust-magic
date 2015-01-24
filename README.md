@@ -30,7 +30,7 @@ Add a dependency to your `Cargo.toml` (see [cargo doc](http://doc.crates.io/guid
 
 ```toml
 [dependencies]
-magic = "0.6.3"
+magic = "0.6.4"
 ```
 
 Then use the [`magic` crate](https://crates.io/crates/magic) like this (in your `src/main.rs`):
