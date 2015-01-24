@@ -8,6 +8,7 @@ use std::path::Path;
 use std::str;
 use std::ptr;
 use std::error;
+use std::fmt::Display;
 
 /// Bitmask flags which control `libmagic` behaviour
 #[unstable]
@@ -127,7 +128,13 @@ pub struct MagicError {
 
 impl error::Error for MagicError {
     fn description(&self) -> &str {
-        self.desc.as_slice()
+        "internal libmagic error"
+    }
+}
+
+impl Display for MagicError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.desc)
     }
 }
 
