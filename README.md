@@ -61,4 +61,4 @@ This project is licensed under the MIT license (see [`LICENSE`](https://github.c
 The `magic-sys` crate being used is licensed under the MIT license as well (see [`LICENSE`](https://github.com/robo9k/rust-magic-sys/blob/master/LICENSE)).
 
 The `file`/`libmagic` project is licensed under a modified BSD license (see [`COPYING`](https://github.com/file/file/blob/master/COPYING)).
-This crate contains snippets from its magic databases (`rust-magic/data/tests/db-images-png` is from `file/magic/Magdir/images`, `rust-magic/data/tests/db-python` is from `file/magic/Magdir/python`).
+This crate contains partial test-data from its magic databases (`rust-magic/data/tests/db-images-png` is from `file/magic/Magdir/images`, `rust-magic/data/tests/db-python` is from `file/magic/Magdir/python`).
