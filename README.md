@@ -8,8 +8,8 @@ rust-magic [![Build Status](https://travis-ci.org/robo9k/rust-magic.svg?branch=m
 `libmagic(3)` is the backend of the `file(1)` command, which classifies files, e.g.:
 
 ```sh
-$ file assets/rust-logo-128x128-blk.png
-assets/rust-logo-128x128-blk.png: PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced
+$ file data/tests/rust-logo-128x128-blk.png
+data/tests/rust-logo-128x128-blk.png: PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced
 ```
 
 This project provides `libmagic` Rust bindings (NOT the `file` command from the example).
@@ -42,7 +42,7 @@ use magic::{Cookie, flags};
 fn main() {
     let cookie = Cookie::open(flags::NONE).ok().unwrap();
     cookie.load(&Path::new("/usr/share/misc/magic"));
-    println!("It's a kind of magic: {}", cookie.file(&Path::new("assets/rust-logo-128x128-blk.png")).ok().unwrap());
+    println!("It's a kind of magic: {}", cookie.file(&Path::new("data/tests/rust-logo-128x128-blk.png")).ok().unwrap());
 }
 ```
 
