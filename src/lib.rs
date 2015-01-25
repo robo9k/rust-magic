@@ -1,3 +1,37 @@
+//! # About
+//!
+//! This crate provides bindings for `libmagic`, which recognizes the
+//! type of data contained in a file (or buffer).
+//!
+//! You might be similar with `libmagic`'s CLI `file`:
+//!
+//! ```sh
+//! $ file data/tests/rust-logo-128x128-blk.png
+//! data/tests/rust-logo-128x128-blk.png: PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced
+//! ```
+//!
+//! # Usage example
+//!
+//! Here's an example of using this crate:
+//!
+//! ```
+//! extern crate magic;
+//! use magic::{Cookie, flags};
+//!
+//! fn main() {
+//!     // Create a new configuration with no special flags
+//!     let cookie = Cookie::open(flags::NONE).ok().unwrap();
+//!     // Load a specific magic database
+//!     let magic_db = vec![Path::new("data/tests/db-images-png")];
+//!     assert!(cookie.load(magic_db.as_slice()).is_ok());
+//!
+//!     // Recognize the magic of a test file
+//!     let test_file = Path::new("data/tests/rust-logo-128x128-blk.png");
+//!     let expected = "PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced";
+//!     assert_eq!(cookie.file(&test_file).ok().unwrap(), expected);
+//! }
+//! ```
+
 extern crate libc;
 extern crate "magic-sys" as ffi;
 #[macro_use]
@@ -9,6 +43,7 @@ use std::str;
 use std::ptr;
 use std::error;
 use std::fmt::Display;
+
 
 /// Bitmask flags which control `libmagic` behaviour
 #[unstable]
@@ -267,7 +302,8 @@ impl Cookie {
 
             let ret = match filenames.len() {
                 0 => self::ffi::magic_load(cookie, ptr::null()),
-                1 => self::ffi::magic_load(cookie, std::ffi::CString::from_slice(filenames[0].as_vec()).as_ptr()),                _ => unimplemented!(),
+                1 => self::ffi::magic_load(cookie, std::ffi::CString::from_slice(filenames[0].as_vec()).as_ptr()),
+                _ => unimplemented!(),
             };
 
             if 0 == ret { Ok(()) } else { Err(self.magic_failure()) }
