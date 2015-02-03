@@ -32,6 +32,16 @@
 //! }
 //! ```
 
+// Silence FFI warnings
+#![feature(libc)]
+#![feature(std_misc)]
+// Silence indirect bitflags! warnings
+#![feature(hash)]
+// Silence `Error` warnings
+#![feature(core)]
+// Silence `Path` warnings
+#![feature(path)]
+
 extern crate libc;
 extern crate "magic-sys" as ffi;
 #[macro_use]
