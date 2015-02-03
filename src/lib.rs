@@ -163,7 +163,7 @@ pub fn version() -> &'static str {
 /// Represents a magic error.
 /// For the most part you should be using the `Error` trait
 /// to interact with rather than this struct.
-#[experimental]
+#[unstable]
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct MagicError {
     pub desc: String,
@@ -192,7 +192,7 @@ impl Drop for Cookie {
     fn drop(&mut self) { unsafe { self::ffi::magic_close(self.cookie) } }
 }
 
-#[experimental]
+#[unstable]
 impl Cookie {
     fn last_error(&self) -> Option<MagicError> {
         let cookie = self.cookie;
