@@ -154,7 +154,7 @@ pub fn version() -> &'static str {
 /// For the most part you should be using the `Error` trait
 /// to interact with rather than this struct.
 #[experimental]
-#[derive(PartialEq, Eq, Clone, Show)]
+#[derive(PartialEq, Eq, Clone, Debug)]
 pub struct MagicError {
     pub desc: String,
 }
