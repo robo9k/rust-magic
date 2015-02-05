@@ -317,7 +317,7 @@ impl Cookie {
         let ret;
 
         unsafe {
-            ret = self::ffi::magic_check(cookie, db_filenames);
+            ret = self::ffi::magic_load(cookie, db_filenames);
         }
         if 0 == ret { Ok(()) } else { Err(self.magic_failure()) }
     }
