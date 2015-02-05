@@ -15,6 +15,8 @@
 //! Here's an example of using this crate:
 //!
 //! ```
+//! use std::path::Path;
+//!
 //! extern crate magic;
 //! use magic::{Cookie, flags};
 //!
@@ -32,6 +34,7 @@
 //! }
 //! ```
 
+
 // Silence FFI warnings
 #![feature(libc)]
 #![feature(std_misc)]
@@ -42,12 +45,13 @@
 // Silence `Path` warnings
 #![feature(path)]
 
+
 extern crate libc;
 extern crate "magic-sys" as ffi;
 #[macro_use]
 extern crate bitflags;
 
-use libc::size_t;
+use libc::{size_t, c_char};
 use std::path::Path;
 use std::str;
 use std::ptr;
@@ -160,6 +164,16 @@ pub fn version() -> &'static str {
 }
 
 
+fn db_filenames(filenames: &[&Path]) -> *const c_char {
+    match filenames.len() {
+        0 => ptr::null(),
+        // FIXME: This is just plain wrong. I'm surprised it works at all..
+        1 => std::ffi::CString::from_slice(filenames[0].to_str().unwrap().as_bytes()).as_ptr(),
+        _ => unimplemented!(),
+    }
+}
+
+
 /// Represents a magic error.
 /// For the most part you should be using the `Error` trait
 /// to interact with rather than this struct.
@@ -216,9 +230,9 @@ impl Cookie {
     }
 
     pub fn file(&self, filename: &Path) -> Result<String, MagicError> {
+        let cookie = self.cookie;
+        let f = std::ffi::CString::from_slice(filename.to_str().unwrap().as_bytes());
         unsafe {
-            let cookie = self.cookie;
-            let f = std::ffi::CString::from_slice(filename.as_vec());
             let str = self::ffi::magic_file(cookie, f.as_ptr());
             if str.is_null() {
                 Err(self.magic_failure())
@@ -230,9 +244,9 @@ impl Cookie {
     }
 
     pub fn buffer(&self, buffer: &[u8]) -> Result<String, MagicError> {
+        let buffer_len = buffer.len() as size_t;
+        let pbuffer = buffer.as_ptr();
         unsafe {
-            let buffer_len = buffer.len() as size_t;
-            let pbuffer = buffer.as_ptr();
             let str = self::ffi::magic_buffer(self.cookie, pbuffer, buffer_len);
             if str.is_null() {
                 Err(self.magic_failure())
@@ -264,73 +278,64 @@ impl Cookie {
     // TODO: check, compile, list and load mostly do the same, refactor!
     // TODO: ^ also needs to implement multiple databases, possibly waiting for the Path reform
 
-    pub fn check(&self, filenames: &[Path]) -> Result<(), MagicError> {
+    pub fn check(&self, filenames: &[&Path]) -> Result<(), MagicError> {
+        let cookie = self.cookie;
+        let db_filenames = db_filenames(filenames);
+        let ret;
+
         unsafe {
-            let cookie = self.cookie;
-
-            let ret = match filenames.len() {
-                0 => self::ffi::magic_check(cookie, ptr::null()),
-                1 => self::ffi::magic_check(cookie, std::ffi::CString::from_slice(filenames[0].as_vec()).as_ptr()),
-                _ => unimplemented!(),
-            };
-
-            if 0 == ret { Ok(()) } else { Err(self.magic_failure()) }
+            ret = self::ffi::magic_check(cookie, db_filenames);
         }
+        if 0 == ret { Ok(()) } else { Err(self.magic_failure()) }
     }
 
-    pub fn compile(&self, filenames: &[Path]) -> Result<(), MagicError> {
+    pub fn compile(&self, filenames: &[&Path]) -> Result<(), MagicError> {
+        let cookie = self.cookie;
+        let db_filenames = db_filenames(filenames);
+        let ret;
+
         unsafe {
-            let cookie = self.cookie;
-
-            let ret = match filenames.len() {
-                0 => self::ffi::magic_compile(cookie, ptr::null()),
-                1 => self::ffi::magic_compile(cookie, std::ffi::CString::from_slice(filenames[0].as_vec()).as_ptr()),
-                _ => unimplemented!(),
-            };
-
-            if 0 == ret { Ok(()) } else { Err(self.magic_failure()) }
+            ret = self::ffi::magic_compile(cookie, db_filenames);
         }
+        if 0 == ret { Ok(()) } else { Err(self.magic_failure()) }
     }
 
-    pub fn list(&self, filenames: &[Path]) -> Result<(), MagicError> {
+    pub fn list(&self, filenames: &[&Path]) -> Result<(), MagicError> {
+        let cookie = self.cookie;
+        let db_filenames = db_filenames(filenames);
+        let ret;
+
         unsafe {
-            let cookie = self.cookie;
-
-            let ret = match filenames.len() {
-                0 => self::ffi::magic_list(cookie, ptr::null()),
-                1 => self::ffi::magic_list(cookie, std::ffi::CString::from_slice(filenames[0].as_vec()).as_ptr()),
-                _ => unimplemented!(),
-            };
-
-            if 0 == ret { Ok(()) } else { Err(self.magic_failure()) }
+            ret = self::ffi::magic_list(cookie, db_filenames);
         }
+        if 0 == ret { Ok(()) } else { Err(self.magic_failure()) }
     }
 
-    pub fn load(&self, filenames: &[Path]) -> Result<(), MagicError> {
+    pub fn load(&self, filenames: &[&Path]) -> Result<(), MagicError> {
+        let cookie = self.cookie;
+        let db_filenames = db_filenames(filenames);
+        let ret;
+
         unsafe {
-            let cookie = self.cookie;
-
-            let ret = match filenames.len() {
-                0 => self::ffi::magic_load(cookie, ptr::null()),
-                1 => self::ffi::magic_load(cookie, std::ffi::CString::from_slice(filenames[0].as_vec()).as_ptr()),
-                _ => unimplemented!(),
-            };
-
-            if 0 == ret { Ok(()) } else { Err(self.magic_failure()) }
+            ret = self::ffi::magic_check(cookie, db_filenames);
         }
+        if 0 == ret { Ok(()) } else { Err(self.magic_failure()) }
     }
 
     pub fn open(flags: self::flags::CookieFlags) -> Result<Cookie, MagicError> {
+        let cookie;
         unsafe {
-            let cookie = self::ffi::magic_open((flags | self::flags::ERROR).bits());
-            if cookie.is_null() { Err(self::MagicError{desc: "errno".to_string(),}) } else { Ok(Cookie {cookie: cookie,}) }
+            cookie = self::ffi::magic_open((flags | self::flags::ERROR).bits());
         }
+        if cookie.is_null() { Err(self::MagicError{desc: "errno".to_string(),}) } else { Ok(Cookie {cookie: cookie,}) }
     }
 }
 
 #[cfg(test)]
 mod tests {
     extern crate regex;
+
+    use std::path::Path;
 
     use super::Cookie;
 	use super::flags;
