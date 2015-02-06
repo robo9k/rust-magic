@@ -28,4 +28,4 @@ magic-sys = "0.0.5"
 bitflags = "0.1"
 
 [dev-dependencies]
-regex = "0.1.13"
+regex = "0.1.14"
