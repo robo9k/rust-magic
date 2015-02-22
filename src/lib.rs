@@ -38,8 +38,6 @@
 // Silence FFI warnings
 #![feature(libc)]
 #![feature(std_misc)]
-// Silence indirect bitflags! warnings
-#![feature(hash)]
 // Silence `Error` warnings
 #![feature(core)]
 // Silence `Path` warnings
