@@ -25,7 +25,7 @@
 //!     let cookie = Cookie::open(flags::NONE).ok().unwrap();
 //!     // Load a specific magic database
 //!     let magic_db = vec![Path::new("data/tests/db-images-png")];
-//!     assert!(cookie.load(magic_db.as_slice()).is_ok());
+//!     assert!(cookie.load(&magic_db).is_ok());
 //!
 //!     // Recognize the magic of a test file
 //!     let test_file = Path::new("data/tests/rust-logo-128x128-blk.png");
@@ -37,17 +37,12 @@
 
 // Silence FFI warnings
 #![feature(libc)]
-#![feature(std_misc)]
-// Silence indirect bitflags! warnings
-#![feature(hash)]
-// Silence `Error` warnings
-#![feature(core)]
-// Silence `Path` warnings
-#![feature(path)]
+// OsStr.to_cstring()
+#![feature(convert)]
 
 
 extern crate libc;
-extern crate "magic-sys" as ffi;
+extern crate magic_sys as ffi;
 #[macro_use]
 extern crate bitflags;
 
@@ -57,10 +52,11 @@ use std::str;
 use std::ptr;
 use std::error;
 use std::fmt::Display;
+use std::ffi::CStr;
 
 
 /// Bitmask flags which control `libmagic` behaviour
-#[unstable]
+// #[unstable]
 pub mod flags {
     use libc::c_int;
 
@@ -153,7 +149,7 @@ pub mod flags {
 
 
 /// Returns the version of this crate in the format `MAJOR.MINOR.PATCH`.
-#[unstable]
+// #[unstable]
 pub fn version() -> &'static str {
     // TODO: There's also an optional _PRE part
     concat!(
@@ -167,8 +163,7 @@ pub fn version() -> &'static str {
 fn db_filenames(filenames: &[&Path]) -> *const c_char {
     match filenames.len() {
         0 => ptr::null(),
-        // FIXME: This is just plain wrong. I'm surprised it works at all..
-        1 => std::ffi::CString::from_slice(filenames[0].to_str().unwrap().as_bytes()).as_ptr(),
+        1 => filenames[0].as_os_str().to_cstring().unwrap().as_ptr(),
         _ => unimplemented!(),
     }
 }
@@ -177,7 +172,7 @@ fn db_filenames(filenames: &[&Path]) -> *const c_char {
 /// Represents a magic error.
 /// For the most part you should be using the `Error` trait
 /// to interact with rather than this struct.
-#[unstable]
+// #[unstable]
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct MagicError {
     pub desc: String,
@@ -196,17 +191,17 @@ impl Display for MagicError {
 }
 
 
-#[unstable]
+// #[unstable]
 pub struct Cookie {
     cookie: *const self::ffi::Magic,
 }
 
-#[unstable]
+// #[unstable]
 impl Drop for Cookie {
     fn drop(&mut self) { unsafe { self::ffi::magic_close(self.cookie) } }
 }
 
-#[unstable]
+// #[unstable]
 impl Cookie {
     fn last_error(&self) -> Option<MagicError> {
         let cookie = self.cookie;
@@ -216,7 +211,7 @@ impl Cookie {
             if e.is_null() {
                 None
             } else {
-                let slice = std::ffi::c_str_to_bytes(&e);
+                let slice = CStr::from_ptr(e).to_bytes();
                 Some(self::MagicError{desc: str::from_utf8(slice).unwrap().to_string(),})
             }
         }
@@ -231,13 +226,13 @@ impl Cookie {
 
     pub fn file(&self, filename: &Path) -> Result<String, MagicError> {
         let cookie = self.cookie;
-        let f = std::ffi::CString::from_slice(filename.to_str().unwrap().as_bytes());
+        let f = filename.as_os_str().to_cstring().unwrap().as_ptr();
         unsafe {
-            let str = self::ffi::magic_file(cookie, f.as_ptr());
+            let str = self::ffi::magic_file(cookie, f);
             if str.is_null() {
                 Err(self.magic_failure())
             } else {
-                let slice = std::ffi::c_str_to_bytes(&str);
+                let slice = CStr::from_ptr(str).to_bytes();
                 Ok(str::from_utf8(slice).unwrap().to_string())
             }
         }
@@ -251,7 +246,7 @@ impl Cookie {
             if str.is_null() {
                 Err(self.magic_failure())
             } else {
-                let slice = std::ffi::c_str_to_bytes(&str);
+                let slice = CStr::from_ptr(str).to_bytes();
                 Ok(str::from_utf8(slice).unwrap().to_string())
             }
         }
@@ -263,7 +258,7 @@ impl Cookie {
             if str.is_null() {
                 None
             } else {
-                let slice = std::ffi::c_str_to_bytes(&str);
+                let slice = CStr::from_ptr(str).to_bytes();
                 Some(str::from_utf8(slice).unwrap().to_string())
             }
         }
@@ -347,68 +342,68 @@ mod tests {
     #[test]
     fn file() {
         let cookie = Cookie::open(flags::NONE).ok().unwrap();
-        assert!(cookie.load(vec![Path::new("data/tests/db-images-png")].as_slice()).is_ok());
+        assert!(cookie.load(&vec![Path::new("data/tests/db-images-png")]).is_ok());
 
         let path = Path::new("data/tests/rust-logo-128x128-blk.png");
 
-        assert_eq!(cookie.file(&path).ok().unwrap().as_slice(), "PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced");
+        assert_eq!(cookie.file(&path).ok().unwrap(), "PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced");
 
         cookie.set_flags(flags::MIME_TYPE);
-        assert_eq!(cookie.file(&path).ok().unwrap().as_slice(), "image/png");
+        assert_eq!(cookie.file(&path).ok().unwrap(), "image/png");
 
         cookie.set_flags(flags::MIME_TYPE | flags::MIME_ENCODING);
-        assert_eq!(cookie.file(&path).ok().unwrap().as_slice(), "image/png; charset=binary");
+        assert_eq!(cookie.file(&path).ok().unwrap(), "image/png; charset=binary");
     }
 
     #[test]
     fn buffer() {
         let cookie = Cookie::open(flags::NONE).ok().unwrap();
-        assert!(cookie.load(vec![Path::new("data/tests/db-python")].as_slice()).is_ok());
+        assert!(cookie.load(&vec![Path::new("data/tests/db-python")]).is_ok());
 
         let s = b"#!/usr/bin/env python\nprint('Hello, world!')";
-        assert_eq!(cookie.buffer(s).ok().unwrap().as_slice(), "Python script, ASCII text executable");
+        assert_eq!(cookie.buffer(s).ok().unwrap(), "Python script, ASCII text executable");
 
         cookie.set_flags(flags::MIME_TYPE);
-        assert_eq!(cookie.buffer(s).ok().unwrap().as_slice(), "text/x-python");
+        assert_eq!(cookie.buffer(s).ok().unwrap(), "text/x-python");
     }
 
     #[test]
     fn file_error() {
         let cookie = Cookie::open(flags::NONE | flags::ERROR).ok().unwrap();
-        assert!(cookie.load(vec![].as_slice()).is_ok());
+        assert!(cookie.load(&vec![]).is_ok());
 
         let ret = cookie.file(&Path::new("non-existent_file.txt"));
         assert!(ret.is_err());
-        assert_eq!(ret.err().unwrap().desc.as_slice(), "cannot stat `non-existent_file.txt' (No such file or directory)");
+        assert_eq!(ret.err().unwrap().desc, "cannot stat `non-existent_file.txt' (No such file or directory)");
     }
 
     #[test]
     fn load_default() {
         let cookie = Cookie::open(flags::NONE | flags::ERROR).ok().unwrap();
-        assert!(cookie.load(vec![].as_slice()).is_ok());
+        assert!(cookie.load(&vec![]).is_ok());
     }
 
     #[test]
     fn load_one() {
         let cookie = Cookie::open(flags::NONE | flags::ERROR).ok().unwrap();
-        assert!(cookie.load(vec![
+        assert!(cookie.load(&vec![
                                     Path::new("data/tests/db-images-png")
-                                ].as_slice()).is_ok());
+                                ]).is_ok());
     }
 
     #[test]
     // TODO: This should not really fail
-    #[should_fail(expected = "not yet implemented")]
+    #[should_panic(expected = "not yet implemented")]
     fn load_multiple() {
         let cookie = Cookie::open(flags::NONE | flags::ERROR).ok().unwrap();
-        assert!(cookie.load(vec![
+        assert!(cookie.load(&vec![
                                 Path::new("data/tests/db-images-png"),
                                 Path::new("data/tests/db-python"),
-                            ].as_slice()).is_ok());
+                            ]).is_ok());
     }
 
     #[test]
     fn version() {
-        assert!(regex::is_match(r"\d+\.\d+.\d+", super::version().as_slice()).ok().unwrap());
+        assert!(regex::is_match(r"\d+\.\d+.\d+", super::version()).ok().unwrap());
     }
 }
