@@ -55,6 +55,7 @@ use std::str;
 use std::ptr;
 use std::error;
 use std::fmt::Display;
+use std::ffi::CStr;
 
 
 /// Bitmask flags which control `libmagic` behaviour
@@ -166,7 +167,7 @@ fn db_filenames(filenames: &[&Path]) -> *const c_char {
     match filenames.len() {
         0 => ptr::null(),
         // FIXME: This is just plain wrong. I'm surprised it works at all..
-        1 => std::ffi::CString::from_slice(filenames[0].to_str().unwrap().as_bytes()).as_ptr(),
+        1 => filenames[0].as_os_str().to_cstring().unwrap().as_ptr(),
         _ => unimplemented!(),
     }
 }
@@ -214,7 +215,7 @@ impl Cookie {
             if e.is_null() {
                 None
             } else {
-                let slice = std::ffi::c_str_to_bytes(&e);
+                let slice = CStr::from_ptr(e).to_bytes();
                 Some(self::MagicError{desc: str::from_utf8(slice).unwrap().to_string(),})
             }
         }
@@ -229,13 +230,13 @@ impl Cookie {
 
     pub fn file(&self, filename: &Path) -> Result<String, MagicError> {
         let cookie = self.cookie;
-        let f = std::ffi::CString::from_slice(filename.to_str().unwrap().as_bytes());
+        let f = filename.as_os_str().to_cstring().unwrap().as_ptr();
         unsafe {
-            let str = self::ffi::magic_file(cookie, f.as_ptr());
+            let str = self::ffi::magic_file(cookie, f);
             if str.is_null() {
                 Err(self.magic_failure())
             } else {
-                let slice = std::ffi::c_str_to_bytes(&str);
+                let slice = CStr::from_ptr(str).to_bytes();
                 Ok(str::from_utf8(slice).unwrap().to_string())
             }
         }
@@ -249,7 +250,7 @@ impl Cookie {
             if str.is_null() {
                 Err(self.magic_failure())
             } else {
-                let slice = std::ffi::c_str_to_bytes(&str);
+                let slice = CStr::from_ptr(str).to_bytes();
                 Ok(str::from_utf8(slice).unwrap().to_string())
             }
         }
@@ -261,7 +262,7 @@ impl Cookie {
             if str.is_null() {
                 None
             } else {
-                let slice = std::ffi::c_str_to_bytes(&str);
+                let slice = CStr::from_ptr(str).to_bytes();
                 Some(str::from_utf8(slice).unwrap().to_string())
             }
         }
