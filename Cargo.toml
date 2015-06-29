@@ -13,7 +13,7 @@ authors = [
     "Petar Radošević <petar@wunki.org>",
     "robo9k <robo@9k.lv>",
 ]
-version = "0.7.0"
+version = "0.8.0"
 exclude = [
     ".gitignore",
     ".travis.yml",
