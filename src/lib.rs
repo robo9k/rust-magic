@@ -59,7 +59,6 @@ use std::ffi::CStr;
 
 
 /// Bitmask flags which control `libmagic` behaviour
-#[unstable]
 pub mod flags {
     use libc::c_int;
 
@@ -152,7 +151,6 @@ pub mod flags {
 
 
 /// Returns the version of this crate in the format `MAJOR.MINOR.PATCH`.
-#[unstable]
 pub fn version() -> &'static str {
     // TODO: There's also an optional _PRE part
     concat!(
@@ -176,7 +174,6 @@ fn db_filenames(filenames: &[&Path]) -> *const c_char {
 /// Represents a magic error.
 /// For the most part you should be using the `Error` trait
 /// to interact with rather than this struct.
-#[unstable]
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct MagicError {
     pub desc: String,
@@ -195,17 +192,14 @@ impl Display for MagicError {
 }
 
 
-#[unstable]
 pub struct Cookie {
     cookie: *const self::ffi::Magic,
 }
 
-#[unstable]
 impl Drop for Cookie {
     fn drop(&mut self) { unsafe { self::ffi::magic_close(self.cookie) } }
 }
 
-#[unstable]
 impl Cookie {
     fn last_error(&self) -> Option<MagicError> {
         let cookie = self.cookie;
