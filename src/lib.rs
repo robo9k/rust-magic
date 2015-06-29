@@ -45,7 +45,7 @@
 
 
 extern crate libc;
-extern crate "magic-sys" as ffi;
+extern crate magic_sys as ffi;
 #[macro_use]
 extern crate bitflags;
 

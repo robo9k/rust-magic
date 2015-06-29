@@ -24,7 +24,7 @@ exclude = [
 name = "magic"
 
 [dependencies]
-magic-sys = "0.0.5"
+magic-sys = "0.0.8"
 bitflags = "0.1"
 
 [dev-dependencies]
