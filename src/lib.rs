@@ -25,7 +25,7 @@
 //!     let cookie = Cookie::open(flags::NONE).ok().unwrap();
 //!     // Load a specific magic database
 //!     let magic_db = vec![Path::new("data/tests/db-images-png")];
-//!     assert!(cookie.load(magic_db.as_slice()).is_ok());
+//!     assert!(cookie.load(&magic_db).is_ok());
 //!
 //!     // Recognize the magic of a test file
 //!     let test_file = Path::new("data/tests/rust-logo-128x128-blk.png");
@@ -35,14 +35,8 @@
 //! ```
 
 
-// Silence FFI warnings
-#![feature(libc)]
-#![feature(std_misc)]
-// Silence `Error` warnings
-#![feature(core)]
-// Silence `Path` warnings
-#![feature(path)]
-
+// OsStr.to_cstring()
+#![feature(convert)]
 
 extern crate libc;
 extern crate magic_sys as ffi;
@@ -340,68 +334,68 @@ mod tests {
     #[test]
     fn file() {
         let cookie = Cookie::open(flags::NONE).ok().unwrap();
-        assert!(cookie.load(vec![Path::new("data/tests/db-images-png")].as_slice()).is_ok());
+        assert!(cookie.load(&vec![Path::new("data/tests/db-images-png")]).is_ok());
 
         let path = Path::new("data/tests/rust-logo-128x128-blk.png");
 
-        assert_eq!(cookie.file(&path).ok().unwrap().as_slice(), "PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced");
+        assert_eq!(cookie.file(&path).ok().unwrap(), "PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced");
 
         cookie.set_flags(flags::MIME_TYPE);
-        assert_eq!(cookie.file(&path).ok().unwrap().as_slice(), "image/png");
+        assert_eq!(cookie.file(&path).ok().unwrap(), "image/png");
 
         cookie.set_flags(flags::MIME_TYPE | flags::MIME_ENCODING);
-        assert_eq!(cookie.file(&path).ok().unwrap().as_slice(), "image/png; charset=binary");
+        assert_eq!(cookie.file(&path).ok().unwrap(), "image/png; charset=binary");
     }
 
     #[test]
     fn buffer() {
         let cookie = Cookie::open(flags::NONE).ok().unwrap();
-        assert!(cookie.load(vec![Path::new("data/tests/db-python")].as_slice()).is_ok());
+        assert!(cookie.load(&vec![Path::new("data/tests/db-python")].as_slice()).is_ok());
 
         let s = b"#!/usr/bin/env python\nprint('Hello, world!')";
-        assert_eq!(cookie.buffer(s).ok().unwrap().as_slice(), "Python script, ASCII text executable");
+        assert_eq!(cookie.buffer(s).ok().unwrap(), "Python script, ASCII text executable");
 
         cookie.set_flags(flags::MIME_TYPE);
-        assert_eq!(cookie.buffer(s).ok().unwrap().as_slice(), "text/x-python");
+        assert_eq!(cookie.buffer(s).ok().unwrap(), "text/x-python");
     }
 
     #[test]
     fn file_error() {
         let cookie = Cookie::open(flags::NONE | flags::ERROR).ok().unwrap();
-        assert!(cookie.load(vec![].as_slice()).is_ok());
+        assert!(cookie.load(&vec![]).is_ok());
 
         let ret = cookie.file(&Path::new("non-existent_file.txt"));
         assert!(ret.is_err());
-        assert_eq!(ret.err().unwrap().desc.as_slice(), "cannot stat `non-existent_file.txt' (No such file or directory)");
+        assert_eq!(ret.err().unwrap().desc, "cannot stat `non-existent_file.txt' (No such file or directory)");
     }
 
     #[test]
     fn load_default() {
         let cookie = Cookie::open(flags::NONE | flags::ERROR).ok().unwrap();
-        assert!(cookie.load(vec![].as_slice()).is_ok());
+        assert!(cookie.load(&vec![]).is_ok());
     }
 
     #[test]
     fn load_one() {
         let cookie = Cookie::open(flags::NONE | flags::ERROR).ok().unwrap();
-        assert!(cookie.load(vec![
+        assert!(cookie.load(&vec![
                                     Path::new("data/tests/db-images-png")
-                                ].as_slice()).is_ok());
+                                ]).is_ok());
     }
 
     #[test]
     // TODO: This should not really fail
-    #[should_fail(expected = "not yet implemented")]
+    #[should_panic(expected = "not yet implemented")]
     fn load_multiple() {
         let cookie = Cookie::open(flags::NONE | flags::ERROR).ok().unwrap();
-        assert!(cookie.load(vec![
+        assert!(cookie.load(&vec![
                                 Path::new("data/tests/db-images-png"),
                                 Path::new("data/tests/db-python"),
-                            ].as_slice()).is_ok());
+                            ]).is_ok());
     }
 
     #[test]
     fn version() {
-        assert!(regex::is_match(r"\d+\.\d+.\d+", super::version().as_slice()).ok().unwrap());
+        assert!(regex::is_match(r"\d+\.\d+.\d+", super::version()).ok().unwrap());
     }
 }
