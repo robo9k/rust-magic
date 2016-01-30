@@ -15,8 +15,6 @@
 //! Here's an example of using this crate:
 //!
 //! ```
-//! use std::path::Path;
-//!
 //! extern crate magic;
 //! use magic::{Cookie, flags};
 //!
@@ -24,11 +22,11 @@
 //!     // Create a new configuration with no special flags
 //!     let cookie = Cookie::open(flags::NONE).ok().unwrap();
 //!     // Load a specific magic database
-//!     let magic_db = vec![Path::new("data/tests/db-images-png")];
+//!     let magic_db = vec!["data/tests/db-images-png"];
 //!     assert!(cookie.load(&magic_db).is_ok());
 //!
 //!     // Recognize the magic of a test file
-//!     let test_file = Path::new("data/tests/rust-logo-128x128-blk.png");
+//!     let test_file = "data/tests/rust-logo-128x128-blk.png";
 //!     let expected = "PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced";
 //!     assert_eq!(cookie.file(&test_file).ok().unwrap(), expected);
 //! }
@@ -155,11 +153,11 @@ pub fn version() -> &'static str {
 }
 
 
-fn db_filenames(filenames: &[&Path]) -> *const c_char {
+fn db_filenames<P: AsRef<Path>>(filenames: &[P]) -> *const c_char {
     match filenames.len() {
         0 => ptr::null(),
         // FIXME: This is just plain wrong. I'm surprised it works at all..
-        1 => filenames[0].as_os_str().to_cstring().unwrap().as_ptr(),
+        1 => filenames[0].as_ref().as_os_str().to_cstring().unwrap().as_ptr(),
         _ => unimplemented!(),
     }
 }
@@ -216,9 +214,9 @@ impl Cookie {
         }
     }
 
-    pub fn file(&self, filename: &Path) -> Result<String, MagicError> {
+    pub fn file<P: AsRef<Path>>(&self, filename: P) -> Result<String, MagicError> {
         let cookie = self.cookie;
-        let f = filename.as_os_str().to_cstring().unwrap().as_ptr();
+        let f = filename.as_ref().as_os_str().to_cstring().unwrap().as_ptr();
         unsafe {
             let str = self::ffi::magic_file(cookie, f);
             if str.is_null() {
@@ -265,7 +263,7 @@ impl Cookie {
     // TODO: check, compile, list and load mostly do the same, refactor!
     // TODO: ^ also needs to implement multiple databases, possibly waiting for the Path reform
 
-    pub fn check(&self, filenames: &[&Path]) -> Result<(), MagicError> {
+    pub fn check<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), MagicError> {
         let cookie = self.cookie;
         let db_filenames = db_filenames(filenames);
         let ret;
@@ -276,7 +274,7 @@ impl Cookie {
         if 0 == ret { Ok(()) } else { Err(self.magic_failure()) }
     }
 
-    pub fn compile(&self, filenames: &[&Path]) -> Result<(), MagicError> {
+    pub fn compile<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), MagicError> {
         let cookie = self.cookie;
         let db_filenames = db_filenames(filenames);
         let ret;
@@ -287,7 +285,7 @@ impl Cookie {
         if 0 == ret { Ok(()) } else { Err(self.magic_failure()) }
     }
 
-    pub fn list(&self, filenames: &[&Path]) -> Result<(), MagicError> {
+    pub fn list<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), MagicError> {
         let cookie = self.cookie;
         let db_filenames = db_filenames(filenames);
         let ret;
@@ -298,7 +296,7 @@ impl Cookie {
         if 0 == ret { Ok(()) } else { Err(self.magic_failure()) }
     }
 
-    pub fn load(&self, filenames: &[&Path]) -> Result<(), MagicError> {
+    pub fn load<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), MagicError> {
         let cookie = self.cookie;
         let db_filenames = db_filenames(filenames);
         let ret;
@@ -322,8 +320,6 @@ impl Cookie {
 mod tests {
     extern crate regex;
 
-    use std::path::Path;
-
     use super::Cookie;
 	use super::flags;
 
@@ -334,9 +330,9 @@ mod tests {
     #[test]
     fn file() {
         let cookie = Cookie::open(flags::NONE).ok().unwrap();
-        assert!(cookie.load(&vec![Path::new("data/tests/db-images-png")]).is_ok());
+        assert!(cookie.load(&vec!["data/tests/db-images-png"]).is_ok());
 
-        let path = Path::new("data/tests/rust-logo-128x128-blk.png");
+        let path = "data/tests/rust-logo-128x128-blk.png";
 
         assert_eq!(cookie.file(&path).ok().unwrap(), "PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced");
 
@@ -350,7 +346,7 @@ mod tests {
     #[test]
     fn buffer() {
         let cookie = Cookie::open(flags::NONE).ok().unwrap();
-        assert!(cookie.load(&vec![Path::new("data/tests/db-python")].as_slice()).is_ok());
+        assert!(cookie.load(&vec!["data/tests/db-python"].as_slice()).is_ok());
 
         let s = b"#!/usr/bin/env python\nprint('Hello, world!')";
         assert_eq!(cookie.buffer(s).ok().unwrap(), "Python script, ASCII text executable");
@@ -362,9 +358,9 @@ mod tests {
     #[test]
     fn file_error() {
         let cookie = Cookie::open(flags::NONE | flags::ERROR).ok().unwrap();
-        assert!(cookie.load(&vec![]).is_ok());
+        assert!(cookie.load::<&str>(&[]).is_ok());
 
-        let ret = cookie.file(&Path::new("non-existent_file.txt"));
+        let ret = cookie.file("non-existent_file.txt");
         assert!(ret.is_err());
         assert_eq!(ret.err().unwrap().desc, "cannot stat `non-existent_file.txt' (No such file or directory)");
     }
@@ -372,14 +368,14 @@ mod tests {
     #[test]
     fn load_default() {
         let cookie = Cookie::open(flags::NONE | flags::ERROR).ok().unwrap();
-        assert!(cookie.load(&vec![]).is_ok());
+        assert!(cookie.load::<&str>(&[]).is_ok());
     }
 
     #[test]
     fn load_one() {
         let cookie = Cookie::open(flags::NONE | flags::ERROR).ok().unwrap();
         assert!(cookie.load(&vec![
-                                    Path::new("data/tests/db-images-png")
+                                    "data/tests/db-images-png"
                                 ]).is_ok());
     }
 
@@ -389,8 +385,8 @@ mod tests {
     fn load_multiple() {
         let cookie = Cookie::open(flags::NONE | flags::ERROR).ok().unwrap();
         assert!(cookie.load(&vec![
-                                Path::new("data/tests/db-images-png"),
-                                Path::new("data/tests/db-python"),
+                                "data/tests/db-images-png",
+                                "data/tests/db-python",
                             ]).is_ok());
     }
 
