@@ -22,6 +22,11 @@ magic = "0.*"
 Then use the [`magic` crate](https://crates.io/crates/magic) according to [its documentation](https://robo9k.github.io/rust-magic/magic/#usage-example).
 
 
+# Requirements
+
+Needs `rustc 1.6 stable` or later. [Create an issue](https://github.com/robo9k/rust-magic/issues/new) if it does not work on current stable.
+
+
 # License
 
 This project is licensed under the MIT license (see [`LICENSE`](https://github.com/robo9k/rust-magic/blob/master/LICENSE)).
