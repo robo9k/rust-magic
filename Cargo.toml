@@ -9,9 +9,12 @@ homepage = "https://github.com/robo9k/rust-magic"
 repository = "https://github.com/robo9k/rust-magic.git"
 documentation = "https://robo9k.github.io/rust-magic/magic/"
 authors = [
-    "Daniel Micay <danielmicay@gmail.com>",
-    "Petar Radošević <petar@wunki.org>",
-    "robo9k <robo@9k.lv>",
+	"Daniel Micay <danielmicay@gmail.com>",
+	"Petar Radošević <petar@wunki.org>",
+	"lilydjwg <lilydjwg@gmail.com>",
+	"Jeff Belgum <belgum@bastille.io>",
+	"Onur Aslan <onur@onur.im>",
+	"robo9k <robo@9k.lv>",
 ]
 version = "0.9.0"
 exclude = [
