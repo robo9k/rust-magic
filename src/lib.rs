@@ -47,7 +47,7 @@ use std::str;
 use std::ptr;
 use std::error;
 use std::fmt::Display;
-use std::ffi::CStr;
+use std::ffi::{CStr, CString};
 
 
 /// Bitmask flags which control `libmagic` behaviour
@@ -157,7 +157,7 @@ fn db_filenames<P: AsRef<Path>>(filenames: &[P]) -> *const c_char {
     match filenames.len() {
         0 => ptr::null(),
         // FIXME: This is just plain wrong. I'm surprised it works at all..
-        1 => filenames[0].as_ref().as_os_str().to_cstring().unwrap().as_ptr(),
+        1 => CString::new(filenames[0].as_ref().to_str().unwrap()).unwrap().as_ptr(),
         _ => unimplemented!(),
     }
 }
@@ -216,7 +216,7 @@ impl Cookie {
 
     pub fn file<P: AsRef<Path>>(&self, filename: P) -> Result<String, MagicError> {
         let cookie = self.cookie;
-        let f = filename.as_ref().as_os_str().to_cstring().unwrap().as_ptr();
+        let f = CString::new(filename.as_ref().to_str().unwrap()).unwrap().as_ptr();
         unsafe {
             let str = self::ffi::magic_file(cookie, f);
             if str.is_null() {
