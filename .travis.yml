@@ -1,5 +1,7 @@
 language: rust
-rust: nightly
+rust:
+    - stable
+    - nightly
 env:
   global:
     secure: XUEuNCeOK0zMazSlY5ZbPeBH5RCvOX+xOGL6g96A3EAZJjGxBNe6j/7eYd8pKUebZt5c0lNYQ2oGwe754Zh8Y9F6JRhEkHWQGp9+SHmKKY7KpTcQGT6wAv5E0yJHyu4I+JX2lIbQDE623ti6r2PMV5XRnjyQ93wWdQVAijzTnaM=
