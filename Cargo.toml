@@ -16,7 +16,7 @@ authors = [
 	"Onur Aslan <onur@onur.im>",
 	"robo9k <robo@9k.lv>",
 ]
-version = "0.9.0"
+version = "0.10.0"
 exclude = [
     ".gitignore",
     ".travis.yml",
