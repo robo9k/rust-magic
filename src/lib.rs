@@ -53,7 +53,7 @@ pub mod flags {
 
     bitflags! {
         #[doc = "Bitmask flags that specify how `Cookie` functions should behave"]
-        flags CookieFlags: c_int {
+        pub flags CookieFlags: c_int {
             #[doc = "No flags"]
             const NONE              = 0x000000,
 
