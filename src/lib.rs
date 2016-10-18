@@ -154,7 +154,7 @@ fn db_filenames<P: AsRef<Path>>(filenames: &[P]) -> *const c_char {
     match filenames.len() {
         0 => ptr::null(),
         // FIXME: This is just plain wrong. I'm surprised it works at all..
-        1 => CString::new(filenames[0].as_ref().to_str().unwrap()).unwrap().as_ptr(),
+        1 => CString::new(filenames[0].as_ref().to_string_lossy().into_owned()).unwrap().into_raw(),
         _ => unimplemented!(),
     }
 }
@@ -213,7 +213,7 @@ impl Cookie {
 
     pub fn file<P: AsRef<Path>>(&self, filename: P) -> Result<String, MagicError> {
         let cookie = self.cookie;
-        let f = CString::new(filename.as_ref().to_str().unwrap()).unwrap().as_ptr();
+        let f = CString::new(filename.as_ref().to_string_lossy().into_owned()).unwrap().into_raw();
         unsafe {
             let str = self::ffi::magic_file(cookie, f);
             if str.is_null() {
