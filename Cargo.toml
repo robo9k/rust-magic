@@ -5,6 +5,7 @@ description = "libmagic bindings"
 readme = "README.md"
 license = "MIT"
 keywords = ["magic", "binding", "file"]
+categories = ["api-bindings"]
 homepage = "https://github.com/robo9k/rust-magic"
 repository = "https://github.com/robo9k/rust-magic.git"
 documentation = "https://robo9k.github.io/rust-magic/magic/"
