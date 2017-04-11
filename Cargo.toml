@@ -6,7 +6,7 @@ license = "MIT"
 keywords = ["magic", "binding", "file"]
 categories = ["api-bindings"]
 repository = "https://github.com/robo9k/rust-magic"
-documentation = "https://robo9k.github.io/rust-magic/magic/"
+documentation = "https://docs.rs/magic"
 authors = [
 	"Daniel Micay <danielmicay@gmail.com>",
 	"Petar Radošević <petar@wunki.org>",

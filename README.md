@@ -1,4 +1,4 @@
-rust-magic [![Build Status](https://travis-ci.org/robo9k/rust-magic.svg?branch=master)](https://travis-ci.org/robo9k/rust-magic)
+rust-magic [![Build Status](https://travis-ci.org/robo9k/rust-magic.svg?branch=master)](https://travis-ci.org/robo9k/rust-magic) [![Documentation](https://docs.rs/magic/badge.svg)](https://docs.rs/magic)
 ==========
 [libmagic](http://darwinsys.com/file/) bindings for [Rust](http://www.rust-lang.org/).
 
@@ -19,7 +19,7 @@ Add a dependency to your `Cargo.toml` (see [Cargo doc](http://doc.crates.io/guid
 magic = "0.*"
 ```
 
-Then use the [`magic` crate](https://crates.io/crates/magic) according to [its documentation](https://robo9k.github.io/rust-magic/magic/#usage-example).
+Then use the [`magic` crate](https://crates.io/crates/magic) according to [its documentation](https://docs.rs/magic/#usage-example).
 
 
 # Requirements

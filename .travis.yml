@@ -8,24 +8,10 @@ rust:
 matrix:
   allow_failures:
     - rust: nightly
-env:
-  global:
-    secure: XUEuNCeOK0zMazSlY5ZbPeBH5RCvOX+xOGL6g96A3EAZJjGxBNe6j/7eYd8pKUebZt5c0lNYQ2oGwe754Zh8Y9F6JRhEkHWQGp9+SHmKKY7KpTcQGT6wAv5E0yJHyu4I+JX2lIbQDE623ti6r2PMV5XRnjyQ93wWdQVAijzTnaM=
 addons:
   apt:
     packages:
       - libmagic-dev
-before_script:
-  - pip install 'ghp-import' --user
-  - export PATH=$HOME/.local/bin:$PATH
 script:
   - cargo build --verbose
   - cargo test --verbose
-after_success: |
-  [ $TRAVIS_BRANCH = master ] &&
-  [ $TRAVIS_PULL_REQUEST = false ] &&
-  [ $TRAVIS_RUST_VERSION = stable ] &&
-  cargo doc --verbose &&
-  echo '<meta http-equiv=refresh content=0;url=magic/index.html>' > target/doc/index.html &&
-  ghp-import -n target/doc &&
-  git push -fq https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages
