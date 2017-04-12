@@ -135,6 +135,12 @@ pub mod flags {
                                      | NO_CHECK_ENCODING.bits,
 	    }
     }
+
+    impl Default for CookieFlags {
+        fn default() -> CookieFlags {
+            NONE
+        }
+    }
 }
 
 
