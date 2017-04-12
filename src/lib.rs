@@ -52,73 +52,73 @@ pub mod flags {
     use libc::c_int;
 
     bitflags! {
-        #[doc = "Bitmask flags that specify how `Cookie` functions should behave"]
+        #[doc = "Bitmask flags that specify how `Cookie` functions should behave\n\nNOTE: The descriptions are taken from `man libmagic 3`."]
         pub flags CookieFlags: c_int {
-            #[doc = "No flags"]
+            #[doc = "No special handling"]
             const NONE              = 0x000000,
 
-            #[doc = "Turn on debugging"]
+            #[doc = "Print debugging messages to `stderr`\n\nNOTE: Those messages are printed by `libmagic` itself, no this Rust crate."]
             const DEBUG             = 0x000001,
 
-            #[doc = "Follow symlinks"]
+            #[doc = "If the file queried is a symlink, follow it"]
             const SYMLINK           = 0x000002,
 
-            #[doc = "Check inside compressed files"]
+            #[doc = "If the file is compressed, unpack it and look at the contents"]
             const COMPRESS          = 0x000004,
 
-            #[doc = "Look at the contents of devices"]
+            #[doc = "If the file is a block or character special device, then open the device and try to look in its contents"]
             const DEVICES           = 0x000008,
 
-            #[doc = "Return the MIME type"]
+            #[doc = "Return a MIME type string, instead of a textual description"]
             const MIME_TYPE         = 0x000010,
 
-            #[doc = "Return all matches"]
+            #[doc = "Return all matches, not just the first"]
             const CONTINUE          = 0x000020,
 
-            #[doc = "Print warnings to stderr"]
+            #[doc = "Check the magic database for consistency and print warnings to `stderr`\n\nNOTE: Those warnings are printed by `libmagic` itself, no this Rust crate."]
             const CHECK             = 0x000040,
 
-            #[doc = "Restore access time on exit"]
+            #[doc = "On systems that support `utime(2)` or `utimes(2)`, attempt to preserve the access time of files analyzed"]
             const PRESERVE_ATIME    = 0x000080,
 
-            #[doc = "Don't translate unprintable chars"]
+            #[doc = "Don't translate unprintable characters to a `\\ooo` octal representation"]
             const RAW               = 0x000100,
 
-            #[doc = "Handle `ENOENT` etc as real errors"]
+            #[doc = "Treat operating system errors while trying to open files and follow symlinks as real errors, instead of printing them in the magic buffer"]
             const ERROR             = 0x000200,
 
-            #[doc = "Return the MIME encoding"]
+            #[doc = "Return a MIME encoding, instead of a textual description"]
             const MIME_ENCODING     = 0x000400,
 
-            #[doc = "Return the MIME type and encoding"]
+            #[doc = "A shorthand for `MIME_TYPE | MIME_ENCODING`"]
             const MIME              = MIME_TYPE.bits
                                      | MIME_ENCODING.bits,
 
             #[doc = "Return the Apple creator and type"]
             const APPLE             = 0x000800,
 
-            #[doc = "Don't check for compressed files"]
+            #[doc = "Don't look inside compressed files"]
             const NO_CHECK_COMPRESS = 0x001000,
 
-            #[doc = "Don't check for tar files"]
+            #[doc = "Don't examine tar files"]
             const NO_CHECK_TAR      = 0x002000,
 
-            #[doc = "Don't check magic entries"]
+            #[doc = "Don't consult magic files"]
             const NO_CHECK_SOFT     = 0x004000,
 
-            #[doc = "Don't check application type"]
+            #[doc = "Check for EMX application type (only on EMX)"]
             const NO_CHECK_APPTYPE  = 0x008000,
 
-            #[doc = "Don't check for elf details"]
+            #[doc = "Don't print ELF details"]
             const NO_CHECK_ELF      = 0x010000,
 
-            #[doc = "Don't check for text files"]
+            #[doc = "Don't check for various types of text files"]
             const NO_CHECK_TEXT     = 0x020000,
 
-            #[doc = "Don't check for cdf files"]
+            #[doc = "Don't get extra information on MS Composite Document Files"]
             const NO_CHECK_CDF      = 0x040000,
 
-            #[doc = "Don't check tokens"]
+            #[doc = "Don't look for known tokens inside ascii files"]
             const NO_CHECK_TOKENS   = 0x100000,
 
             #[doc = "Don't check text encodings"]
