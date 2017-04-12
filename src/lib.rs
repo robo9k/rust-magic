@@ -166,9 +166,7 @@ fn db_filenames<P: AsRef<Path>>(filenames: &[P]) -> *const c_char {
 }
 
 
-/// Represents a magic error.
-/// For the most part you should be using the `Error` trait
-/// to interact with rather than this struct.
+/// The error type used in this crate
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct MagicError {
     pub desc: String,
@@ -187,6 +185,7 @@ impl Display for MagicError {
 }
 
 
+/// Configuration of which `CookieFlags` and magic databases to use
 pub struct Cookie {
     cookie: *const self::ffi::Magic,
 }
