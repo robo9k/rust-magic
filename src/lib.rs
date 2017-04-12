@@ -194,6 +194,7 @@ pub struct Cookie {
 }
 
 impl Drop for Cookie {
+    /// Closes the magic database and deallocates any resources used
     fn drop(&mut self) { unsafe { self::ffi::magic_close(self.cookie) } }
 }
 
@@ -219,6 +220,7 @@ impl Cookie {
         }
     }
 
+    /// Returns a textual description of the contents of the `filename`
     pub fn file<P: AsRef<Path>>(&self, filename: P) -> Result<String, MagicError> {
         let cookie = self.cookie;
         let f = CString::new(filename.as_ref().to_string_lossy().into_owned()).unwrap().into_raw();
@@ -233,6 +235,7 @@ impl Cookie {
         }
     }
 
+    /// Returns a textual description of the contents of the `buffer`
     pub fn buffer(&self, buffer: &[u8]) -> Result<String, MagicError> {
         let buffer_len = buffer.len() as size_t;
         let pbuffer = buffer.as_ptr();
@@ -247,6 +250,11 @@ impl Cookie {
         }
     }
 
+    /// Returns a textual explanation of the last error, if any
+    ///
+    /// You should not need to call this, since you can use the `MagicError` in
+    /// the `Result` returned by the other functions.
+    // TODO: Remove this entirely?
     pub fn error(&self) -> Option<String> {
         unsafe {
             let str = self::ffi::magic_error(self.cookie);
@@ -259,6 +267,10 @@ impl Cookie {
         }
     }
 
+    /// Sets the flags to use
+    ///
+    /// Overwrites any previously set flags, e.g. those from `load()`.
+    // TODO: libmagic itself has to magic_getflags, but we could remember them in Cookie?
     pub fn set_flags(&self, flags: self::flags::CookieFlags) -> bool {
         unsafe {
             self::ffi::magic_setflags(self.cookie, flags.bits()) != -1
@@ -268,6 +280,7 @@ impl Cookie {
     // TODO: check, compile, list and load mostly do the same, refactor!
     // TODO: ^ also needs to implement multiple databases, possibly waiting for the Path reform
 
+    /// Check the validity of entries in the database `filenames`
     pub fn check<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), MagicError> {
         let cookie = self.cookie;
         let db_filenames = db_filenames(filenames);
@@ -279,6 +292,9 @@ impl Cookie {
         if 0 == ret { Ok(()) } else { Err(self.magic_failure()) }
     }
 
+    /// Compiles the given database `filenames` for faster access
+    ///
+    /// The compiled files created are named from the `basename` of each file argument with '.mgc' appended to it.
     pub fn compile<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), MagicError> {
         let cookie = self.cookie;
         let db_filenames = db_filenames(filenames);
@@ -290,6 +306,7 @@ impl Cookie {
         if 0 == ret { Ok(()) } else { Err(self.magic_failure()) }
     }
 
+    /// Dumps all magic entries in the given database `filenames` in a human readable format
     pub fn list<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), MagicError> {
         let cookie = self.cookie;
         let db_filenames = db_filenames(filenames);
@@ -301,6 +318,9 @@ impl Cookie {
         if 0 == ret { Ok(()) } else { Err(self.magic_failure()) }
     }
 
+    /// Loads the given database `filenames` for further queries
+    ///
+    /// Adds '.mgc'	to the database	filenames as appropriate.
     pub fn load<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), MagicError> {
         let cookie = self.cookie;
         let db_filenames = db_filenames(filenames);
@@ -312,6 +332,9 @@ impl Cookie {
         if 0 == ret { Ok(()) } else { Err(self.magic_failure()) }
     }
 
+    /// Creates a new configuration, `flags` specify how other functions should behave
+    ///
+    /// This does not `load()` any databases yet.
     pub fn open(flags: self::flags::CookieFlags) -> Result<Cookie, MagicError> {
         let cookie;
         unsafe {
