@@ -132,8 +132,7 @@ pub mod flags {
                                      | NO_CHECK_TEXT.bits
                                      | NO_CHECK_CDF.bits
                                      | NO_CHECK_TOKENS.bits
-                                     | NO_CHECK_ENCODING.bits
-                                     | 0,
+                                     | NO_CHECK_ENCODING.bits,
 	    }
     }
 }
