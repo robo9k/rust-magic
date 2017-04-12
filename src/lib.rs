@@ -16,19 +16,19 @@
 //!
 //! ```
 //! extern crate magic;
-//! use magic::{Cookie, flags};
+//! use magic::{Cookie, CookieFlags};
 //!
 //! fn main() {
-//!     // Create a new configuration with no special flags
-//!     let cookie = Cookie::open(flags::NONE).ok().unwrap();
-//!     // Load a specific magic database
-//!     let magic_db = vec!["data/tests/db-images-png"];
-//!     assert!(cookie.load(&magic_db).is_ok());
+//!     // Create a new default configuration
+//!     let cookie = Cookie::open(CookieFlags::default()).unwrap();
+//!     // Load one specific magic database
+//!     let databases = vec!["data/tests/db-images-png"];
+//!     assert!(cookie.load(&databases).is_ok());
 //!
 //!     // Recognize the magic of a test file
-//!     let test_file = "data/tests/rust-logo-128x128-blk.png";
-//!     let expected = "PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced";
-//!     assert_eq!(cookie.file(&test_file).ok().unwrap(), expected);
+//!     let test_file_path = "data/tests/rust-logo-128x128-blk.png";
+//!     let expected_magic = "PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced";
+//!     assert_eq!(cookie.file(&test_file_path).unwrap(), expected_magic);
 //! }
 //! ```
 
@@ -45,6 +45,9 @@ use std::ptr;
 use std::error;
 use std::fmt::Display;
 use std::ffi::{CStr, CString};
+
+// Make it easier to use `CookieFlags::default()` and such
+pub use self::flags::CookieFlags;
 
 
 /// Bitmask flags which control `libmagic` behaviour
