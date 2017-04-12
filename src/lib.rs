@@ -137,6 +137,7 @@ pub mod flags {
     }
 
     impl Default for CookieFlags {
+        /// Returns `NONE`
         fn default() -> CookieFlags {
             NONE
         }
