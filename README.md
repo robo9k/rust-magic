@@ -26,6 +26,7 @@ Then use the [`magic` crate](https://crates.io/crates/magic) according to [its d
 
 Needs `rustc 1.6 stable` or later. [Create an issue](https://github.com/robo9k/rust-magic/issues/new) if it does not work on current stable.
 
+By default compiling `rust-magic` will search your system library paths for a version of `libmagic.so`. If you're cross-compiling, or need more control over which library is selected, see [how to build `rust-magic-sys`](https://github.com/robo9k/rust-magic-sys#building).
 
 # License
 
