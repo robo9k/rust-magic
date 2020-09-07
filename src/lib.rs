@@ -409,7 +409,7 @@ mod tests {
 
     #[test]
     // TODO: This should not really fail
-    #[should_panic(expected = "not yet implemented")]
+    #[should_panic(expected = "not implemented")]
     fn load_multiple() {
         let cookie = Cookie::open(flags::NONE | flags::ERROR).ok().unwrap();
         assert!(cookie.load(&vec![
