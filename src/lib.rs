@@ -100,6 +100,12 @@ pub mod flags {
             #[doc = "Return the Apple creator and type"]
             const APPLE             = 0x000800,
 
+            #[doc = "Return a slash-separated list of extensions"]
+            const EXTENSION         = 0x1000000,
+
+            #[doc = "Check inside compressed files but do not report compression"]
+            const COMPRESS_TRANSP   = 0x2000000,
+
             #[doc = "Don't look inside compressed files"]
             const NO_CHECK_COMPRESS = 0x001000,
 
