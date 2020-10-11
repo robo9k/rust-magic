@@ -332,6 +332,32 @@ impl Cookie {
         if 0 == ret { Ok(()) } else { Err(self.magic_failure()) }
     }
 
+    /// Loads one or several buffers loaded with contents of compiled magic
+    /// databases.  This function can be used in environments where the magic
+    /// library does not have direct access to the filesystem.
+    pub fn load_buffers(&self, buffers: &[&[u8]]) -> Result<(), MagicError> {
+        let cookie = self.cookie;
+        let mut ffi_buffers: Vec<*const u8>    = Vec::with_capacity(buffers.len());
+        let mut ffi_sizes:   Vec<libc::size_t> = Vec::with_capacity(buffers.len());
+        let ffi_nbuffers = buffers.len() as libc::size_t;
+        let ret;
+
+        for slice in buffers {
+            ffi_buffers.push((*slice).as_ptr());
+            ffi_sizes.push(slice.len() as libc::size_t);
+        }
+
+        unsafe {
+            ret = magic_sys::magic_load_buffers(
+                cookie,
+                ffi_buffers.as_ptr(),
+                ffi_sizes.as_ptr(),
+                ffi_nbuffers)
+        };
+
+        if 0 == ret { Ok(()) } else { Err(self.magic_failure()) }
+    }
+
     /// Creates a new configuration, `flags` specify how other functions should behave
     ///
     /// This does not `load()` any databases yet.

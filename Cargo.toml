@@ -28,7 +28,7 @@ travis-ci = { repository = "robo9k/rust-magic" }
 name = "magic"
 
 [dependencies]
-magic-sys = "0.2.0"
+magic-sys = "0.2.1"
 bitflags = "0.7.0"
 libc = "0.2.13"
 
