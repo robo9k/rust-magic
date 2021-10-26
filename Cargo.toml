@@ -1,31 +1,47 @@
 [package]
 name = "magic"
-description = "libmagic bindings"
-readme = "README.md"
+description = "High level bindings for the `libmagic` C library"
 license = "MIT"
-keywords = ["magic", "binding", "file"]
-categories = ["api-bindings"]
-repository = "https://github.com/robo9k/rust-magic"
-documentation = "https://docs.rs/magic"
+keywords = [
+    "magic",
+    "file",
+    "ffi",
+    "bindings",
+]
+categories = [
+	"api-bindings",
+	"filesystem",
+	"parsing",
+]
+repository = "https://github.com/robo9k/rust-magic.git"
 authors = [
 	"Daniel Micay <danielmicay@gmail.com>",
 	"Petar Radošević <petar@wunki.org>",
 	"lilydjwg <lilydjwg@gmail.com>",
 	"Jeff Belgum <belgum@bastille.io>",
 	"Onur Aslan <onur@onur.im>",
-	"robo9k <robo@9k.lv>",
+	"robo9k <robo9k@symlink.io>",
 ]
 version = "0.12.2"
 exclude = [
-    ".gitignore",
+	".gitignore",
+	"/.github/",
+	"rust-toolchain.toml",
+	"deny.toml",
+	"data/tests/",
+	".bumpversion.cfg",
 ]
 rust-version = "1.46"
 
 [package.metadata]
 msrv = "1.46.0"
 
-[lib]
-name = "magic"
+[package.metadata.docs.rs]
+all-features = true
+targets = []
+
+[badges]
+maintenance = { status = "passively-maintained" }
 
 [dependencies]
 bitflags = "1.3.2"
