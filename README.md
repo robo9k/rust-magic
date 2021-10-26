@@ -16,7 +16,7 @@ Add a dependency to your `Cargo.toml` (see [Cargo doc](https://doc.rust-lang.org
 
 ```toml
 [dependencies]
-magic = "0.*"
+magic = "0.13"
 ```
 
 Then use the [`magic` crate](https://crates.io/crates/magic) according to [its documentation](https://docs.rs/magic/#usage-example).
