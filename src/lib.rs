@@ -336,7 +336,7 @@ impl Cookie {
 
     /// Loads the given database `filenames` for further queries
     ///
-    /// Adds '.mgc'	to the database	filenames as appropriate.
+    /// Adds '.mgc' to the database filenames as appropriate.
     pub fn load<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), MagicError> {
         let cookie = self.cookie;
         let db_filenames = db_filenames(filenames);
@@ -365,7 +365,7 @@ impl Cookie {
                 desc: "errno".to_string(),
             })
         } else {
-            Ok(Cookie { cookie: cookie })
+            Ok(Cookie { cookie })
         }
     }
 }
