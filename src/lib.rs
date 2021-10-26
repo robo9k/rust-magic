@@ -32,23 +32,21 @@
 //! }
 //! ```
 
-
 extern crate libc;
 extern crate magic_sys as ffi;
 #[macro_use]
 extern crate bitflags;
 
-use libc::{size_t, c_char};
-use std::path::Path;
-use std::str;
-use std::ptr;
+use libc::{c_char, size_t};
 use std::error;
-use std::fmt::Display;
 use std::ffi::{CStr, CString};
+use std::fmt::Display;
+use std::path::Path;
+use std::ptr;
+use std::str;
 
 // Make it easier to use `CookieFlags::default()` and such
 pub use self::flags::CookieFlags;
-
 
 /// Bitmask flags which control `libmagic` behaviour
 pub mod flags {
@@ -136,7 +134,7 @@ pub mod flags {
                                      | NO_CHECK_CDF.bits
                                      | NO_CHECK_TOKENS.bits
                                      | NO_CHECK_ENCODING.bits,
-	    }
+        }
     }
 
     impl Default for CookieFlags {
@@ -147,27 +145,28 @@ pub mod flags {
     }
 }
 
-
 /// Returns the version of this crate in the format `MAJOR.MINOR.PATCH`.
 pub fn version() -> &'static str {
     // TODO: There's also an optional _PRE part
     concat!(
-        env!("CARGO_PKG_VERSION_MAJOR"), ".",
-        env!("CARGO_PKG_VERSION_MINOR"), ".",
+        env!("CARGO_PKG_VERSION_MAJOR"),
+        ".",
+        env!("CARGO_PKG_VERSION_MINOR"),
+        ".",
         env!("CARGO_PKG_VERSION_PATCH"),
     )
 }
-
 
 fn db_filenames<P: AsRef<Path>>(filenames: &[P]) -> *const c_char {
     match filenames.len() {
         0 => ptr::null(),
         // FIXME: This is just plain wrong. I'm surprised it works at all..
-        1 => CString::new(filenames[0].as_ref().to_string_lossy().into_owned()).unwrap().into_raw(),
+        1 => CString::new(filenames[0].as_ref().to_string_lossy().into_owned())
+            .unwrap()
+            .into_raw(),
         _ => unimplemented!(),
     }
 }
-
 
 /// The error type used in this crate
 #[derive(PartialEq, Eq, Clone, Debug)]
@@ -187,7 +186,6 @@ impl Display for MagicError {
     }
 }
 
-
 /// Configuration of which `CookieFlags` and magic databases to use
 pub struct Cookie {
     cookie: *const self::ffi::Magic,
@@ -195,7 +193,9 @@ pub struct Cookie {
 
 impl Drop for Cookie {
     /// Closes the magic database and deallocates any resources used
-    fn drop(&mut self) { unsafe { self::ffi::magic_close(self.cookie) } }
+    fn drop(&mut self) {
+        unsafe { self::ffi::magic_close(self.cookie) }
+    }
 }
 
 impl Cookie {
@@ -208,7 +208,9 @@ impl Cookie {
                 None
             } else {
                 let slice = CStr::from_ptr(e).to_bytes();
-                Some(self::MagicError{desc: str::from_utf8(slice).unwrap().to_string(),})
+                Some(self::MagicError {
+                    desc: str::from_utf8(slice).unwrap().to_string(),
+                })
             }
         }
     }
@@ -216,14 +218,18 @@ impl Cookie {
     fn magic_failure(&self) -> MagicError {
         match self.last_error() {
             Some(e) => e,
-            None => self::MagicError{desc: "unknown error".to_string(),}
+            None => self::MagicError {
+                desc: "unknown error".to_string(),
+            },
         }
     }
 
     /// Returns a textual description of the contents of the `filename`
     pub fn file<P: AsRef<Path>>(&self, filename: P) -> Result<String, MagicError> {
         let cookie = self.cookie;
-        let f = CString::new(filename.as_ref().to_string_lossy().into_owned()).unwrap().into_raw();
+        let f = CString::new(filename.as_ref().to_string_lossy().into_owned())
+            .unwrap()
+            .into_raw();
         unsafe {
             let str = self::ffi::magic_file(cookie, f);
             if str.is_null() {
@@ -272,9 +278,7 @@ impl Cookie {
     /// Overwrites any previously set flags, e.g. those from `load()`.
     // TODO: libmagic itself has to magic_getflags, but we could remember them in Cookie?
     pub fn set_flags(&self, flags: self::flags::CookieFlags) -> bool {
-        unsafe {
-            self::ffi::magic_setflags(self.cookie, flags.bits()) != -1
-        }
+        unsafe { self::ffi::magic_setflags(self.cookie, flags.bits()) != -1 }
     }
 
     // TODO: check, compile, list and load mostly do the same, refactor!
@@ -289,7 +293,11 @@ impl Cookie {
         unsafe {
             ret = self::ffi::magic_check(cookie, db_filenames);
         }
-        if 0 == ret { Ok(()) } else { Err(self.magic_failure()) }
+        if 0 == ret {
+            Ok(())
+        } else {
+            Err(self.magic_failure())
+        }
     }
 
     /// Compiles the given database `filenames` for faster access
@@ -303,7 +311,11 @@ impl Cookie {
         unsafe {
             ret = self::ffi::magic_compile(cookie, db_filenames);
         }
-        if 0 == ret { Ok(()) } else { Err(self.magic_failure()) }
+        if 0 == ret {
+            Ok(())
+        } else {
+            Err(self.magic_failure())
+        }
     }
 
     /// Dumps all magic entries in the given database `filenames` in a human readable format
@@ -315,12 +327,16 @@ impl Cookie {
         unsafe {
             ret = self::ffi::magic_list(cookie, db_filenames);
         }
-        if 0 == ret { Ok(()) } else { Err(self.magic_failure()) }
+        if 0 == ret {
+            Ok(())
+        } else {
+            Err(self.magic_failure())
+        }
     }
 
     /// Loads the given database `filenames` for further queries
     ///
-    /// Adds '.mgc'	to the database	filenames as appropriate.
+    /// Adds '.mgc' to the database filenames as appropriate.
     pub fn load<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), MagicError> {
         let cookie = self.cookie;
         let db_filenames = db_filenames(filenames);
@@ -329,7 +345,11 @@ impl Cookie {
         unsafe {
             ret = self::ffi::magic_load(cookie, db_filenames);
         }
-        if 0 == ret { Ok(()) } else { Err(self.magic_failure()) }
+        if 0 == ret {
+            Ok(())
+        } else {
+            Err(self.magic_failure())
+        }
     }
 
     /// Creates a new configuration, `flags` specify how other functions should behave
@@ -340,7 +360,13 @@ impl Cookie {
         unsafe {
             cookie = self::ffi::magic_open((flags | self::flags::ERROR).bits());
         }
-        if cookie.is_null() { Err(self::MagicError{desc: "errno".to_string(),}) } else { Ok(Cookie {cookie: cookie,}) }
+        if cookie.is_null() {
+            Err(self::MagicError {
+                desc: "errno".to_string(),
+            })
+        } else {
+            Ok(Cookie { cookie })
+        }
     }
 }
 
@@ -348,8 +374,8 @@ impl Cookie {
 mod tests {
     extern crate regex;
 
+    use super::flags;
     use super::Cookie;
-	use super::flags;
 
     // Using relative paths to test files should be fine, since cargo doc
     // http://doc.crates.io/build-script.html#inputs-to-the-build-script
@@ -362,22 +388,33 @@ mod tests {
 
         let path = "data/tests/rust-logo-128x128-blk.png";
 
-        assert_eq!(cookie.file(&path).ok().unwrap(), "PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced");
+        assert_eq!(
+            cookie.file(&path).ok().unwrap(),
+            "PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced"
+        );
 
         cookie.set_flags(flags::MIME_TYPE);
         assert_eq!(cookie.file(&path).ok().unwrap(), "image/png");
 
         cookie.set_flags(flags::MIME_TYPE | flags::MIME_ENCODING);
-        assert_eq!(cookie.file(&path).ok().unwrap(), "image/png; charset=binary");
+        assert_eq!(
+            cookie.file(&path).ok().unwrap(),
+            "image/png; charset=binary"
+        );
     }
 
     #[test]
     fn buffer() {
         let cookie = Cookie::open(flags::NONE).ok().unwrap();
-        assert!(cookie.load(&vec!["data/tests/db-python"].as_slice()).is_ok());
+        assert!(cookie
+            .load(&vec!["data/tests/db-python"].as_slice())
+            .is_ok());
 
         let s = b"#!/usr/bin/env python\nprint('Hello, world!')";
-        assert_eq!(cookie.buffer(s).ok().unwrap(), "Python script, ASCII text executable");
+        assert_eq!(
+            cookie.buffer(s).ok().unwrap(),
+            "Python script, ASCII text executable"
+        );
 
         cookie.set_flags(flags::MIME_TYPE);
         assert_eq!(cookie.buffer(s).ok().unwrap(), "text/x-python");
@@ -390,7 +427,10 @@ mod tests {
 
         let ret = cookie.file("non-existent_file.txt");
         assert!(ret.is_err());
-        assert_eq!(ret.err().unwrap().desc, "cannot stat `non-existent_file.txt' (No such file or directory)");
+        assert_eq!(
+            ret.err().unwrap().desc,
+            "cannot stat `non-existent_file.txt' (No such file or directory)"
+        );
     }
 
     #[test]
@@ -402,9 +442,7 @@ mod tests {
     #[test]
     fn load_one() {
         let cookie = Cookie::open(flags::NONE | flags::ERROR).ok().unwrap();
-        assert!(cookie.load(&vec![
-                                    "data/tests/db-images-png"
-                                ]).is_ok());
+        assert!(cookie.load(&vec!["data/tests/db-images-png"]).is_ok());
     }
 
     #[test]
@@ -412,14 +450,15 @@ mod tests {
     #[should_panic(expected = "not implemented")]
     fn load_multiple() {
         let cookie = Cookie::open(flags::NONE | flags::ERROR).ok().unwrap();
-        assert!(cookie.load(&vec![
-                                "data/tests/db-images-png",
-                                "data/tests/db-python",
-                            ]).is_ok());
+        assert!(cookie
+            .load(&vec!["data/tests/db-images-png", "data/tests/db-python",])
+            .is_ok());
     }
 
     #[test]
     fn version() {
-        assert!(regex::is_match(r"\d+\.\d+.\d+", super::version()).ok().unwrap());
+        assert!(regex::is_match(r"\d+\.\d+.\d+", super::version())
+            .ok()
+            .unwrap());
     }
 }
