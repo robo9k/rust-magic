@@ -1,4 +1,4 @@
-rust-magic [![Build Status](https://travis-ci.org/robo9k/rust-magic.svg?branch=master)](https://travis-ci.org/robo9k/rust-magic) [![Documentation](https://docs.rs/magic/badge.svg)](https://docs.rs/magic)
+rust-magic [![linux build status](https://github.com/robo9k/rust-magic/actions/workflows/linux.yml/badge.svg)](https://github.com/robo9k/rust-magic/actions/workflows/linux.yml) [![Documentation](https://docs.rs/magic/badge.svg)](https://docs.rs/magic)
 ==========
 [libmagic](http://darwinsys.com/file/) bindings for [Rust](http://www.rust-lang.org/).
 
