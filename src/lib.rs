@@ -376,7 +376,7 @@ mod tests {
     use super::CookieFlags;
 
     // Using relative paths to test files should be fine, since cargo doc
-    // http://doc.crates.io/build-script.html#inputs-to-the-build-script
+    // https://doc.rust-lang.org/cargo/reference/build-scripts.html#inputs-to-the-build-script
     // states that cwd == CARGO_MANIFEST_DIR
 
     #[test]
