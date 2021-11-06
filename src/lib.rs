@@ -296,7 +296,7 @@ impl Cookie {
     /// Sets the flags to use
     ///
     /// Overwrites any previously set flags, e.g. those from `load()`.
-    // TODO: libmagic itself has to magic_getflags, but we could remember them in Cookie?
+    #[must_use]
     pub fn set_flags(&self, flags: self::CookieFlags) -> bool {
         unsafe { self::ffi::magic_setflags(self.cookie, flags.bits()) != -1 }
     }
@@ -446,10 +446,10 @@ mod tests {
             "PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced"
         );
 
-        cookie.set_flags(CookieFlags::MIME_TYPE);
+        assert!(cookie.set_flags(CookieFlags::MIME_TYPE));
         assert_eq!(cookie.file(&path).ok().unwrap(), "image/png");
 
-        cookie.set_flags(CookieFlags::MIME_TYPE | CookieFlags::MIME_ENCODING);
+        assert!(cookie.set_flags(CookieFlags::MIME_TYPE | CookieFlags::MIME_ENCODING));
         assert_eq!(
             cookie.file(&path).ok().unwrap(),
             "image/png; charset=binary"
@@ -469,7 +469,7 @@ mod tests {
             "Python script, ASCII text executable"
         );
 
-        cookie.set_flags(CookieFlags::MIME_TYPE);
+        assert!(cookie.set_flags(CookieFlags::MIME_TYPE));
         assert_eq!(cookie.buffer(s).ok().unwrap(), "text/x-python");
     }
 
