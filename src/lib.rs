@@ -36,6 +36,9 @@ extern crate libc;
 extern crate magic_sys as ffi;
 #[macro_use]
 extern crate bitflags;
+#[cfg(test)]
+#[macro_use]
+extern crate static_assertions;
 
 use libc::{c_char, c_int, size_t};
 use std::error;
@@ -203,6 +206,7 @@ impl Display for MagicError {
 }
 
 /// Configuration of which `CookieFlags` and magic databases to use
+#[derive(Debug)]
 pub struct Cookie {
     cookie: self::ffi::magic_t,
 }
@@ -476,4 +480,6 @@ mod tests {
         let version_regex = regex::Regex::new(r"\d+\.\d+.\d+").unwrap();
         assert!(version_regex.is_match(super::version()));
     }
+
+    assert_impl_all!(Cookie: std::fmt::Debug);
 }
