@@ -65,92 +65,120 @@ bitflags! {
         /// Print debugging messages to `stderr`
         ///
         /// NOTE: Those messages are printed by `libmagic` itself, no this Rust crate.
+        #[doc(alias = "MAGIC_DEBUG")]
         const DEBUG             = self::ffi::MAGIC_DEBUG;
 
         /// If the file queried is a symlink, follow it
+        #[doc(alias = "MAGIC_SYMLINK")]
         const SYMLINK           = self::ffi::MAGIC_SYMLINK;
 
         /// If the file is compressed, unpack it and look at the contents
+        #[doc(alias = "MAGIC_COMPRESS")]
         const COMPRESS          = self::ffi::MAGIC_COMPRESS;
 
         /// If the file is a block or character special device, then open the device and try to look in its contents
+        #[doc(alias = "MAGIC_DEVICES")]
         const DEVICES           = self::ffi::MAGIC_DEVICES;
 
         /// Return a MIME type string, instead of a textual description
+        #[doc(alias = "MAGIC_MIME_TYPE")]
         const MIME_TYPE         = self::ffi::MAGIC_MIME_TYPE;
 
         /// Return all matches, not just the first
+        #[doc(alias = "MAGIC_CONTINUE")]
         const CONTINUE          = self::ffi::MAGIC_CONTINUE;
 
         /// Check the magic database for consistency and print warnings to `stderr`
         ///
         /// NOTE: Those warnings are printed by `libmagic` itself, no this Rust crate.
+        #[doc(alias = "MAGIC_CHECK")]
         const CHECK             = self::ffi::MAGIC_CHECK;
 
         /// On systems that support `utime(2)` or `utimes(2)`, attempt to preserve the access time of files analyzed
+        #[doc(alias = "MAGIC_PRESERVE_ATIME")]
         const PRESERVE_ATIME    = self::ffi::MAGIC_PRESERVE_ATIME;
 
         /// Don't translate unprintable characters to a `\\ooo` octal representation
+        #[doc(alias = "MAGIC_RAW")]
         const RAW               = self::ffi::MAGIC_RAW;
 
         /// Treat operating system errors while trying to open files and follow symlinks as real errors, instead of printing them in the magic buffer
+        #[doc(alias = "MAGIC_ERROR")]
         const ERROR             = self::ffi::MAGIC_ERROR;
 
         /// Return a MIME encoding, instead of a textual description
+        #[doc(alias = "MAGIC_MIME_ENCODING")]
         const MIME_ENCODING     = self::ffi::MAGIC_MIME_ENCODING;
 
         /// A shorthand for `MIME_TYPE | MIME_ENCODING`
+        #[doc(alias = "MAGIC_MIME")]
         const MIME              = Self::MIME_TYPE.bits
                                 | Self::MIME_ENCODING.bits;
 
         /// Return the Apple creator and type
+        #[doc(alias = "MAGIC_APPLE")]
         const APPLE             = self::ffi::MAGIC_APPLE;
 
         /// Return a slash-separated list of extensions for this file type
+        #[doc(alias = "MAGIC_EXTENSION")]
         const EXTENSION         = self::ffi::MAGIC_EXTENSION;
 
         /// Don't report on compression, only report about the uncompressed data
+        #[doc(alias = "MAGIC_COMPRESS_TRANSP")]
         const COMPRESS_TRANSP   = self::ffi::MAGIC_COMPRESS_TRANSP;
 
         /// A shorthand for `EXTENSION | MIME | APPLE`
+        #[doc(alias = "MAGIC_NODESC")]
         const NODESC            = Self::EXTENSION.bits
                                 | Self::MIME.bits
                                 | Self::APPLE.bits;
 
         /// Don't look inside compressed files
+        #[doc(alias = "MAGIC_NO_CHECK_COMPRESS")]
         const NO_CHECK_COMPRESS = self::ffi::MAGIC_NO_CHECK_COMPRESS;
 
         /// Don't examine tar files
+        #[doc(alias = "MAGIC_NO_CHECK_TAR")]
         const NO_CHECK_TAR      = self::ffi::MAGIC_NO_CHECK_TAR;
 
         /// Don't consult magic files
+        #[doc(alias = "MAGIC_NO_CHECK_SOFT")]
         const NO_CHECK_SOFT     = self::ffi::MAGIC_NO_CHECK_SOFT;
 
         /// Check for EMX application type (only on EMX)
+        #[doc(alias = "MAGIC_NO_CHECK_APPTYPE")]
         const NO_CHECK_APPTYPE  = self::ffi::MAGIC_NO_CHECK_APPTYPE;
 
         /// Don't print ELF details
+        #[doc(alias = "MAGIC_NO_CHECK_ELF")]
         const NO_CHECK_ELF      = self::ffi::MAGIC_NO_CHECK_ELF;
 
         /// Don't check for various types of text files
+        #[doc(alias = "MAGIC_NO_CHECK_TEXT")]
         const NO_CHECK_TEXT     = self::ffi::MAGIC_NO_CHECK_TEXT;
 
         /// Don't get extra information on MS Composite Document Files
+        #[doc(alias = "MAGIC_NO_CHECK_CDF")]
         const NO_CHECK_CDF      = self::ffi::MAGIC_NO_CHECK_CDF;
 
         /// Don't examine CSV files
+        #[doc(alias = "MAGIC_NO_CHECK_CSV")]
         const NO_CHECK_CSV      = self::ffi::MAGIC_NO_CHECK_CSV;
 
         /// Don't look for known tokens inside ascii files
+        #[doc(alias = "MAGIC_NO_CHECK_TOKENS")]
         const NO_CHECK_TOKENS   = self::ffi::MAGIC_NO_CHECK_TOKENS;
 
         /// Don't check text encodings
+        #[doc(alias = "MAGIC_NO_CHECK_ENCODING")]
         const NO_CHECK_ENCODING = self::ffi::MAGIC_NO_CHECK_ENCODING;
 
         /// Don't examine JSON files
+        #[doc(alias = "MAGIC_NO_CHECK_JSON")]
         const NO_CHECK_JSON     = self::ffi::MAGIC_NO_CHECK_JSON;
 
         /// No built-in tests; only consult the magic file
+        #[doc(alias = "MAGIC_NO_CHECK_BUILTIN")]
         const NO_CHECK_BUILTIN  = Self::NO_CHECK_COMPRESS.bits
                                 | Self::NO_CHECK_TAR.bits
                                 | Self::NO_CHECK_APPTYPE.bits
@@ -207,12 +235,15 @@ impl Display for MagicError {
 
 /// Configuration of which `CookieFlags` and magic databases to use
 #[derive(Debug)]
+#[doc(alias = "magic_t")]
+#[doc(alias = "magic_set")]
 pub struct Cookie {
     cookie: self::ffi::magic_t,
 }
 
 impl Drop for Cookie {
     /// Closes the magic database and deallocates any resources used
+    #[doc(alias = "magic_close")]
     fn drop(&mut self) {
         unsafe { self::ffi::magic_close(self.cookie) }
     }
@@ -245,6 +276,7 @@ impl Cookie {
     }
 
     /// Returns a textual description of the contents of the `filename`
+    #[doc(alias = "magic_file")]
     pub fn file<P: AsRef<Path>>(&self, filename: P) -> Result<String, MagicError> {
         let cookie = self.cookie;
         let f = CString::new(filename.as_ref().to_string_lossy().into_owned())
@@ -262,6 +294,7 @@ impl Cookie {
     }
 
     /// Returns a textual description of the contents of the `buffer`
+    #[doc(alias = "magic_buffer")]
     pub fn buffer(&self, buffer: &[u8]) -> Result<String, MagicError> {
         let buffer_len = buffer.len() as size_t;
         let pbuffer = buffer.as_ptr();
@@ -281,6 +314,7 @@ impl Cookie {
     /// You should not need to call this, since you can use the `MagicError` in
     /// the `Result` returned by the other functions.
     // TODO: Remove this entirely?
+    #[doc(alias = "magic_error")]
     pub fn error(&self) -> Option<String> {
         unsafe {
             let str = self::ffi::magic_error(self.cookie);
@@ -296,6 +330,7 @@ impl Cookie {
     /// Sets the flags to use
     ///
     /// Overwrites any previously set flags, e.g. those from `load()`.
+    #[doc(alias = "magic_setflags")]
     #[must_use]
     pub fn set_flags(&self, flags: self::CookieFlags) -> bool {
         unsafe { self::ffi::magic_setflags(self.cookie, flags.bits()) != -1 }
@@ -305,6 +340,7 @@ impl Cookie {
     // TODO: ^ also needs to implement multiple databases, possibly waiting for the Path reform
 
     /// Check the validity of entries in the database `filenames`
+    #[doc(alias = "magic_check")]
     pub fn check<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), MagicError> {
         let cookie = self.cookie;
         let db_filenames = db_filenames(filenames);
@@ -323,6 +359,7 @@ impl Cookie {
     /// Compiles the given database `filenames` for faster access
     ///
     /// The compiled files created are named from the `basename` of each file argument with '.mgc' appended to it.
+    #[doc(alias = "magic_compile")]
     pub fn compile<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), MagicError> {
         let cookie = self.cookie;
         let db_filenames = db_filenames(filenames);
@@ -339,6 +376,7 @@ impl Cookie {
     }
 
     /// Dumps all magic entries in the given database `filenames` in a human readable format
+    #[doc(alias = "magic_list")]
     pub fn list<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), MagicError> {
         let cookie = self.cookie;
         let db_filenames = db_filenames(filenames);
@@ -357,6 +395,7 @@ impl Cookie {
     /// Loads the given database `filenames` for further queries
     ///
     /// Adds '.mgc' to the database filenames as appropriate.
+    #[doc(alias = "magic_load")]
     pub fn load<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), MagicError> {
         let cookie = self.cookie;
         let db_filenames = db_filenames(filenames);
@@ -377,6 +416,7 @@ impl Cookie {
     /// This function can be used in environment where `libmagic` does
     /// not have direct access to the filesystem, but can access the magic
     /// database via shared memory or other IPC means.
+    #[doc(alias = "magic_load_buffers")]
     pub fn load_buffers(&self, buffers: &[&[u8]]) -> Result<(), MagicError> {
         let cookie = self.cookie;
         let mut ffi_buffers: Vec<*const u8> = Vec::with_capacity(buffers.len());
@@ -408,6 +448,7 @@ impl Cookie {
     /// Creates a new configuration, `flags` specify how other functions should behave
     ///
     /// This does not `load()` any databases yet.
+    #[doc(alias = "magic_open")]
     pub fn open(flags: self::CookieFlags) -> Result<Cookie, MagicError> {
         let cookie;
         unsafe {
