@@ -520,7 +520,7 @@ mod tests {
     fn load_buffers_file() {
         let cookie = Cookie::open(Default::default()).ok().unwrap();
         // file --compile --magic-file data/tests/db-images-png
-        let magic_database = std::fs::read("data/tests/db-images-png.mgc").unwrap();
+        let magic_database = std::fs::read("data/tests/db-images-png-precompiled.mgc").unwrap();
         let buffers = vec![magic_database.as_slice()];
         cookie.load_buffers(&*buffers).unwrap();
 
