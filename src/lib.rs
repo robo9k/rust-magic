@@ -372,6 +372,39 @@ impl Cookie {
         }
     }
 
+    /// Loads the given compiled databases for further queries
+    ///
+    /// This function can be used in environment where `libmagic` does
+    /// not have direct access to the filesystem, but can access the magic
+    /// database via shared memory or other IPC means.
+    pub fn load_buffers(&self, buffers: &[&[u8]]) -> Result<(), MagicError> {
+        let cookie = self.cookie;
+        let mut ffi_buffers: Vec<*const u8> = Vec::with_capacity(buffers.len());
+        let mut ffi_sizes: Vec<libc::size_t> = Vec::with_capacity(buffers.len());
+        let ffi_nbuffers = buffers.len() as libc::size_t;
+        let ret;
+
+        for slice in buffers {
+            ffi_buffers.push((*slice).as_ptr());
+            ffi_sizes.push(slice.len() as libc::size_t);
+        }
+
+        unsafe {
+            ret = self::ffi::magic_load_buffers(
+                cookie,
+                ffi_buffers.as_mut_ptr() as *mut *mut libc::c_void,
+                ffi_sizes.as_mut_ptr(),
+                ffi_nbuffers,
+            )
+        };
+
+        if 0 == ret {
+            Ok(())
+        } else {
+            Err(self.magic_failure())
+        }
+    }
+
     /// Creates a new configuration, `flags` specify how other functions should behave
     ///
     /// This does not `load()` any databases yet.
@@ -482,4 +515,19 @@ mod tests {
     }
 
     assert_impl_all!(Cookie: std::fmt::Debug);
+
+    #[test]
+    fn load_buffers_file() {
+        let cookie = Cookie::open(Default::default()).ok().unwrap();
+        // file --compile --magic-file data/tests/db-images-png
+        let magic_database = std::fs::read("data/tests/db-images-png.mgc").unwrap();
+        let buffers = vec![magic_database.as_slice()];
+        cookie.load_buffers(&*buffers).unwrap();
+
+        let path = "data/tests/rust-logo-128x128-blk.png";
+        assert_eq!(
+            cookie.file(&path).ok().unwrap(),
+            "PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced"
+        );
+    }
 }
