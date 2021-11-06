@@ -98,10 +98,21 @@ bitflags! {
 
         /// A shorthand for `MIME_TYPE | MIME_ENCODING`
         const MIME              = Self::MIME_TYPE.bits
-                                 | Self::MIME_ENCODING.bits;
+                                | Self::MIME_ENCODING.bits;
 
         /// Return the Apple creator and type
         const APPLE             = self::ffi::MAGIC_APPLE;
+
+        /// Return a slash-separated list of extensions for this file type
+        const EXTENSION         = self::ffi::MAGIC_EXTENSION;
+
+        /// Don't report on compression, only report about the uncompressed data
+        const COMPRESS_TRANSP   = self::ffi::MAGIC_COMPRESS_TRANSP;
+
+        /// A shorthand for `EXTENSION | MIME | APPLE`
+        const NODESC            = Self::EXTENSION.bits
+                                | Self::MIME.bits
+                                | Self::APPLE.bits;
 
         /// Don't look inside compressed files
         const NO_CHECK_COMPRESS = self::ffi::MAGIC_NO_CHECK_COMPRESS;
@@ -124,21 +135,29 @@ bitflags! {
         /// Don't get extra information on MS Composite Document Files
         const NO_CHECK_CDF      = self::ffi::MAGIC_NO_CHECK_CDF;
 
+        /// Don't examine CSV files
+        const NO_CHECK_CSV      = self::ffi::MAGIC_NO_CHECK_CSV;
+
         /// Don't look for known tokens inside ascii files
         const NO_CHECK_TOKENS   = self::ffi::MAGIC_NO_CHECK_TOKENS;
 
         /// Don't check text encodings
         const NO_CHECK_ENCODING = self::ffi::MAGIC_NO_CHECK_ENCODING;
 
+        /// Don't examine JSON files
+        const NO_CHECK_JSON     = self::ffi::MAGIC_NO_CHECK_JSON;
+
         /// No built-in tests; only consult the magic file
         const NO_CHECK_BUILTIN  = Self::NO_CHECK_COMPRESS.bits
-                                 | Self::NO_CHECK_TAR.bits
-                                 | Self::NO_CHECK_APPTYPE.bits
-                                 | Self::NO_CHECK_ELF.bits
-                                 | Self::NO_CHECK_TEXT.bits
-                                 | Self::NO_CHECK_CDF.bits
-                                 | Self::NO_CHECK_TOKENS.bits
-                                 | Self::NO_CHECK_ENCODING.bits;
+                                | Self::NO_CHECK_TAR.bits
+                                | Self::NO_CHECK_APPTYPE.bits
+                                | Self::NO_CHECK_ELF.bits
+                                | Self::NO_CHECK_TEXT.bits
+                                | Self::NO_CHECK_CSV.bits
+                                | Self::NO_CHECK_CDF.bits
+                                | Self::NO_CHECK_TOKENS.bits
+                                | Self::NO_CHECK_ENCODING.bits
+                                | Self::NO_CHECK_JSON.bits;
     }
 }
 
