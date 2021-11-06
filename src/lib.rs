@@ -49,97 +49,115 @@ bitflags! {
     /// Bitmask flags that specify how `Cookie` functions should behave
     ///
     /// NOTE: The descriptions are taken from `man libmagic 3`.
+    ///
+    /// `MAGIC_NONE` is the default, meaning "No special handling".
+    /// ```
+    /// let default_flags: magic::CookieFlags = Default::default();
+    /// assert_eq!(default_flags, magic::CookieFlags::empty());
+    /// ```
+    #[derive(Default)]
     pub struct CookieFlags: c_int {
-        /// No special handling
-        const NONE              = 0x000000;
+        // MAGIC_NONE is 0/default, see https://docs.rs/bitflags/1.3.2/bitflags/#zero-flags
 
         /// Print debugging messages to `stderr`
         ///
         /// NOTE: Those messages are printed by `libmagic` itself, no this Rust crate.
-        const DEBUG             = 0x000001;
+        const DEBUG             = self::ffi::MAGIC_DEBUG;
 
         /// If the file queried is a symlink, follow it
-        const SYMLINK           = 0x000002;
+        const SYMLINK           = self::ffi::MAGIC_SYMLINK;
 
         /// If the file is compressed, unpack it and look at the contents
-        const COMPRESS          = 0x000004;
+        const COMPRESS          = self::ffi::MAGIC_COMPRESS;
 
         /// If the file is a block or character special device, then open the device and try to look in its contents
-        const DEVICES           = 0x000008;
+        const DEVICES           = self::ffi::MAGIC_DEVICES;
 
         /// Return a MIME type string, instead of a textual description
-        const MIME_TYPE         = 0x000010;
+        const MIME_TYPE         = self::ffi::MAGIC_MIME_TYPE;
 
         /// Return all matches, not just the first
-        const CONTINUE          = 0x000020;
+        const CONTINUE          = self::ffi::MAGIC_CONTINUE;
 
         /// Check the magic database for consistency and print warnings to `stderr`
         ///
         /// NOTE: Those warnings are printed by `libmagic` itself, no this Rust crate.
-        const CHECK             = 0x000040;
+        const CHECK             = self::ffi::MAGIC_CHECK;
 
         /// On systems that support `utime(2)` or `utimes(2)`, attempt to preserve the access time of files analyzed
-        const PRESERVE_ATIME    = 0x000080;
+        const PRESERVE_ATIME    = self::ffi::MAGIC_PRESERVE_ATIME;
 
         /// Don't translate unprintable characters to a `\\ooo` octal representation
-        const RAW               = 0x000100;
+        const RAW               = self::ffi::MAGIC_RAW;
 
         /// Treat operating system errors while trying to open files and follow symlinks as real errors, instead of printing them in the magic buffer
-        const ERROR             = 0x000200;
+        const ERROR             = self::ffi::MAGIC_ERROR;
 
         /// Return a MIME encoding, instead of a textual description
-        const MIME_ENCODING     = 0x000400;
+        const MIME_ENCODING     = self::ffi::MAGIC_MIME_ENCODING;
 
         /// A shorthand for `MIME_TYPE | MIME_ENCODING`
         const MIME              = Self::MIME_TYPE.bits
-                                 | Self::MIME_ENCODING.bits;
+                                | Self::MIME_ENCODING.bits;
 
         /// Return the Apple creator and type
-        const APPLE             = 0x000800;
+        const APPLE             = self::ffi::MAGIC_APPLE;
+
+        /// Return a slash-separated list of extensions for this file type
+        const EXTENSION         = self::ffi::MAGIC_EXTENSION;
+
+        /// Don't report on compression, only report about the uncompressed data
+        const COMPRESS_TRANSP   = self::ffi::MAGIC_COMPRESS_TRANSP;
+
+        /// A shorthand for `EXTENSION | MIME | APPLE`
+        const NODESC            = Self::EXTENSION.bits
+                                | Self::MIME.bits
+                                | Self::APPLE.bits;
 
         /// Don't look inside compressed files
-        const NO_CHECK_COMPRESS = 0x001000;
+        const NO_CHECK_COMPRESS = self::ffi::MAGIC_NO_CHECK_COMPRESS;
 
         /// Don't examine tar files
-        const NO_CHECK_TAR      = 0x002000;
+        const NO_CHECK_TAR      = self::ffi::MAGIC_NO_CHECK_TAR;
 
         /// Don't consult magic files
-        const NO_CHECK_SOFT     = 0x004000;
+        const NO_CHECK_SOFT     = self::ffi::MAGIC_NO_CHECK_SOFT;
 
         /// Check for EMX application type (only on EMX)
-        const NO_CHECK_APPTYPE  = 0x008000;
+        const NO_CHECK_APPTYPE  = self::ffi::MAGIC_NO_CHECK_APPTYPE;
 
         /// Don't print ELF details
-        const NO_CHECK_ELF      = 0x010000;
+        const NO_CHECK_ELF      = self::ffi::MAGIC_NO_CHECK_ELF;
 
         /// Don't check for various types of text files
-        const NO_CHECK_TEXT     = 0x020000;
+        const NO_CHECK_TEXT     = self::ffi::MAGIC_NO_CHECK_TEXT;
 
         /// Don't get extra information on MS Composite Document Files
-        const NO_CHECK_CDF      = 0x040000;
+        const NO_CHECK_CDF      = self::ffi::MAGIC_NO_CHECK_CDF;
+
+        /// Don't examine CSV files
+        const NO_CHECK_CSV      = self::ffi::MAGIC_NO_CHECK_CSV;
 
         /// Don't look for known tokens inside ascii files
-        const NO_CHECK_TOKENS   = 0x100000;
+        const NO_CHECK_TOKENS   = self::ffi::MAGIC_NO_CHECK_TOKENS;
 
         /// Don't check text encodings
-        const NO_CHECK_ENCODING = 0x200000;
+        const NO_CHECK_ENCODING = self::ffi::MAGIC_NO_CHECK_ENCODING;
+
+        /// Don't examine JSON files
+        const NO_CHECK_JSON     = self::ffi::MAGIC_NO_CHECK_JSON;
 
         /// No built-in tests; only consult the magic file
         const NO_CHECK_BUILTIN  = Self::NO_CHECK_COMPRESS.bits
-                                 | Self::NO_CHECK_TAR.bits
-                                 | Self::NO_CHECK_APPTYPE.bits
-                                 | Self::NO_CHECK_ELF.bits
-                                 | Self::NO_CHECK_TEXT.bits
-                                 | Self::NO_CHECK_CDF.bits
-                                 | Self::NO_CHECK_TOKENS.bits
-                                 | Self::NO_CHECK_ENCODING.bits;
-    }
-}
-
-impl Default for CookieFlags {
-    /// Returns `NONE`
-    fn default() -> CookieFlags {
-        CookieFlags::NONE
+                                | Self::NO_CHECK_TAR.bits
+                                | Self::NO_CHECK_APPTYPE.bits
+                                | Self::NO_CHECK_ELF.bits
+                                | Self::NO_CHECK_TEXT.bits
+                                | Self::NO_CHECK_CSV.bits
+                                | Self::NO_CHECK_CDF.bits
+                                | Self::NO_CHECK_TOKENS.bits
+                                | Self::NO_CHECK_ENCODING.bits
+                                | Self::NO_CHECK_JSON.bits;
     }
 }
 
@@ -186,7 +204,7 @@ impl Display for MagicError {
 
 /// Configuration of which `CookieFlags` and magic databases to use
 pub struct Cookie {
-    cookie: *const self::ffi::Magic,
+    cookie: self::ffi::magic_t,
 }
 
 impl Drop for Cookie {
@@ -381,7 +399,7 @@ mod tests {
 
     #[test]
     fn file() {
-        let cookie = Cookie::open(CookieFlags::NONE).ok().unwrap();
+        let cookie = Cookie::open(Default::default()).ok().unwrap();
         assert!(cookie.load(&vec!["data/tests/db-images-png"]).is_ok());
 
         let path = "data/tests/rust-logo-128x128-blk.png";
@@ -403,7 +421,7 @@ mod tests {
 
     #[test]
     fn buffer() {
-        let cookie = Cookie::open(CookieFlags::NONE).ok().unwrap();
+        let cookie = Cookie::open(Default::default()).ok().unwrap();
         assert!(cookie
             .load(&vec!["data/tests/db-python"].as_slice())
             .is_ok());
@@ -420,9 +438,7 @@ mod tests {
 
     #[test]
     fn file_error() {
-        let cookie = Cookie::open(CookieFlags::NONE | CookieFlags::ERROR)
-            .ok()
-            .unwrap();
+        let cookie = Cookie::open(CookieFlags::ERROR).ok().unwrap();
         assert!(cookie.load::<&str>(&[]).is_ok());
 
         let ret = cookie.file("non-existent_file.txt");
@@ -435,17 +451,13 @@ mod tests {
 
     #[test]
     fn load_default() {
-        let cookie = Cookie::open(CookieFlags::NONE | CookieFlags::ERROR)
-            .ok()
-            .unwrap();
+        let cookie = Cookie::open(CookieFlags::ERROR).ok().unwrap();
         assert!(cookie.load::<&str>(&[]).is_ok());
     }
 
     #[test]
     fn load_one() {
-        let cookie = Cookie::open(CookieFlags::NONE | CookieFlags::ERROR)
-            .ok()
-            .unwrap();
+        let cookie = Cookie::open(CookieFlags::ERROR).ok().unwrap();
         assert!(cookie.load(&vec!["data/tests/db-images-png"]).is_ok());
     }
 
@@ -453,9 +465,7 @@ mod tests {
     // TODO: This should not really fail
     #[should_panic(expected = "not implemented")]
     fn load_multiple() {
-        let cookie = Cookie::open(CookieFlags::NONE | CookieFlags::ERROR)
-            .ok()
-            .unwrap();
+        let cookie = Cookie::open(CookieFlags::ERROR).ok().unwrap();
         assert!(cookie
             .load(&vec!["data/tests/db-images-png", "data/tests/db-python",])
             .is_ok());
