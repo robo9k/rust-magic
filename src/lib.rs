@@ -186,7 +186,7 @@ impl Display for MagicError {
 
 /// Configuration of which `CookieFlags` and magic databases to use
 pub struct Cookie {
-    cookie: *const self::ffi::Magic,
+    cookie: self::ffi::magic_t,
 }
 
 impl Drop for Cookie {
