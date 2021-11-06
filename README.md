@@ -23,7 +23,7 @@ Then use the [`magic` crate](https://crates.io/crates/magic) according to [its d
 
 # MSRV
 
-The Minimum Supported Rust Version (MSRV) is Rust 1.46 or higher.
+The Minimum Supported Rust Version (MSRV) is Rust 1.48 or higher.
 
 This version might be changed in the future, but it will be done with a crate version bump.
 

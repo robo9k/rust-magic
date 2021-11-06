@@ -31,10 +31,10 @@ exclude = [
 	"data/tests/",
 	".bumpversion.cfg",
 ]
-rust-version = "1.46"
+rust-version = "1.48"
 
 [package.metadata]
-msrv = "1.46.0"
+msrv = "1.48.0"
 
 [package.metadata.docs.rs]
 all-features = true
