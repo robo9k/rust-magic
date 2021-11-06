@@ -51,78 +51,78 @@ bitflags! {
     /// NOTE: The descriptions are taken from `man libmagic 3`.
     pub struct CookieFlags: c_int {
         /// No special handling
-        const NONE              = 0x000000;
+        const NONE              = self::ffi::MAGIC_NONE;
 
         /// Print debugging messages to `stderr`
         ///
         /// NOTE: Those messages are printed by `libmagic` itself, no this Rust crate.
-        const DEBUG             = 0x000001;
+        const DEBUG             = self::ffi::MAGIC_DEBUG;
 
         /// If the file queried is a symlink, follow it
-        const SYMLINK           = 0x000002;
+        const SYMLINK           = self::ffi::MAGIC_SYMLINK;
 
         /// If the file is compressed, unpack it and look at the contents
-        const COMPRESS          = 0x000004;
+        const COMPRESS          = self::ffi::MAGIC_COMPRESS;
 
         /// If the file is a block or character special device, then open the device and try to look in its contents
-        const DEVICES           = 0x000008;
+        const DEVICES           = self::ffi::MAGIC_DEVICES;
 
         /// Return a MIME type string, instead of a textual description
-        const MIME_TYPE         = 0x000010;
+        const MIME_TYPE         = self::ffi::MAGIC_MIME_TYPE;
 
         /// Return all matches, not just the first
-        const CONTINUE          = 0x000020;
+        const CONTINUE          = self::ffi::MAGIC_CONTINUE;
 
         /// Check the magic database for consistency and print warnings to `stderr`
         ///
         /// NOTE: Those warnings are printed by `libmagic` itself, no this Rust crate.
-        const CHECK             = 0x000040;
+        const CHECK             = self::ffi::MAGIC_CHECK;
 
         /// On systems that support `utime(2)` or `utimes(2)`, attempt to preserve the access time of files analyzed
-        const PRESERVE_ATIME    = 0x000080;
+        const PRESERVE_ATIME    = self::ffi::MAGIC_PRESERVE_ATIME;
 
         /// Don't translate unprintable characters to a `\\ooo` octal representation
-        const RAW               = 0x000100;
+        const RAW               = self::ffi::MAGIC_RAW;
 
         /// Treat operating system errors while trying to open files and follow symlinks as real errors, instead of printing them in the magic buffer
-        const ERROR             = 0x000200;
+        const ERROR             = self::ffi::MAGIC_ERROR;
 
         /// Return a MIME encoding, instead of a textual description
-        const MIME_ENCODING     = 0x000400;
+        const MIME_ENCODING     = self::ffi::MAGIC_MIME_ENCODING;
 
         /// A shorthand for `MIME_TYPE | MIME_ENCODING`
         const MIME              = Self::MIME_TYPE.bits
                                  | Self::MIME_ENCODING.bits;
 
         /// Return the Apple creator and type
-        const APPLE             = 0x000800;
+        const APPLE             = self::ffi::MAGIC_APPLE;
 
         /// Don't look inside compressed files
-        const NO_CHECK_COMPRESS = 0x001000;
+        const NO_CHECK_COMPRESS = self::ffi::MAGIC_NO_CHECK_COMPRESS;
 
         /// Don't examine tar files
-        const NO_CHECK_TAR      = 0x002000;
+        const NO_CHECK_TAR      = self::ffi::MAGIC_NO_CHECK_TAR;
 
         /// Don't consult magic files
-        const NO_CHECK_SOFT     = 0x004000;
+        const NO_CHECK_SOFT     = self::ffi::MAGIC_NO_CHECK_SOFT;
 
         /// Check for EMX application type (only on EMX)
-        const NO_CHECK_APPTYPE  = 0x008000;
+        const NO_CHECK_APPTYPE  = self::ffi::MAGIC_NO_CHECK_APPTYPE;
 
         /// Don't print ELF details
-        const NO_CHECK_ELF      = 0x010000;
+        const NO_CHECK_ELF      = self::ffi::MAGIC_NO_CHECK_ELF;
 
         /// Don't check for various types of text files
-        const NO_CHECK_TEXT     = 0x020000;
+        const NO_CHECK_TEXT     = self::ffi::MAGIC_NO_CHECK_TEXT;
 
         /// Don't get extra information on MS Composite Document Files
-        const NO_CHECK_CDF      = 0x040000;
+        const NO_CHECK_CDF      = self::ffi::MAGIC_NO_CHECK_CDF;
 
         /// Don't look for known tokens inside ascii files
-        const NO_CHECK_TOKENS   = 0x100000;
+        const NO_CHECK_TOKENS   = self::ffi::MAGIC_NO_CHECK_TOKENS;
 
         /// Don't check text encodings
-        const NO_CHECK_ENCODING = 0x200000;
+        const NO_CHECK_ENCODING = self::ffi::MAGIC_NO_CHECK_ENCODING;
 
         /// No built-in tests; only consult the magic file
         const NO_CHECK_BUILTIN  = Self::NO_CHECK_COMPRESS.bits
