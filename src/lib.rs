@@ -49,9 +49,15 @@ bitflags! {
     /// Bitmask flags that specify how `Cookie` functions should behave
     ///
     /// NOTE: The descriptions are taken from `man libmagic 3`.
+    ///
+    /// `MAGIC_NONE` is the default, meaning "No special handling".
+    /// ```
+    /// let default_flags: magic::CookieFlags = Default::default();
+    /// assert_eq!(default_flags, magic::CookieFlags::empty());
+    /// ```
+    #[derive(Default)]
     pub struct CookieFlags: c_int {
-        /// No special handling
-        const NONE              = self::ffi::MAGIC_NONE;
+        // MAGIC_NONE is 0/default, see https://docs.rs/bitflags/1.3.2/bitflags/#zero-flags
 
         /// Print debugging messages to `stderr`
         ///
@@ -133,13 +139,6 @@ bitflags! {
                                  | Self::NO_CHECK_CDF.bits
                                  | Self::NO_CHECK_TOKENS.bits
                                  | Self::NO_CHECK_ENCODING.bits;
-    }
-}
-
-impl Default for CookieFlags {
-    /// Returns `NONE`
-    fn default() -> CookieFlags {
-        CookieFlags::NONE
     }
 }
 
@@ -381,7 +380,7 @@ mod tests {
 
     #[test]
     fn file() {
-        let cookie = Cookie::open(CookieFlags::NONE).ok().unwrap();
+        let cookie = Cookie::open(Default::default()).ok().unwrap();
         assert!(cookie.load(&vec!["data/tests/db-images-png"]).is_ok());
 
         let path = "data/tests/rust-logo-128x128-blk.png";
@@ -403,7 +402,7 @@ mod tests {
 
     #[test]
     fn buffer() {
-        let cookie = Cookie::open(CookieFlags::NONE).ok().unwrap();
+        let cookie = Cookie::open(Default::default()).ok().unwrap();
         assert!(cookie
             .load(&vec!["data/tests/db-python"].as_slice())
             .is_ok());
@@ -420,9 +419,7 @@ mod tests {
 
     #[test]
     fn file_error() {
-        let cookie = Cookie::open(CookieFlags::NONE | CookieFlags::ERROR)
-            .ok()
-            .unwrap();
+        let cookie = Cookie::open(CookieFlags::ERROR).ok().unwrap();
         assert!(cookie.load::<&str>(&[]).is_ok());
 
         let ret = cookie.file("non-existent_file.txt");
@@ -435,17 +432,13 @@ mod tests {
 
     #[test]
     fn load_default() {
-        let cookie = Cookie::open(CookieFlags::NONE | CookieFlags::ERROR)
-            .ok()
-            .unwrap();
+        let cookie = Cookie::open(CookieFlags::ERROR).ok().unwrap();
         assert!(cookie.load::<&str>(&[]).is_ok());
     }
 
     #[test]
     fn load_one() {
-        let cookie = Cookie::open(CookieFlags::NONE | CookieFlags::ERROR)
-            .ok()
-            .unwrap();
+        let cookie = Cookie::open(CookieFlags::ERROR).ok().unwrap();
         assert!(cookie.load(&vec!["data/tests/db-images-png"]).is_ok());
     }
 
@@ -453,9 +446,7 @@ mod tests {
     // TODO: This should not really fail
     #[should_panic(expected = "not implemented")]
     fn load_multiple() {
-        let cookie = Cookie::open(CookieFlags::NONE | CookieFlags::ERROR)
-            .ok()
-            .unwrap();
+        let cookie = Cookie::open(CookieFlags::ERROR).ok().unwrap();
         assert!(cookie
             .load(&vec!["data/tests/db-images-png", "data/tests/db-python",])
             .is_ok());
