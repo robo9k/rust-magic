@@ -235,7 +235,8 @@ impl Display for MagicError {
 
 /// Configuration of which `CookieFlags` and magic databases to use
 #[derive(Debug)]
-#[doc(alias("magic_t", "magic_set"))]
+#[doc(alias = "magic_t")]
+#[doc(alias = "magic_set")]
 pub struct Cookie {
     cookie: self::ffi::magic_t,
 }
