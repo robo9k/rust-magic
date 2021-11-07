@@ -244,6 +244,8 @@ pub enum MagicError {
     Libmagic(#[from] LibmagicError),
     #[error(transparent)]
     LibmagicOpen(#[from] LibmagicOpenError),
+    #[error("`libmagic` flag {0:?} is not supported on this system")]
+    LibmagicFlagUnsupported(CookieFlags),
     #[error("unknown error")]
     Unknown,
 }
@@ -352,9 +354,14 @@ impl Cookie {
     ///
     /// Overwrites any previously set flags, e.g. those from `load()`.
     #[doc(alias = "magic_setflags")]
-    #[must_use]
-    pub fn set_flags(&self, flags: self::CookieFlags) -> bool {
-        unsafe { self::ffi::magic_setflags(self.cookie, flags.bits()) != -1 }
+    pub fn set_flags(&self, flags: self::CookieFlags) -> Result<(), MagicError> {
+        let ret = unsafe { self::ffi::magic_setflags(self.cookie, flags.bits()) };
+        match ret {
+            -1 => Err(MagicError::LibmagicFlagUnsupported(
+                CookieFlags::PRESERVE_ATIME,
+            )),
+            _ => Ok(()),
+        }
     }
 
     // TODO: check, compile, list and load mostly do the same, refactor!
@@ -510,10 +517,12 @@ mod tests {
             "PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced"
         );
 
-        assert!(cookie.set_flags(CookieFlags::MIME_TYPE));
+        cookie.set_flags(CookieFlags::MIME_TYPE).unwrap();
         assert_eq!(cookie.file(&path).ok().unwrap(), "image/png");
 
-        assert!(cookie.set_flags(CookieFlags::MIME_TYPE | CookieFlags::MIME_ENCODING));
+        cookie
+            .set_flags(CookieFlags::MIME_TYPE | CookieFlags::MIME_ENCODING)
+            .unwrap();
         assert_eq!(
             cookie.file(&path).ok().unwrap(),
             "image/png; charset=binary"
@@ -533,7 +542,7 @@ mod tests {
             "Python script, ASCII text executable"
         );
 
-        assert!(cookie.set_flags(CookieFlags::MIME_TYPE));
+        cookie.set_flags(CookieFlags::MIME_TYPE).unwrap();
         assert_eq!(cookie.buffer(s).ok().unwrap(), "text/x-python");
     }
 
