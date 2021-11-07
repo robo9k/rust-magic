@@ -39,14 +39,15 @@ extern crate bitflags;
 #[cfg(test)]
 #[macro_use]
 extern crate static_assertions;
+extern crate errno;
+extern crate thiserror;
 
 use libc::{c_char, c_int, size_t};
-use std::error;
 use std::ffi::{CStr, CString};
-use std::fmt::Display;
 use std::path::Path;
 use std::ptr;
 use std::str;
+use thiserror::Error;
 
 bitflags! {
     /// Bitmask flags that specify how `Cookie` functions should behave
@@ -215,22 +216,39 @@ fn db_filenames<P: AsRef<Path>>(filenames: &[P]) -> *const c_char {
     }
 }
 
+/// Generic `libmagic` error type for successfuly opened [`Cookie`] instances
+#[doc(alias = "magic_error")]
+#[derive(Error, Debug)]
+#[error("`libmagic` error ({}): {explanation}", match .errno {
+    Some(errno) => format!("OS errno: {}", errno),
+    None => "no OS errno".to_string(),
+})]
+pub struct LibmagicError {
+    explanation: String,
+    #[source]
+    errno: Option<errno::Errno>,
+}
+
+/// `libmagic` error type for [`Cookie::open`]
+#[derive(Error, Debug)]
+#[error("`libmagic` error for `magic_open`, errno: {errno}")]
+pub struct LibmagicOpenError {
+    #[source]
+    errno: errno::Errno,
+}
+
 /// The error type used in this crate
-#[derive(PartialEq, Eq, Clone, Debug)]
-pub struct MagicError {
-    pub desc: String,
-}
-
-impl error::Error for MagicError {
-    fn description(&self) -> &str {
-        "internal libmagic error"
-    }
-}
-
-impl Display for MagicError {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}", self.desc)
-    }
+#[non_exhaustive]
+#[derive(Error, Debug)]
+pub enum MagicError {
+    #[error(transparent)]
+    Libmagic(#[from] LibmagicError),
+    #[error(transparent)]
+    LibmagicOpen(#[from] LibmagicOpenError),
+    #[error("`libmagic` flag {0:?} is not supported on this system")]
+    LibmagicFlagUnsupported(CookieFlags),
+    #[error("unknown error")]
+    Unknown,
 }
 
 /// Configuration of which `CookieFlags` and magic databases to use
@@ -254,14 +272,22 @@ impl Cookie {
         let cookie = self.cookie;
 
         unsafe {
-            let e = self::ffi::magic_error(cookie);
-            if e.is_null() {
+            let error = self::ffi::magic_error(cookie);
+            let errno = self::ffi::magic_errno(cookie);
+            if error.is_null() {
                 None
             } else {
-                let slice = CStr::from_ptr(e).to_bytes();
-                Some(self::MagicError {
-                    desc: str::from_utf8(slice).unwrap().to_string(),
-                })
+                let slice = CStr::from_ptr(error).to_bytes();
+                Some(
+                    LibmagicError {
+                        explanation: str::from_utf8(slice).unwrap().to_string(),
+                        errno: match errno {
+                            0 => None,
+                            _ => Some(errno::Errno(errno)),
+                        },
+                    }
+                    .into(),
+                )
             }
         }
     }
@@ -269,9 +295,7 @@ impl Cookie {
     fn magic_failure(&self) -> MagicError {
         match self.last_error() {
             Some(e) => e,
-            None => self::MagicError {
-                desc: "unknown error".to_string(),
-            },
+            None => MagicError::Unknown,
         }
     }
 
@@ -309,31 +333,18 @@ impl Cookie {
         }
     }
 
-    /// Returns a textual explanation of the last error, if any
-    ///
-    /// You should not need to call this, since you can use the `MagicError` in
-    /// the `Result` returned by the other functions.
-    // TODO: Remove this entirely?
-    #[doc(alias = "magic_error")]
-    pub fn error(&self) -> Option<String> {
-        unsafe {
-            let str = self::ffi::magic_error(self.cookie);
-            if str.is_null() {
-                None
-            } else {
-                let slice = CStr::from_ptr(str).to_bytes();
-                Some(str::from_utf8(slice).unwrap().to_string())
-            }
-        }
-    }
-
     /// Sets the flags to use
     ///
     /// Overwrites any previously set flags, e.g. those from `load()`.
     #[doc(alias = "magic_setflags")]
-    #[must_use]
-    pub fn set_flags(&self, flags: self::CookieFlags) -> bool {
-        unsafe { self::ffi::magic_setflags(self.cookie, flags.bits()) != -1 }
+    pub fn set_flags(&self, flags: self::CookieFlags) -> Result<(), MagicError> {
+        let ret = unsafe { self::ffi::magic_setflags(self.cookie, flags.bits()) };
+        match ret {
+            -1 => Err(MagicError::LibmagicFlagUnsupported(
+                CookieFlags::PRESERVE_ATIME,
+            )),
+            _ => Ok(()),
+        }
     }
 
     // TODO: check, compile, list and load mostly do the same, refactor!
@@ -455,9 +466,10 @@ impl Cookie {
             cookie = self::ffi::magic_open((flags | self::CookieFlags::ERROR).bits());
         }
         if cookie.is_null() {
-            Err(self::MagicError {
-                desc: "errno".to_string(),
-            })
+            Err(LibmagicOpenError {
+                errno: errno::errno(),
+            }
+            .into())
         } else {
             Ok(Cookie { cookie })
         }
@@ -470,6 +482,7 @@ mod tests {
 
     use super::Cookie;
     use super::CookieFlags;
+    use super::MagicError;
 
     // Using relative paths to test files should be fine, since cargo doc
     // https://doc.rust-lang.org/cargo/reference/build-scripts.html#inputs-to-the-build-script
@@ -487,10 +500,12 @@ mod tests {
             "PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced"
         );
 
-        assert!(cookie.set_flags(CookieFlags::MIME_TYPE));
+        cookie.set_flags(CookieFlags::MIME_TYPE).unwrap();
         assert_eq!(cookie.file(&path).ok().unwrap(), "image/png");
 
-        assert!(cookie.set_flags(CookieFlags::MIME_TYPE | CookieFlags::MIME_ENCODING));
+        cookie
+            .set_flags(CookieFlags::MIME_TYPE | CookieFlags::MIME_ENCODING)
+            .unwrap();
         assert_eq!(
             cookie.file(&path).ok().unwrap(),
             "image/png; charset=binary"
@@ -510,7 +525,7 @@ mod tests {
             "Python script, ASCII text executable"
         );
 
-        assert!(cookie.set_flags(CookieFlags::MIME_TYPE));
+        cookie.set_flags(CookieFlags::MIME_TYPE).unwrap();
         assert_eq!(cookie.buffer(s).ok().unwrap(), "text/x-python");
     }
 
@@ -520,11 +535,10 @@ mod tests {
         assert!(cookie.load::<&str>(&[]).is_ok());
 
         let ret = cookie.file("non-existent_file.txt");
-        assert!(ret.is_err());
-        assert_eq!(
-            ret.err().unwrap().desc,
-            "cannot stat `non-existent_file.txt' (No such file or directory)"
-        );
+        match ret {
+            Err(e @ MagicError::Libmagic { .. }) => println!("{}", e),
+            ref e => panic!("result is not a `Libmagic` error: {:?}", e),
+        }
     }
 
     #[test]
