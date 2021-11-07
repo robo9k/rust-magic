@@ -1,36 +1,68 @@
 //! # About
 //!
-//! This crate provides bindings for `libmagic`, which recognizes the
+//! This crate provides bindings for the `libmagic` C library, which recognizes the
 //! type of data contained in a file (or buffer).
 //!
-//! You might be similar with `libmagic`'s CLI `file`:
+//! You might be familiar with `libmagic`'s CLI; [`file`](https://www.darwinsys.com/file/):
 //!
 //! ```sh
 //! $ file data/tests/rust-logo-128x128-blk.png
 //! data/tests/rust-logo-128x128-blk.png: PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced
 //! ```
 //!
+//! ## `libmagic`
+//!
+//! Understanding how the `libmagic` C library and thus this crate works requires a bit of glossary.
+//!
+//! `libmagic` at its core can analyze a file or buffer and return a mostly unstructured text that describes the analysis result.
+//! There are built-in tests for special cases and there are magic databases with signatures which can be supplied by the user for the generic cases.
+//!
+//! The analysis behaviour can be influenced by so-called flags and parameters.
+//! Flags are either set or unset and do not have a value, parameters have a value.
+//!
+//! Databases can be in text form or compiled binary form for faster access. They can be loaded from files on disk or from in-memory buffers.
+//! A regular `libmagic` / `file` installation contains a default database file that includes a plethora of file formats.
+//!
+//! Most `libmagic` functionality requires a configured instance which is called a "magic cookie".
+//! Creating a cookie instance requires initial flags and usually loaded databases.
+//!
 //! # Usage example
 //!
-//! Here's an example of using this crate:
+//! ```rust
+//! # fn main() -> Result<(), magic::MagicError> {
+//! // Open a new configuration with flags
+//! let cookie = magic::Cookie::open(magic::CookieFlags::ERROR)?;
+//! // Load the default database
+//! cookie.load::<&str>(&[])?;
+//! // Load an additional database for demonstration purposes
+//! cookie.load(&vec!["data/tests/db-images-png"])?;
 //!
+//! // Analyze a test file
+//! let file_to_analyze = "data/tests/rust-logo-128x128-blk.png";
+//! let expected_analysis_result = "PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced";
+//! assert_eq!(cookie.file(&file_to_analyze)?, expected_analysis_result);
+//! # Ok(())
+//! # }
 //! ```
-//! extern crate magic;
-//! use magic::{Cookie, CookieFlags};
+//! # Further reading
 //!
-//! fn main() {
-//!     // Create a new default configuration
-//!     let cookie = Cookie::open(CookieFlags::default()).unwrap();
-//!     // Load one specific magic database
-//!     let databases = vec!["data/tests/db-images-png"];
-//!     assert!(cookie.load(&databases).is_ok());
+//! * [`Cookie::open`]
+//! * [`CookieFlags`], in particular [`CookieFlags::ERROR`], [`CookieFlags::NO_CHECK_BUILTIN`]
+//! * [`Cookie::load`], [`Cookie::load_buffers`]
+//! * [`Cookie::file`], [`Cookie::buffer`]
 //!
-//!     // Recognize the magic of a test file
-//!     let test_file_path = "data/tests/rust-logo-128x128-blk.png";
-//!     let expected_magic = "PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced";
-//!     assert_eq!(cookie.file(&test_file_path).unwrap(), expected_magic);
-//! }
-//! ```
+//! # Safety
+//!
+//! This crate is a binding to the `libmagic` C library and as such subject to its security problems.
+//! Please note that `libmagic` has several CVEs, listed on e.g. [Repology](https://repology.org/project/file/cves).
+//! Make sure that you are using an up-to-date version of `libmagic` and ideally
+//! add additional security layers such as sandboxing (which this crate does _not_ provide)
+//! and __do not use it on untrusted input__ e.g. from users on the internet!
+//!
+//! The Rust code of this crate needs to use some `unsafe` for interacting with the `libmagic` C FFI.
+//!
+//! This crate has not been audited nor is it ready for production use.
+//!
 
 extern crate libc;
 extern crate magic_sys as ffi;
