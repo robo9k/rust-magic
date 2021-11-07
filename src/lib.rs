@@ -217,6 +217,7 @@ fn db_filenames<P: AsRef<Path>>(filenames: &[P]) -> *const c_char {
 }
 
 /// Generic `libmagic` error type for successfuly opened [`Cookie`] instances
+#[doc(alias = "magic_error")]
 #[derive(Error, Debug)]
 #[error("`libmagic` error ({}): {explanation}", match .errno {
     Some(errno) => format!("OS errno: {}", errno),
@@ -328,24 +329,6 @@ impl Cookie {
             } else {
                 let slice = CStr::from_ptr(str).to_bytes();
                 Ok(str::from_utf8(slice).unwrap().to_string())
-            }
-        }
-    }
-
-    /// Returns a textual explanation of the last error, if any
-    ///
-    /// You should not need to call this, since you can use the `MagicError` in
-    /// the `Result` returned by the other functions.
-    // TODO: Remove this entirely?
-    #[doc(alias = "magic_error")]
-    pub fn error(&self) -> Option<String> {
-        unsafe {
-            let str = self::ffi::magic_error(self.cookie);
-            if str.is_null() {
-                None
-            } else {
-                let slice = CStr::from_ptr(str).to_bytes();
-                Some(str::from_utf8(slice).unwrap().to_string())
             }
         }
     }
