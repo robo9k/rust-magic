@@ -74,7 +74,7 @@ extern crate static_assertions;
 extern crate errno;
 extern crate thiserror;
 
-use libc::{c_char, c_int, size_t};
+use libc::{c_int, size_t};
 use std::ffi::{CStr, CString};
 use std::path::Path;
 use std::ptr;
@@ -237,14 +237,20 @@ pub fn version() -> &'static str {
     )
 }
 
-fn db_filenames<P: AsRef<Path>>(filenames: &[P]) -> *const c_char {
+fn db_filenames<P: AsRef<Path>>(filenames: &[P]) -> Result<Option<CString>, MagicError> {
     match filenames.len() {
-        0 => ptr::null(),
-        // FIXME: This is just plain wrong. I'm surprised it works at all..
-        1 => CString::new(filenames[0].as_ref().to_string_lossy().into_owned())
-            .unwrap()
-            .into_raw(),
-        _ => unimplemented!(),
+        0 => Ok(None),
+        // this is not the most efficient nor correct for Windows, but consistent with previous behaviour
+        _ => Ok(Some(
+            CString::new(
+                filenames
+                    .iter()
+                    .map(|f| f.as_ref().to_string_lossy().into_owned())
+                    .collect::<Vec<String>>()
+                    .join(":"),
+            )
+            .map_err(|_| MagicError::InvalidDatabaseFilePath)?,
+        )),
     }
 }
 
@@ -279,6 +285,8 @@ pub enum MagicError {
     LibmagicOpen(#[from] LibmagicOpenError),
     #[error("`libmagic` flag {0:?} is not supported on this system")]
     LibmagicFlagUnsupported(CookieFlags),
+    #[error("invalid database file path")]
+    InvalidDatabaseFilePath,
     #[error("unknown error")]
     Unknown,
 }
@@ -386,11 +394,14 @@ impl Cookie {
     #[doc(alias = "magic_check")]
     pub fn check<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), MagicError> {
         let cookie = self.cookie;
-        let db_filenames = db_filenames(filenames);
+        let db_filenames = db_filenames(filenames)?;
         let ret;
 
         unsafe {
-            ret = self::ffi::magic_check(cookie, db_filenames);
+            ret = self::ffi::magic_check(
+                cookie,
+                db_filenames.map_or_else(ptr::null, |c| c.into_raw()),
+            );
         }
         if 0 == ret {
             Ok(())
@@ -405,11 +416,14 @@ impl Cookie {
     #[doc(alias = "magic_compile")]
     pub fn compile<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), MagicError> {
         let cookie = self.cookie;
-        let db_filenames = db_filenames(filenames);
+        let db_filenames = db_filenames(filenames)?;
         let ret;
 
         unsafe {
-            ret = self::ffi::magic_compile(cookie, db_filenames);
+            ret = self::ffi::magic_compile(
+                cookie,
+                db_filenames.map_or_else(ptr::null, |c| c.into_raw()),
+            );
         }
         if 0 == ret {
             Ok(())
@@ -422,11 +436,14 @@ impl Cookie {
     #[doc(alias = "magic_list")]
     pub fn list<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), MagicError> {
         let cookie = self.cookie;
-        let db_filenames = db_filenames(filenames);
+        let db_filenames = db_filenames(filenames)?;
         let ret;
 
         unsafe {
-            ret = self::ffi::magic_list(cookie, db_filenames);
+            ret = self::ffi::magic_list(
+                cookie,
+                db_filenames.map_or_else(ptr::null, |c| c.into_raw()),
+            );
         }
         if 0 == ret {
             Ok(())
@@ -437,15 +454,33 @@ impl Cookie {
 
     /// Loads the given database `filenames` for further queries
     ///
-    /// Adds '.mgc' to the database filenames as appropriate.
+    /// Adds ".mgc" to the database filenames as appropriate.
+    ///
+    /// Calling `Cookie::load` or [`Cookie::load_buffers`] replaces the previously loaded database/s.
+    ///
+    /// # Examples
+    /// ```rust
+    /// # fn main() -> Result<(), magic::MagicError> {
+    /// let cookie = magic::Cookie::open(Default::default())?;
+    ///
+    /// // Load the default database
+    /// cookie.load::<&str>(&[])?;
+    ///
+    /// // Load databases from files
+    /// cookie.load(&vec!["data/tests/db-images-png", "data/tests/db-python"])?;
+    /// # Ok(())
+    /// # }
     #[doc(alias = "magic_load")]
     pub fn load<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), MagicError> {
         let cookie = self.cookie;
-        let db_filenames = db_filenames(filenames);
+        let db_filenames = db_filenames(filenames)?;
         let ret;
 
         unsafe {
-            ret = self::ffi::magic_load(cookie, db_filenames);
+            ret = self::ffi::magic_load(
+                cookie,
+                db_filenames.map_or_else(ptr::null, |c| c.into_raw()),
+            );
         }
         if 0 == ret {
             Ok(())
@@ -456,9 +491,13 @@ impl Cookie {
 
     /// Loads the given compiled databases for further queries
     ///
-    /// This function can be used in environment where `libmagic` does
+    /// Databases need to be compiled with a compatible `libmagic` version.
+    ///
+    /// This function can be used in environments where `libmagic` does
     /// not have direct access to the filesystem, but can access the magic
     /// database via shared memory or other IPC means.
+    ///
+    /// Calling `Cookie::load_buffers` or [`Cookie::load`] replaces the previously loaded database/s.
     #[doc(alias = "magic_load_buffers")]
     pub fn load_buffers(&self, buffers: &[&[u8]]) -> Result<(), MagicError> {
         let cookie = self.cookie;
@@ -586,8 +625,6 @@ mod tests {
     }
 
     #[test]
-    // TODO: This should not really fail
-    #[should_panic(expected = "not implemented")]
     fn load_multiple() {
         let cookie = Cookie::open(CookieFlags::ERROR).ok().unwrap();
         assert!(cookie
