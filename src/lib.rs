@@ -372,20 +372,11 @@ impl Cookie {
     /// Dumps all magic entries in the given database `filenames` in a human readable format
     #[doc(alias = "magic_list")]
     pub fn list<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), MagicError> {
-        let cookie = self.cookie;
         let db_filenames = db_filenames(filenames)?;
-        let ret;
 
-        unsafe {
-            ret = self::libmagic::magic_list(
-                cookie,
-                db_filenames.map_or_else(ptr::null, |c| c.into_raw()),
-            );
-        }
-        if 0 == ret {
-            Ok(())
-        } else {
-            Err(self.magic_failure())
+        match self::ffi::list(self.cookie, db_filenames.as_deref()) {
+            Err(err) => Err(err.into()),
+            Ok(_) => Ok(()),
         }
     }
 

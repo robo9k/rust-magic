@@ -126,3 +126,17 @@ pub(crate) fn compile(
         res => panic!("libmagic API violation: `magic_compile()` returned {}", res),
     }
 }
+
+pub(crate) fn list(
+    cookie: self::libmagic::magic_t,
+    filename: Option<&std::ffi::CStr>,
+) -> Result<(), LibmagicError> {
+    let filename_ptr = filename.map_or_else(std::ptr::null, std::ffi::CStr::as_ptr);
+    let res = unsafe { self::libmagic::magic_list(cookie, filename_ptr) };
+
+    match res {
+        0 => Ok(()),
+        -1 => Err(last_error(cookie).unwrap()),
+        res => panic!("libmagic API violation: `magic_list()` returned {}", res),
+    }
+}
