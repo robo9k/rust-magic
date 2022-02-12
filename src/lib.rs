@@ -361,20 +361,11 @@ impl Cookie {
     /// The compiled files created are named from the `basename` of each file argument with '.mgc' appended to it.
     #[doc(alias = "magic_compile")]
     pub fn compile<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), MagicError> {
-        let cookie = self.cookie;
         let db_filenames = db_filenames(filenames)?;
-        let ret;
 
-        unsafe {
-            ret = self::libmagic::magic_compile(
-                cookie,
-                db_filenames.map_or_else(ptr::null, |c| c.into_raw()),
-            );
-        }
-        if 0 == ret {
-            Ok(())
-        } else {
-            Err(self.magic_failure())
+        match self::ffi::compile(self.cookie, db_filenames.as_deref()) {
+            Err(err) => Err(err.into()),
+            Ok(_) => Ok(()),
         }
     }
 
