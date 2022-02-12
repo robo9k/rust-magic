@@ -8,48 +8,46 @@ extern crate libc;
 extern crate magic_sys as libmagic;
 extern crate thiserror;
 
-use std::ffi::CStr;
-
 #[non_exhaustive]
 #[derive(thiserror::Error, Debug)]
 pub(crate) enum LibmagicError {
     /// Error during `magic_open`
     #[error("Error calling `magic_open`, errno: {errno}")]
-    Open {
-        #[source]
-        errno: errno::Errno,
-    },
+    Open { errno: errno::Errno },
 
     /// Error for opened `magic_t` instance
-    #[error("Error for cookie call ({}): {explanation}", match .errno {
-        Some(errno) => format!("OS errno: {}", errno),
-        None => "no OS errno".to_string(),
-    })]
+    #[error("Error for cookie call ({}): {}",
+        match .errno {
+            Some(errno) => format!("OS errno: {}", errno),
+            None => "no OS errno".to_string(),
+        },
+        .explanation.to_string_lossy()
+    )]
     Cookie {
-        explanation: String,
-        #[source]
+        explanation: std::ffi::CString,
         errno: Option<errno::Errno>,
     },
+
+    /// Error during `magic_setflags`
     #[error("Error calling `magic_setflags`, unsupported flags: {flags}")]
     UnsupportedFlags { flags: libc::c_int },
 }
 
-pub(crate) fn last_error(cookie: self::libmagic::magic_t) -> Option<LibmagicError> {
-    unsafe {
-        let error = self::libmagic::magic_error(cookie);
-        let errno = self::libmagic::magic_errno(cookie);
-        if error.is_null() {
-            None
-        } else {
-            let slice = CStr::from_ptr(error).to_bytes();
-            Some(LibmagicError::Cookie {
-                explanation: std::str::from_utf8(slice).unwrap().to_string(),
-                errno: match errno {
-                    0 => None,
-                    _ => Some(errno::Errno(errno)),
-                },
-            })
-        }
+fn last_error(cookie: self::libmagic::magic_t) -> Option<LibmagicError> {
+    let error = unsafe { self::libmagic::magic_error(cookie) };
+    let errno = unsafe { self::libmagic::magic_errno(cookie) };
+
+    if error.is_null() {
+        None
+    } else {
+        let c_str = unsafe { std::ffi::CStr::from_ptr(error) };
+        Some(LibmagicError::Cookie {
+            explanation: c_str.into(),
+            errno: match errno {
+                0 => None,
+                _ => Some(errno::Errno(errno)),
+            },
+        })
     }
 }
 
