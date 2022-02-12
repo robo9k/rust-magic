@@ -64,7 +64,7 @@
 //! This crate has not been audited nor is it ready for production use.
 //!
 
-#![warn(unsafe_code)]
+#![deny(unsafe_code)]
 
 extern crate libc;
 extern crate magic_sys as libmagic;
@@ -422,17 +422,9 @@ impl Cookie {
     /// This does not `load()` any databases yet.
     #[doc(alias = "magic_open")]
     pub fn open(flags: self::CookieFlags) -> Result<Cookie, MagicError> {
-        let cookie;
-        unsafe {
-            cookie = self::libmagic::magic_open((flags | self::CookieFlags::ERROR).bits());
-        }
-        if cookie.is_null() {
-            Err(self::ffi::LibmagicError::Open {
-                errno: errno::errno(),
-            }
-            .into())
-        } else {
-            Ok(Cookie { cookie })
+        match self::ffi::open(flags.bits()) {
+            Err(err) => Err(err.into()),
+            Ok(cookie) => Ok(Cookie { cookie }),
         }
     }
 }

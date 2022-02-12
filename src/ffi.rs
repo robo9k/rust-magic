@@ -184,3 +184,15 @@ pub(crate) fn load_buffers(
         ),
     }
 }
+
+pub(crate) fn open(flags: libc::c_int) -> Result<self::libmagic::magic_t, LibmagicError> {
+    let cookie = unsafe { self::libmagic::magic_open(flags) };
+
+    if cookie.is_null() {
+        Err(LibmagicError::Open {
+            errno: errno::errno(),
+        })
+    } else {
+        Ok(cookie)
+    }
+}
