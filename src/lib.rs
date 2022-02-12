@@ -273,8 +273,6 @@ pub enum MagicError {
     LibmagicFlagUnsupported(CookieFlags),
     #[error("invalid database file path")]
     InvalidDatabaseFilePath,
-    #[error("unknown error")]
-    Unknown,
 }
 
 impl From<self::ffi::LibmagicError> for MagicError {
