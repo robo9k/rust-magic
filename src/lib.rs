@@ -76,8 +76,8 @@ extern crate static_assertions;
 extern crate errno;
 extern crate thiserror;
 
-use libc::{c_int, size_t};
-use std::ffi::{CStr, CString};
+use libc::c_int;
+use std::ffi::CString;
 use std::path::Path;
 use std::ptr;
 use std::str;
@@ -332,12 +332,13 @@ impl Cookie {
     /// Overwrites any previously set flags, e.g. those from `load()`.
     #[doc(alias = "magic_setflags")]
     pub fn set_flags(&self, flags: self::CookieFlags) -> Result<(), MagicError> {
-        let ret = unsafe { self::libmagic::magic_setflags(self.cookie, flags.bits()) };
+        let ret = self::ffi::setflags(self.cookie, flags.bits());
         match ret {
-            -1 => Err(MagicError::LibmagicFlagUnsupported(
+            // according to `libmagic` man page this is the only flag that could be unsupported
+            Err(_) => Err(MagicError::LibmagicFlagUnsupported(
                 CookieFlags::PRESERVE_ATIME,
             )),
-            _ => Ok(()),
+            Ok(_) => Ok(()),
         }
     }
 

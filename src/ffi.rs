@@ -30,6 +30,8 @@ pub(crate) enum LibmagicError {
         #[source]
         errno: Option<errno::Errno>,
     },
+    #[error("Error calling `magic_setflags`, unsupported flags: {flags}")]
+    UnsupportedFlags { flags: libc::c_int },
 }
 
 pub(crate) fn last_error(cookie: self::libmagic::magic_t) -> Option<LibmagicError> {
@@ -83,5 +85,16 @@ pub(crate) fn buffer(
     } else {
         let c_str = unsafe { std::ffi::CStr::from_ptr(res) };
         Ok(c_str.into())
+    }
+}
+
+pub(crate) fn setflags(
+    cookie: self::libmagic::magic_t,
+    flags: libc::c_int,
+) -> Result<(), LibmagicError> {
+    let ret = unsafe { self::libmagic::magic_setflags(cookie, flags) };
+    match ret {
+        -1 => Err(LibmagicError::UnsupportedFlags { flags }),
+        _ => Ok(()),
     }
 }
