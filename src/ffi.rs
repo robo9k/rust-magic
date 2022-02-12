@@ -59,7 +59,7 @@ pub(crate) fn close(cookie: self::libmagic::magic_t) {
 
 pub(crate) fn file(
     cookie: self::libmagic::magic_t,
-    filename: &std::ffi::CStr,
+    filename: &std::ffi::CStr, // TODO: Support NULL
 ) -> Result<std::ffi::CString, LibmagicError> {
     let filename_ptr = filename.as_ptr();
     let res = unsafe { self::libmagic::magic_file(cookie, filename_ptr) };
@@ -96,5 +96,19 @@ pub(crate) fn setflags(
     match ret {
         -1 => Err(LibmagicError::UnsupportedFlags { flags }),
         _ => Ok(()),
+    }
+}
+
+pub(crate) fn check(
+    cookie: self::libmagic::magic_t,
+    filename: Option<&std::ffi::CStr>,
+) -> Result<(), LibmagicError> {
+    let filename_ptr = filename.map_or_else(std::ptr::null, std::ffi::CStr::as_ptr);
+    let res = unsafe { self::libmagic::magic_check(cookie, filename_ptr) };
+
+    match res {
+        0 => Ok(()),
+        -1 => Err(last_error(cookie).unwrap()),
+        res => panic!("libmagic API violation: `magic_check()` returned {}", res),
     }
 }
