@@ -258,41 +258,30 @@ fn db_filenames<P: AsRef<Path>>(filenames: &[P]) -> Result<Option<CString>, Magi
     }
 }
 
-/// Generic `libmagic` error type for successfuly opened [`Cookie`] instances
-#[doc(alias = "magic_error")]
+/// FFI error while calling `libmagic`
+// This is a newtype wrapper to avoid making `ffi::LibmagicError` fields public
 #[derive(Error, Debug)]
-#[error("`libmagic` error ({}): {explanation}", match .errno {
-    Some(errno) => format!("OS errno: {}", errno),
-    None => "no OS errno".to_string(),
-})]
-pub struct LibmagicError {
-    explanation: String,
-    #[source]
-    errno: Option<errno::Errno>,
-}
-
-/// `libmagic` error type for [`Cookie::open`]
-#[derive(Error, Debug)]
-#[error("`libmagic` error for `magic_open`, errno: {errno}")]
-pub struct LibmagicOpenError {
-    #[source]
-    errno: errno::Errno,
-}
+#[error("`libmagic` error: {0:?}")]
+pub struct FfiError(#[from] ffi::LibmagicError);
 
 /// The error type used in this crate
 #[non_exhaustive]
 #[derive(Error, Debug)]
 pub enum MagicError {
     #[error(transparent)]
-    Libmagic(#[from] LibmagicError),
-    #[error(transparent)]
-    LibmagicOpen(#[from] LibmagicOpenError),
+    Libmagic(#[from] FfiError),
     #[error("`libmagic` flag {0:?} is not supported on this system")]
     LibmagicFlagUnsupported(CookieFlags),
     #[error("invalid database file path")]
     InvalidDatabaseFilePath,
     #[error("unknown error")]
     Unknown,
+}
+
+impl From<self::ffi::LibmagicError> for MagicError {
+    fn from(libmagic_error: self::ffi::LibmagicError) -> Self {
+        FfiError::from(libmagic_error).into()
+    }
 }
 
 /// Configuration of which `CookieFlags` and magic databases to use
@@ -312,33 +301,9 @@ impl Drop for Cookie {
 }
 
 impl Cookie {
-    fn last_error(&self) -> Option<MagicError> {
-        let cookie = self.cookie;
-
-        unsafe {
-            let error = self::libmagic::magic_error(cookie);
-            let errno = self::libmagic::magic_errno(cookie);
-            if error.is_null() {
-                None
-            } else {
-                let slice = CStr::from_ptr(error).to_bytes();
-                Some(
-                    LibmagicError {
-                        explanation: str::from_utf8(slice).unwrap().to_string(),
-                        errno: match errno {
-                            0 => None,
-                            _ => Some(errno::Errno(errno)),
-                        },
-                    }
-                    .into(),
-                )
-            }
-        }
-    }
-
     fn magic_failure(&self) -> MagicError {
-        match self.last_error() {
-            Some(e) => e,
+        match self::ffi::last_error(self.cookie) {
+            Some(e) => e.into(),
             None => MagicError::Unknown,
         }
     }
@@ -541,7 +506,7 @@ impl Cookie {
             cookie = self::libmagic::magic_open((flags | self::CookieFlags::ERROR).bits());
         }
         if cookie.is_null() {
-            Err(LibmagicOpenError {
+            Err(self::ffi::LibmagicError::Open {
                 errno: errno::errno(),
             }
             .into())
