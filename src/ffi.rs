@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: © The `magic` Rust crate authors
+// SPDX-License-Identifier: MIT
+
 //! Internal Foreign Function Interface module for `magic_sys` / `libmagic`
 //!
 //! Contains `unsafe` as a medium level binding.

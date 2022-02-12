@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: © The `magic` Rust crate authors
+// SPDX-License-Identifier: MIT
+
 //! # About
 //!
 //! This crate provides bindings for the `libmagic` C library, which recognizes the
