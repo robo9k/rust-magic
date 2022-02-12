@@ -31,6 +31,10 @@ pub(crate) enum LibmagicError {
     /// Error during `magic_setflags`
     #[error("Error calling `magic_setflags`, unsupported flags: {flags}")]
     UnsupportedFlags { flags: libc::c_int },
+
+    /// `libmagic` did not behave according to its API
+    #[error("Error in `libmagic` behavior, violated its API: {description}")]
+    ApiViolation { description: String },
 }
 
 fn last_error(cookie: self::libmagic::magic_t) -> Option<LibmagicError> {
@@ -51,6 +55,13 @@ fn last_error(cookie: self::libmagic::magic_t) -> Option<LibmagicError> {
     }
 }
 
+fn expect_error(cookie: self::libmagic::magic_t, description: String) -> LibmagicError {
+    match last_error(cookie) {
+        Some(err) => err,
+        None => LibmagicError::ApiViolation { description },
+    }
+}
+
 pub(crate) fn close(cookie: self::libmagic::magic_t) {
     unsafe { self::libmagic::magic_close(cookie) }
 }
@@ -63,7 +74,10 @@ pub(crate) fn file(
     let res = unsafe { self::libmagic::magic_file(cookie, filename_ptr) };
 
     if res.is_null() {
-        Err(last_error(cookie).unwrap())
+        Err(expect_error(
+            cookie,
+            "`magic_file()` did not set last error".to_string(),
+        ))
     } else {
         let c_str = unsafe { std::ffi::CStr::from_ptr(res) };
         Ok(c_str.into())
@@ -79,7 +93,10 @@ pub(crate) fn buffer(
     let res = unsafe { self::libmagic::magic_buffer(cookie, buffer_ptr, buffer_len) };
 
     if res.is_null() {
-        Err(last_error(cookie).unwrap())
+        Err(expect_error(
+            cookie,
+            "`magic_buffer()` did not set last error".to_string(),
+        ))
     } else {
         let c_str = unsafe { std::ffi::CStr::from_ptr(res) };
         Ok(c_str.into())
@@ -106,8 +123,13 @@ pub(crate) fn check(
 
     match res {
         0 => Ok(()),
-        -1 => Err(last_error(cookie).unwrap()),
-        res => panic!("libmagic API violation: `magic_check()` returned {}", res),
+        -1 => Err(expect_error(
+            cookie,
+            "`magic_check()` did not set last error".to_string(),
+        )),
+        res => Err(LibmagicError::ApiViolation {
+            description: format!("Expected 0 or -1 but `magic_check()` returned {}", res),
+        }),
     }
 }
 
@@ -120,8 +142,13 @@ pub(crate) fn compile(
 
     match res {
         0 => Ok(()),
-        -1 => Err(last_error(cookie).unwrap()),
-        res => panic!("libmagic API violation: `magic_compile()` returned {}", res),
+        -1 => Err(expect_error(
+            cookie,
+            "`magic_compile()` did not set last error".to_string(),
+        )),
+        res => Err(LibmagicError::ApiViolation {
+            description: format!("Expected 0 or -1 but `magic_compile()` returned {}", res),
+        }),
     }
 }
 
@@ -134,8 +161,13 @@ pub(crate) fn list(
 
     match res {
         0 => Ok(()),
-        -1 => Err(last_error(cookie).unwrap()),
-        res => panic!("libmagic API violation: `magic_list()` returned {}", res),
+        -1 => Err(expect_error(
+            cookie,
+            "`magic_list()` did not set last error".to_string(),
+        )),
+        res => Err(LibmagicError::ApiViolation {
+            description: format!("Expected 0 or -1 but `magic_list()` returned {}", res),
+        }),
     }
 }
 
@@ -148,8 +180,13 @@ pub(crate) fn load(
 
     match res {
         0 => Ok(()),
-        -1 => Err(last_error(cookie).unwrap()),
-        res => panic!("libmagic API violation: `magic_load()` returned {}", res),
+        -1 => Err(expect_error(
+            cookie,
+            "`magic_load()` did not set last error".to_string(),
+        )),
+        res => Err(LibmagicError::ApiViolation {
+            description: format!("Expected 0 or -1 but `magic_load()` returned {}", res),
+        }),
     }
 }
 
@@ -175,11 +212,16 @@ pub(crate) fn load_buffers(
 
     match res {
         0 => Ok(()),
-        -1 => Err(last_error(cookie).unwrap()),
-        res => panic!(
-            "libmagic API violation: `magic_load_buffers()` returned {}",
-            res
-        ),
+        -1 => Err(expect_error(
+            cookie,
+            "`magic_load_buffers()` did not set last error".to_string(),
+        )),
+        res => Err(LibmagicError::ApiViolation {
+            description: format!(
+                "Expected 0 or -1 but `magic_load_buffers()` returned {}",
+                res
+            ),
+        }),
     }
 }
 
