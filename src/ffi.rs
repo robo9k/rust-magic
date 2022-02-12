@@ -154,3 +154,33 @@ pub(crate) fn load(
         res => panic!("libmagic API violation: `magic_load()` returned {}", res),
     }
 }
+
+pub(crate) fn load_buffers(
+    cookie: self::libmagic::magic_t,
+    buffers: &[&[u8]],
+) -> Result<(), LibmagicError> {
+    let mut ffi_buffers: Vec<*const u8> = Vec::with_capacity(buffers.len());
+    let mut ffi_sizes: Vec<libc::size_t> = Vec::with_capacity(buffers.len());
+    let ffi_nbuffers = buffers.len() as libc::size_t;
+
+    for slice in buffers {
+        ffi_buffers.push((*slice).as_ptr());
+        ffi_sizes.push(slice.len() as libc::size_t);
+    }
+
+    let ffi_buffers_ptr = ffi_buffers.as_mut_ptr() as *mut *mut libc::c_void;
+    let ffi_sizes_ptr = ffi_sizes.as_mut_ptr();
+
+    let res = unsafe {
+        self::libmagic::magic_load_buffers(cookie, ffi_buffers_ptr, ffi_sizes_ptr, ffi_nbuffers)
+    };
+
+    match res {
+        0 => Ok(()),
+        -1 => Err(last_error(cookie).unwrap()),
+        res => panic!(
+            "libmagic API violation: `magic_load_buffers()` returned {}",
+            res
+        ),
+    }
+}

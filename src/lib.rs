@@ -300,13 +300,6 @@ impl Drop for Cookie {
 }
 
 impl Cookie {
-    fn magic_failure(&self) -> MagicError {
-        match self::ffi::last_error(self.cookie) {
-            Some(e) => e.into(),
-            None => MagicError::Unknown,
-        }
-    }
-
     /// Returns a textual description of the contents of the `filename`
     #[doc(alias = "magic_file")]
     pub fn file<P: AsRef<Path>>(&self, filename: P) -> Result<String, MagicError> {
@@ -418,30 +411,9 @@ impl Cookie {
     /// Calling `Cookie::load_buffers` or [`Cookie::load`] replaces the previously loaded database/s.
     #[doc(alias = "magic_load_buffers")]
     pub fn load_buffers(&self, buffers: &[&[u8]]) -> Result<(), MagicError> {
-        let cookie = self.cookie;
-        let mut ffi_buffers: Vec<*const u8> = Vec::with_capacity(buffers.len());
-        let mut ffi_sizes: Vec<libc::size_t> = Vec::with_capacity(buffers.len());
-        let ffi_nbuffers = buffers.len() as libc::size_t;
-        let ret;
-
-        for slice in buffers {
-            ffi_buffers.push((*slice).as_ptr());
-            ffi_sizes.push(slice.len() as libc::size_t);
-        }
-
-        unsafe {
-            ret = self::libmagic::magic_load_buffers(
-                cookie,
-                ffi_buffers.as_mut_ptr() as *mut *mut libc::c_void,
-                ffi_sizes.as_mut_ptr(),
-                ffi_nbuffers,
-            )
-        };
-
-        if 0 == ret {
-            Ok(())
-        } else {
-            Err(self.magic_failure())
+        match self::ffi::load_buffers(self.cookie, buffers) {
+            Err(err) => Err(err.into()),
+            Ok(_) => Ok(()),
         }
     }
 
