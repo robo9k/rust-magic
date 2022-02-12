@@ -311,18 +311,10 @@ impl Cookie {
     /// Returns a textual description of the contents of the `filename`
     #[doc(alias = "magic_file")]
     pub fn file<P: AsRef<Path>>(&self, filename: P) -> Result<String, MagicError> {
-        let cookie = self.cookie;
-        let f = CString::new(filename.as_ref().to_string_lossy().into_owned())
-            .unwrap()
-            .into_raw();
-        unsafe {
-            let str = self::libmagic::magic_file(cookie, f);
-            if str.is_null() {
-                Err(self.magic_failure())
-            } else {
-                let slice = CStr::from_ptr(str).to_bytes();
-                Ok(str::from_utf8(slice).unwrap().to_string())
-            }
+        let c_string = CString::new(filename.as_ref().to_string_lossy().into_owned()).unwrap();
+        match self::ffi::file(self.cookie, c_string.as_c_str()) {
+            Ok(res) => Ok(res.to_string_lossy().to_string()),
+            Err(err) => Err(err.into()),
         }
     }
 

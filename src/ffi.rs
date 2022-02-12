@@ -39,20 +39,31 @@ pub(crate) fn last_error(cookie: self::libmagic::magic_t) -> Option<LibmagicErro
             None
         } else {
             let slice = CStr::from_ptr(error).to_bytes();
-            Some(
-                LibmagicError::Cookie {
-                    explanation: std::str::from_utf8(slice).unwrap().to_string(),
-                    errno: match errno {
-                        0 => None,
-                        _ => Some(errno::Errno(errno)),
-                    },
-                }
-                .into(),
-            )
+            Some(LibmagicError::Cookie {
+                explanation: std::str::from_utf8(slice).unwrap().to_string(),
+                errno: match errno {
+                    0 => None,
+                    _ => Some(errno::Errno(errno)),
+                },
+            })
         }
     }
 }
 
 pub(crate) fn close(cookie: self::libmagic::magic_t) {
     unsafe { self::libmagic::magic_close(cookie) }
+}
+
+pub(crate) fn file(
+    cookie: self::libmagic::magic_t,
+    filename: &std::ffi::CStr,
+) -> Result<std::ffi::CString, LibmagicError> {
+    let res = unsafe { self::libmagic::magic_file(cookie, filename.as_ptr()) };
+
+    if res.is_null() {
+        Err(last_error(cookie).unwrap())
+    } else {
+        let c_str = unsafe { std::ffi::CStr::from_ptr(res) };
+        Ok(c_str.into())
+    }
 }
