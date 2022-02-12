@@ -4,6 +4,7 @@
 
 #![allow(unsafe_code)]
 
+extern crate libc;
 extern crate magic_sys as libmagic;
 extern crate thiserror;
 
@@ -58,7 +59,24 @@ pub(crate) fn file(
     cookie: self::libmagic::magic_t,
     filename: &std::ffi::CStr,
 ) -> Result<std::ffi::CString, LibmagicError> {
-    let res = unsafe { self::libmagic::magic_file(cookie, filename.as_ptr()) };
+    let filename_ptr = filename.as_ptr();
+    let res = unsafe { self::libmagic::magic_file(cookie, filename_ptr) };
+
+    if res.is_null() {
+        Err(last_error(cookie).unwrap())
+    } else {
+        let c_str = unsafe { std::ffi::CStr::from_ptr(res) };
+        Ok(c_str.into())
+    }
+}
+
+pub(crate) fn buffer(
+    cookie: self::libmagic::magic_t,
+    buffer: &[u8],
+) -> Result<std::ffi::CString, LibmagicError> {
+    let buffer_ptr = buffer.as_ptr();
+    let buffer_len = buffer.len() as libc::size_t;
+    let res = unsafe { self::libmagic::magic_buffer(cookie, buffer_ptr, buffer_len) };
 
     if res.is_null() {
         Err(last_error(cookie).unwrap())

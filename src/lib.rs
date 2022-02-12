@@ -321,16 +321,9 @@ impl Cookie {
     /// Returns a textual description of the contents of the `buffer`
     #[doc(alias = "magic_buffer")]
     pub fn buffer(&self, buffer: &[u8]) -> Result<String, MagicError> {
-        let buffer_len = buffer.len() as size_t;
-        let pbuffer = buffer.as_ptr();
-        unsafe {
-            let str = self::libmagic::magic_buffer(self.cookie, pbuffer, buffer_len);
-            if str.is_null() {
-                Err(self.magic_failure())
-            } else {
-                let slice = CStr::from_ptr(str).to_bytes();
-                Ok(str::from_utf8(slice).unwrap().to_string())
-            }
+        match self::ffi::buffer(self.cookie, buffer) {
+            Ok(res) => Ok(res.to_string_lossy().to_string()),
+            Err(err) => Err(err.into()),
         }
     }
 
