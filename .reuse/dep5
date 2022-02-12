@@ -1,0 +1,29 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: The `magic` Rust crate
+Upstream-Contact: robot9001 <robo9k@symlink.io>
+Source: https://github.com/robo9k/rust-magic
+
+Files: Cargo.toml README.md
+Copyright: © The `magic` Rust crate authors
+License: MIT
+
+Files: .bumpversion.cfg
+Copyright: © The `magic` Rust crate authors
+License: MIT
+
+Files: .github/workflows/* clippy.toml deny.toml rust-toolchain.toml
+Copyright: © The `magic` Rust crate authors
+License: MIT
+
+Files: .gitignore
+Copyright: © The `magic` Rust crate authors
+License: MIT
+
+Files: data/tests/db-*
+Copyright: Copyright (c) Ian F. Darwin 1986, 1987, 1989, 1990, 1991, 1992, 1994, 1995.
+License: LicenseRef-file
+
+Files: data/tests/rust-logo-128x128-blk.png
+Copyright: The Mozilla Foundation
+License: CC-BY-4.0
+Comment: https://github.com/robo9k/rust-magic/issues/12

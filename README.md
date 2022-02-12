@@ -1,4 +1,4 @@
-rust-magic [![linux build status](https://github.com/robo9k/rust-magic/actions/workflows/linux.yml/badge.svg)](https://github.com/robo9k/rust-magic/actions/workflows/linux.yml) [![Documentation](https://docs.rs/magic/badge.svg)](https://docs.rs/magic)
+rust-magic [![linux build status](https://github.com/robo9k/rust-magic/actions/workflows/linux.yml/badge.svg)](https://github.com/robo9k/rust-magic/actions/workflows/linux.yml) [![Documentation](https://docs.rs/magic/badge.svg)](https://docs.rs/magic) [![REUSE status](https://api.reuse.software/badge/github.com/robo9k/rust-magic)](https://api.reuse.software/info/github.com/robo9k/rust-magic)
 ==========
 [libmagic](https://www.darwinsys.com/file/) bindings for [Rust](https://www.rust-lang.org/).
 
@@ -33,7 +33,7 @@ By default compiling `rust-magic` will search your system library paths for a ve
 
 # License
 
-This project is licensed under the MIT license (see [`LICENSE`](https://github.com/robo9k/rust-magic/blob/master/LICENSE)).
+This project is licensed under the MIT license (see [`LICENSE`](LICENSES/MIT.txt)).
 
 The `magic-sys` crate being used is licensed under the MIT license as well (see [`LICENSE-MIT`](https://github.com/robo9k/rust-magic-sys/blob/main/LICENSE-MIT)).
 
