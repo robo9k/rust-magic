@@ -79,7 +79,6 @@ extern crate thiserror;
 use libc::c_int;
 use std::ffi::CString;
 use std::path::Path;
-use std::ptr;
 use std::str;
 use thiserror::Error;
 
@@ -400,20 +399,11 @@ impl Cookie {
     /// # }
     #[doc(alias = "magic_load")]
     pub fn load<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), MagicError> {
-        let cookie = self.cookie;
         let db_filenames = db_filenames(filenames)?;
-        let ret;
 
-        unsafe {
-            ret = self::libmagic::magic_load(
-                cookie,
-                db_filenames.map_or_else(ptr::null, |c| c.into_raw()),
-            );
-        }
-        if 0 == ret {
-            Ok(())
-        } else {
-            Err(self.magic_failure())
+        match self::ffi::load(self.cookie, db_filenames.as_deref()) {
+            Err(err) => Err(err.into()),
+            Ok(_) => Ok(()),
         }
     }
 
