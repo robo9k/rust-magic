@@ -64,6 +64,8 @@
 //! This crate has not been audited nor is it ready for production use.
 //!
 
+#![warn(unsafe_code)]
+
 extern crate libc;
 extern crate magic_sys as libmagic;
 #[macro_use]
@@ -80,6 +82,8 @@ use std::path::Path;
 use std::ptr;
 use std::str;
 use thiserror::Error;
+
+mod ffi;
 
 bitflags! {
     /// Bitmask flags that specify how `Cookie` functions should behave
@@ -303,7 +307,7 @@ impl Drop for Cookie {
     /// Closes the magic database and deallocates any resources used
     #[doc(alias = "magic_close")]
     fn drop(&mut self) {
-        unsafe { self::libmagic::magic_close(self.cookie) }
+        self::ffi::close(self.cookie);
     }
 }
 
