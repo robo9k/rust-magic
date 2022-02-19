@@ -1,0 +1,35 @@
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  rustdoc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          profile: minimal
+
+      - uses: actions-rs/cargo@v1
+        with:
+          command: doc
+          args: --verbose --lib --no-deps --all-features
+
+      - run: |
+          echo '<meta http-equiv="refresh" content="0; url=magic/index.html">' > target/doc/index.html
+          touch target/doc/.nojekyll
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: rustdoc
+          path: target/doc/
+
+      - uses: JamesIves/github-pages-deploy-action@4
+        with:
+          branch: gh-pages
+          folder: target/doc/
