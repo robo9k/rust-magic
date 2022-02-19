@@ -31,6 +31,8 @@ exclude = [
 	"data/tests/",
 	".bumpversion.cfg",
 	"clippy.toml",
+	"LICENSES/",
+	".reuse/",
 ]
 rust-version = "1.48"
 
