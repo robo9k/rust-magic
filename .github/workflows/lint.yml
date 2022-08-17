@@ -14,8 +14,6 @@ env:
 
 jobs:
   cargo-fmt:
-    permissions:
-      checks: write # for actions-rs/clippy-check to write checks
     runs-on: ubuntu-latest
 
     steps:
@@ -32,6 +30,8 @@ jobs:
         args: --all -- --check
 
   cargo-clippy:
+    permissions:
+      checks: write # for actions-rs/clippy-check to write checks
     runs-on: ubuntu-latest
 
     steps:
