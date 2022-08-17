@@ -1,5 +1,8 @@
 name: docs
 
+permissions:
+  contents: read
+
 on:
   push:
     branches:
@@ -7,17 +10,19 @@ on:
 
 jobs:
   rustdoc:
+    permissions:
+      contents: write # for JamesIves/github-pages-deploy-action to push changes in repo
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v3.0.2
 
-      - uses: actions-rs/toolchain@v1
+      - uses: actions-rs/toolchain@b2417cde72dcf67f306c0ae8e0828a81bf0b189f # v1.0.6
         with:
           toolchain: stable
           override: true
           profile: minimal
 
-      - uses: actions-rs/cargo@v1
+      - uses: actions-rs/cargo@ae10961054e4aa8b4aa7dffede299aaf087aa33b # v1.0.1
         with:
           command: doc
           args: --verbose --lib --no-deps --all-features
@@ -26,12 +31,12 @@ jobs:
           echo '<meta http-equiv="refresh" content="0; url=magic/index.html">' > target/doc/index.html
           touch target/doc/.nojekyll
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # v3.1.0
         with:
           name: rustdoc
           path: target/doc/
 
-      - uses: JamesIves/github-pages-deploy-action@v4
+      - uses: JamesIves/github-pages-deploy-action@13046b614c663b56cba4dda3f30b9736a748b80d # v4.4.0
         with:
           branch: gh-pages
           folder: target/doc/
