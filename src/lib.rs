@@ -69,25 +69,14 @@
 
 #![deny(unsafe_code)]
 
-extern crate libc;
-extern crate magic_sys as libmagic;
-#[macro_use]
-extern crate bitflags;
-#[cfg(test)]
-#[macro_use]
-extern crate static_assertions;
-extern crate errno;
-extern crate thiserror;
-
-use libc::c_int;
 use std::ffi::CString;
 use std::path::Path;
-use std::str;
-use thiserror::Error;
+
+use magic_sys as libmagic;
 
 mod ffi;
 
-bitflags! {
+bitflags::bitflags! {
     /// Bitmask flags that specify how `Cookie` functions should behave
     ///
     /// NOTE: The descriptions are taken from `man libmagic 3`.
@@ -97,57 +86,57 @@ bitflags! {
     /// let default_flags: magic::CookieFlags = Default::default();
     /// assert_eq!(default_flags, magic::CookieFlags::empty());
     /// ```
-    #[derive(Default)]
-    pub struct CookieFlags: c_int {
+    #[derive(std::default::Default)]
+    pub struct CookieFlags: libc::c_int {
         // MAGIC_NONE is 0/default, see https://docs.rs/bitflags/1.3.2/bitflags/#zero-flags
 
         /// Print debugging messages to `stderr`
         ///
         /// NOTE: Those messages are printed by `libmagic` itself, no this Rust crate.
         #[doc(alias = "MAGIC_DEBUG")]
-        const DEBUG             = self::libmagic::MAGIC_DEBUG;
+        const DEBUG             = libmagic::MAGIC_DEBUG;
 
         /// If the file queried is a symlink, follow it
         #[doc(alias = "MAGIC_SYMLINK")]
-        const SYMLINK           = self::libmagic::MAGIC_SYMLINK;
+        const SYMLINK           = libmagic::MAGIC_SYMLINK;
 
         /// If the file is compressed, unpack it and look at the contents
         #[doc(alias = "MAGIC_COMPRESS")]
-        const COMPRESS          = self::libmagic::MAGIC_COMPRESS;
+        const COMPRESS          = libmagic::MAGIC_COMPRESS;
 
         /// If the file is a block or character special device, then open the device and try to look in its contents
         #[doc(alias = "MAGIC_DEVICES")]
-        const DEVICES           = self::libmagic::MAGIC_DEVICES;
+        const DEVICES           = libmagic::MAGIC_DEVICES;
 
         /// Return a MIME type string, instead of a textual description
         #[doc(alias = "MAGIC_MIME_TYPE")]
-        const MIME_TYPE         = self::libmagic::MAGIC_MIME_TYPE;
+        const MIME_TYPE         = libmagic::MAGIC_MIME_TYPE;
 
         /// Return all matches, not just the first
         #[doc(alias = "MAGIC_CONTINUE")]
-        const CONTINUE          = self::libmagic::MAGIC_CONTINUE;
+        const CONTINUE          = libmagic::MAGIC_CONTINUE;
 
         /// Check the magic database for consistency and print warnings to `stderr`
         ///
         /// NOTE: Those warnings are printed by `libmagic` itself, no this Rust crate.
         #[doc(alias = "MAGIC_CHECK")]
-        const CHECK             = self::libmagic::MAGIC_CHECK;
+        const CHECK             = libmagic::MAGIC_CHECK;
 
         /// On systems that support `utime(2)` or `utimes(2)`, attempt to preserve the access time of files analyzed
         #[doc(alias = "MAGIC_PRESERVE_ATIME")]
-        const PRESERVE_ATIME    = self::libmagic::MAGIC_PRESERVE_ATIME;
+        const PRESERVE_ATIME    = libmagic::MAGIC_PRESERVE_ATIME;
 
         /// Don't translate unprintable characters to a `\\ooo` octal representation
         #[doc(alias = "MAGIC_RAW")]
-        const RAW               = self::libmagic::MAGIC_RAW;
+        const RAW               = libmagic::MAGIC_RAW;
 
         /// Treat operating system errors while trying to open files and follow symlinks as real errors, instead of printing them in the magic buffer
         #[doc(alias = "MAGIC_ERROR")]
-        const ERROR             = self::libmagic::MAGIC_ERROR;
+        const ERROR             = libmagic::MAGIC_ERROR;
 
         /// Return a MIME encoding, instead of a textual description
         #[doc(alias = "MAGIC_MIME_ENCODING")]
-        const MIME_ENCODING     = self::libmagic::MAGIC_MIME_ENCODING;
+        const MIME_ENCODING     = libmagic::MAGIC_MIME_ENCODING;
 
         /// A shorthand for `MIME_TYPE | MIME_ENCODING`
         #[doc(alias = "MAGIC_MIME")]
@@ -156,15 +145,15 @@ bitflags! {
 
         /// Return the Apple creator and type
         #[doc(alias = "MAGIC_APPLE")]
-        const APPLE             = self::libmagic::MAGIC_APPLE;
+        const APPLE             = libmagic::MAGIC_APPLE;
 
         /// Return a slash-separated list of extensions for this file type
         #[doc(alias = "MAGIC_EXTENSION")]
-        const EXTENSION         = self::libmagic::MAGIC_EXTENSION;
+        const EXTENSION         = libmagic::MAGIC_EXTENSION;
 
         /// Don't report on compression, only report about the uncompressed data
         #[doc(alias = "MAGIC_COMPRESS_TRANSP")]
-        const COMPRESS_TRANSP   = self::libmagic::MAGIC_COMPRESS_TRANSP;
+        const COMPRESS_TRANSP   = libmagic::MAGIC_COMPRESS_TRANSP;
 
         /// A shorthand for `EXTENSION | MIME | APPLE`
         #[doc(alias = "MAGIC_NODESC")]
@@ -174,47 +163,47 @@ bitflags! {
 
         /// Don't look inside compressed files
         #[doc(alias = "MAGIC_NO_CHECK_COMPRESS")]
-        const NO_CHECK_COMPRESS = self::libmagic::MAGIC_NO_CHECK_COMPRESS;
+        const NO_CHECK_COMPRESS = libmagic::MAGIC_NO_CHECK_COMPRESS;
 
         /// Don't examine tar files
         #[doc(alias = "MAGIC_NO_CHECK_TAR")]
-        const NO_CHECK_TAR      = self::libmagic::MAGIC_NO_CHECK_TAR;
+        const NO_CHECK_TAR      = libmagic::MAGIC_NO_CHECK_TAR;
 
         /// Don't consult magic files
         #[doc(alias = "MAGIC_NO_CHECK_SOFT")]
-        const NO_CHECK_SOFT     = self::libmagic::MAGIC_NO_CHECK_SOFT;
+        const NO_CHECK_SOFT     = libmagic::MAGIC_NO_CHECK_SOFT;
 
         /// Check for EMX application type (only on EMX)
         #[doc(alias = "MAGIC_NO_CHECK_APPTYPE")]
-        const NO_CHECK_APPTYPE  = self::libmagic::MAGIC_NO_CHECK_APPTYPE;
+        const NO_CHECK_APPTYPE  = libmagic::MAGIC_NO_CHECK_APPTYPE;
 
         /// Don't print ELF details
         #[doc(alias = "MAGIC_NO_CHECK_ELF")]
-        const NO_CHECK_ELF      = self::libmagic::MAGIC_NO_CHECK_ELF;
+        const NO_CHECK_ELF      = libmagic::MAGIC_NO_CHECK_ELF;
 
         /// Don't check for various types of text files
         #[doc(alias = "MAGIC_NO_CHECK_TEXT")]
-        const NO_CHECK_TEXT     = self::libmagic::MAGIC_NO_CHECK_TEXT;
+        const NO_CHECK_TEXT     = libmagic::MAGIC_NO_CHECK_TEXT;
 
         /// Don't get extra information on MS Composite Document Files
         #[doc(alias = "MAGIC_NO_CHECK_CDF")]
-        const NO_CHECK_CDF      = self::libmagic::MAGIC_NO_CHECK_CDF;
+        const NO_CHECK_CDF      = libmagic::MAGIC_NO_CHECK_CDF;
 
         /// Don't examine CSV files
         #[doc(alias = "MAGIC_NO_CHECK_CSV")]
-        const NO_CHECK_CSV      = self::libmagic::MAGIC_NO_CHECK_CSV;
+        const NO_CHECK_CSV      = libmagic::MAGIC_NO_CHECK_CSV;
 
         /// Don't look for known tokens inside ascii files
         #[doc(alias = "MAGIC_NO_CHECK_TOKENS")]
-        const NO_CHECK_TOKENS   = self::libmagic::MAGIC_NO_CHECK_TOKENS;
+        const NO_CHECK_TOKENS   = libmagic::MAGIC_NO_CHECK_TOKENS;
 
         /// Don't check text encodings
         #[doc(alias = "MAGIC_NO_CHECK_ENCODING")]
-        const NO_CHECK_ENCODING = self::libmagic::MAGIC_NO_CHECK_ENCODING;
+        const NO_CHECK_ENCODING = libmagic::MAGIC_NO_CHECK_ENCODING;
 
         /// Don't examine JSON files
         #[doc(alias = "MAGIC_NO_CHECK_JSON")]
-        const NO_CHECK_JSON     = self::libmagic::MAGIC_NO_CHECK_JSON;
+        const NO_CHECK_JSON     = libmagic::MAGIC_NO_CHECK_JSON;
 
         /// No built-in tests; only consult the magic file
         #[doc(alias = "MAGIC_NO_CHECK_BUILTIN")]
@@ -262,13 +251,13 @@ fn db_filenames<P: AsRef<Path>>(filenames: &[P]) -> Result<Option<CString>, Magi
 
 /// FFI error while calling `libmagic`
 // This is a newtype wrapper to avoid making `ffi::LibmagicError` fields public
-#[derive(Error, Debug)]
+#[derive(thiserror::Error, Debug)]
 #[error("`libmagic` error: {0:?}")]
-pub struct FfiError(#[from] ffi::LibmagicError);
+pub struct FfiError(#[from] crate::ffi::LibmagicError);
 
 /// The error type used in this crate
 #[non_exhaustive]
-#[derive(Error, Debug)]
+#[derive(thiserror::Error, Debug)]
 pub enum MagicError {
     #[error(transparent)]
     Libmagic(#[from] FfiError),
@@ -278,8 +267,8 @@ pub enum MagicError {
     InvalidDatabaseFilePath,
 }
 
-impl From<self::ffi::LibmagicError> for MagicError {
-    fn from(libmagic_error: self::ffi::LibmagicError) -> Self {
+impl From<crate::ffi::LibmagicError> for MagicError {
+    fn from(libmagic_error: crate::ffi::LibmagicError) -> Self {
         FfiError::from(libmagic_error).into()
     }
 }
@@ -289,14 +278,14 @@ impl From<self::ffi::LibmagicError> for MagicError {
 #[doc(alias = "magic_t")]
 #[doc(alias = "magic_set")]
 pub struct Cookie {
-    cookie: self::libmagic::magic_t,
+    cookie: libmagic::magic_t,
 }
 
 impl Drop for Cookie {
     /// Closes the magic database and deallocates any resources used
     #[doc(alias = "magic_close")]
     fn drop(&mut self) {
-        self::ffi::close(self.cookie);
+        crate::ffi::close(self.cookie);
     }
 }
 
@@ -305,7 +294,7 @@ impl Cookie {
     #[doc(alias = "magic_file")]
     pub fn file<P: AsRef<Path>>(&self, filename: P) -> Result<String, MagicError> {
         let c_string = CString::new(filename.as_ref().to_string_lossy().into_owned()).unwrap();
-        match self::ffi::file(self.cookie, c_string.as_c_str()) {
+        match crate::ffi::file(self.cookie, c_string.as_c_str()) {
             Ok(res) => Ok(res.to_string_lossy().to_string()),
             Err(err) => Err(err.into()),
         }
@@ -314,7 +303,7 @@ impl Cookie {
     /// Returns a textual description of the contents of the `buffer`
     #[doc(alias = "magic_buffer")]
     pub fn buffer(&self, buffer: &[u8]) -> Result<String, MagicError> {
-        match self::ffi::buffer(self.cookie, buffer) {
+        match crate::ffi::buffer(self.cookie, buffer) {
             Ok(res) => Ok(res.to_string_lossy().to_string()),
             Err(err) => Err(err.into()),
         }
@@ -324,8 +313,8 @@ impl Cookie {
     ///
     /// Overwrites any previously set flags, e.g. those from `load()`.
     #[doc(alias = "magic_setflags")]
-    pub fn set_flags(&self, flags: self::CookieFlags) -> Result<(), MagicError> {
-        let ret = self::ffi::setflags(self.cookie, flags.bits());
+    pub fn set_flags(&self, flags: CookieFlags) -> Result<(), MagicError> {
+        let ret = crate::ffi::setflags(self.cookie, flags.bits());
         match ret {
             // according to `libmagic` man page this is the only flag that could be unsupported
             Err(_) => Err(MagicError::LibmagicFlagUnsupported(
@@ -343,7 +332,7 @@ impl Cookie {
     pub fn check<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), MagicError> {
         let db_filenames = db_filenames(filenames)?;
 
-        match self::ffi::check(self.cookie, db_filenames.as_deref()) {
+        match crate::ffi::check(self.cookie, db_filenames.as_deref()) {
             Err(err) => Err(err.into()),
             Ok(_) => Ok(()),
         }
@@ -356,7 +345,7 @@ impl Cookie {
     pub fn compile<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), MagicError> {
         let db_filenames = db_filenames(filenames)?;
 
-        match self::ffi::compile(self.cookie, db_filenames.as_deref()) {
+        match crate::ffi::compile(self.cookie, db_filenames.as_deref()) {
             Err(err) => Err(err.into()),
             Ok(_) => Ok(()),
         }
@@ -367,7 +356,7 @@ impl Cookie {
     pub fn list<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), MagicError> {
         let db_filenames = db_filenames(filenames)?;
 
-        match self::ffi::list(self.cookie, db_filenames.as_deref()) {
+        match crate::ffi::list(self.cookie, db_filenames.as_deref()) {
             Err(err) => Err(err.into()),
             Ok(_) => Ok(()),
         }
@@ -395,7 +384,7 @@ impl Cookie {
     pub fn load<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), MagicError> {
         let db_filenames = db_filenames(filenames)?;
 
-        match self::ffi::load(self.cookie, db_filenames.as_deref()) {
+        match crate::ffi::load(self.cookie, db_filenames.as_deref()) {
             Err(err) => Err(err.into()),
             Ok(_) => Ok(()),
         }
@@ -412,7 +401,7 @@ impl Cookie {
     /// Calling `Cookie::load_buffers` or [`Cookie::load`] replaces the previously loaded database/s.
     #[doc(alias = "magic_load_buffers")]
     pub fn load_buffers(&self, buffers: &[&[u8]]) -> Result<(), MagicError> {
-        match self::ffi::load_buffers(self.cookie, buffers) {
+        match crate::ffi::load_buffers(self.cookie, buffers) {
             Err(err) => Err(err.into()),
             Ok(_) => Ok(()),
         }
@@ -422,8 +411,8 @@ impl Cookie {
     ///
     /// This does not `load()` any databases yet.
     #[doc(alias = "magic_open")]
-    pub fn open(flags: self::CookieFlags) -> Result<Cookie, MagicError> {
-        match self::ffi::open(flags.bits()) {
+    pub fn open(flags: CookieFlags) -> Result<Cookie, MagicError> {
+        match crate::ffi::open(flags.bits()) {
             Err(err) => Err(err.into()),
             Ok(cookie) => Ok(Cookie { cookie }),
         }
@@ -521,7 +510,7 @@ mod tests {
         assert!(version_regex.is_match(super::version()));
     }
 
-    assert_impl_all!(Cookie: std::fmt::Debug);
+    static_assertions::assert_impl_all!(Cookie: std::fmt::Debug);
 
     #[test]
     fn load_buffers_file() {
