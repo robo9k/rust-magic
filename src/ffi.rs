@@ -234,3 +234,7 @@ pub(crate) fn open(flags: libc::c_int) -> Result<libmagic::magic_t, LibmagicErro
         Ok(cookie)
     }
 }
+
+pub(crate) fn version() -> libc::c_int {
+    unsafe { libmagic::magic_version() }
+}

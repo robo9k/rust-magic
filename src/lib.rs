@@ -76,6 +76,15 @@ use magic_sys as libmagic;
 
 mod ffi;
 
+/// Returns the version of the `libmagic` C library as reported by itself.
+///
+/// # Examples
+/// A version of "5.41" is returned as `541`.
+#[doc(alias = "magic_version")]
+pub fn libmagic_version() -> libc::c_int {
+    crate::ffi::version()
+}
+
 bitflags::bitflags! {
     /// Bitmask flags that specify how `Cookie` functions should behave
     ///
@@ -218,18 +227,6 @@ bitflags::bitflags! {
                                 | Self::NO_CHECK_ENCODING.bits
                                 | Self::NO_CHECK_JSON.bits;
     }
-}
-
-/// Returns the version of this crate in the format `MAJOR.MINOR.PATCH`.
-pub fn version() -> &'static str {
-    // TODO: There's also an optional _PRE part
-    concat!(
-        env!("CARGO_PKG_VERSION_MAJOR"),
-        ".",
-        env!("CARGO_PKG_VERSION_MINOR"),
-        ".",
-        env!("CARGO_PKG_VERSION_PATCH"),
-    )
 }
 
 fn db_filenames<P: AsRef<Path>>(filenames: &[P]) -> Result<Option<CString>, MagicError> {
@@ -421,8 +418,6 @@ impl Cookie {
 
 #[cfg(test)]
 mod tests {
-    extern crate regex;
-
     use super::Cookie;
     use super::CookieFlags;
     use super::MagicError;
@@ -504,12 +499,6 @@ mod tests {
             .is_ok());
     }
 
-    #[test]
-    fn version() {
-        let version_regex = regex::Regex::new(r"\d+\.\d+.\d+").unwrap();
-        assert!(version_regex.is_match(super::version()));
-    }
-
     static_assertions::assert_impl_all!(Cookie: std::fmt::Debug);
 
     #[test]
@@ -525,5 +514,12 @@ mod tests {
             cookie.file(&path).ok().unwrap(),
             "PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced"
         );
+    }
+
+    #[test]
+    fn libmagic_version() {
+        let version = super::libmagic_version();
+
+        assert!(version > 500);
     }
 }
