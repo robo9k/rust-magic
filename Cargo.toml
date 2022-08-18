@@ -22,7 +22,7 @@ authors = [
 	"Onur Aslan <onur@onur.im>",
 	"robo9k <robo9k@symlink.io>",
 ]
-version = "0.13.0-alpha.3"
+version = "0.13.0"
 exclude = [
 	".gitignore",
 	"/.github/",
