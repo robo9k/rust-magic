@@ -76,6 +76,15 @@ use magic_sys as libmagic;
 
 mod ffi;
 
+/// Returns the version of the `libmagic` C library as reported by itself.
+///
+/// # Examples
+/// A version of "5.41" is returned as `541`.
+#[doc(alias = "magic_version")]
+pub fn libmagic_version() -> libc::c_int {
+    crate::ffi::version()
+}
+
 bitflags::bitflags! {
     /// Bitmask flags that specify how `Cookie` functions should behave
     ///
@@ -505,5 +514,12 @@ mod tests {
             cookie.file(&path).ok().unwrap(),
             "PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced"
         );
+    }
+
+    #[test]
+    fn libmagic_version() {
+        let version = super::libmagic_version();
+
+        assert!(version > 500);
     }
 }
