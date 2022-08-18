@@ -7,9 +7,7 @@
 
 #![allow(unsafe_code)]
 
-extern crate libc;
-extern crate magic_sys as libmagic;
-extern crate thiserror;
+use magic_sys as libmagic;
 
 #[non_exhaustive]
 #[derive(thiserror::Error, Debug)]
@@ -40,9 +38,9 @@ pub(crate) enum LibmagicError {
     ApiViolation { description: String },
 }
 
-fn last_error(cookie: self::libmagic::magic_t) -> Option<LibmagicError> {
-    let error = unsafe { self::libmagic::magic_error(cookie) };
-    let errno = unsafe { self::libmagic::magic_errno(cookie) };
+fn last_error(cookie: libmagic::magic_t) -> Option<LibmagicError> {
+    let error = unsafe { libmagic::magic_error(cookie) };
+    let errno = unsafe { libmagic::magic_errno(cookie) };
 
     if error.is_null() {
         None
@@ -58,23 +56,23 @@ fn last_error(cookie: self::libmagic::magic_t) -> Option<LibmagicError> {
     }
 }
 
-fn expect_error(cookie: self::libmagic::magic_t, description: String) -> LibmagicError {
+fn expect_error(cookie: libmagic::magic_t, description: String) -> LibmagicError {
     match last_error(cookie) {
         Some(err) => err,
         None => LibmagicError::ApiViolation { description },
     }
 }
 
-pub(crate) fn close(cookie: self::libmagic::magic_t) {
-    unsafe { self::libmagic::magic_close(cookie) }
+pub(crate) fn close(cookie: libmagic::magic_t) {
+    unsafe { libmagic::magic_close(cookie) }
 }
 
 pub(crate) fn file(
-    cookie: self::libmagic::magic_t,
+    cookie: libmagic::magic_t,
     filename: &std::ffi::CStr, // TODO: Support NULL
 ) -> Result<std::ffi::CString, LibmagicError> {
     let filename_ptr = filename.as_ptr();
-    let res = unsafe { self::libmagic::magic_file(cookie, filename_ptr) };
+    let res = unsafe { libmagic::magic_file(cookie, filename_ptr) };
 
     if res.is_null() {
         Err(expect_error(
@@ -88,12 +86,12 @@ pub(crate) fn file(
 }
 
 pub(crate) fn buffer(
-    cookie: self::libmagic::magic_t,
+    cookie: libmagic::magic_t,
     buffer: &[u8],
 ) -> Result<std::ffi::CString, LibmagicError> {
     let buffer_ptr = buffer.as_ptr();
     let buffer_len = buffer.len() as libc::size_t;
-    let res = unsafe { self::libmagic::magic_buffer(cookie, buffer_ptr, buffer_len) };
+    let res = unsafe { libmagic::magic_buffer(cookie, buffer_ptr, buffer_len) };
 
     if res.is_null() {
         Err(expect_error(
@@ -106,11 +104,8 @@ pub(crate) fn buffer(
     }
 }
 
-pub(crate) fn setflags(
-    cookie: self::libmagic::magic_t,
-    flags: libc::c_int,
-) -> Result<(), LibmagicError> {
-    let ret = unsafe { self::libmagic::magic_setflags(cookie, flags) };
+pub(crate) fn setflags(cookie: libmagic::magic_t, flags: libc::c_int) -> Result<(), LibmagicError> {
+    let ret = unsafe { libmagic::magic_setflags(cookie, flags) };
     match ret {
         -1 => Err(LibmagicError::UnsupportedFlags { flags }),
         _ => Ok(()),
@@ -118,11 +113,11 @@ pub(crate) fn setflags(
 }
 
 pub(crate) fn check(
-    cookie: self::libmagic::magic_t,
+    cookie: libmagic::magic_t,
     filename: Option<&std::ffi::CStr>,
 ) -> Result<(), LibmagicError> {
     let filename_ptr = filename.map_or_else(std::ptr::null, std::ffi::CStr::as_ptr);
-    let res = unsafe { self::libmagic::magic_check(cookie, filename_ptr) };
+    let res = unsafe { libmagic::magic_check(cookie, filename_ptr) };
 
     match res {
         0 => Ok(()),
@@ -137,11 +132,11 @@ pub(crate) fn check(
 }
 
 pub(crate) fn compile(
-    cookie: self::libmagic::magic_t,
+    cookie: libmagic::magic_t,
     filename: Option<&std::ffi::CStr>,
 ) -> Result<(), LibmagicError> {
     let filename_ptr = filename.map_or_else(std::ptr::null, std::ffi::CStr::as_ptr);
-    let res = unsafe { self::libmagic::magic_compile(cookie, filename_ptr) };
+    let res = unsafe { libmagic::magic_compile(cookie, filename_ptr) };
 
     match res {
         0 => Ok(()),
@@ -156,11 +151,11 @@ pub(crate) fn compile(
 }
 
 pub(crate) fn list(
-    cookie: self::libmagic::magic_t,
+    cookie: libmagic::magic_t,
     filename: Option<&std::ffi::CStr>,
 ) -> Result<(), LibmagicError> {
     let filename_ptr = filename.map_or_else(std::ptr::null, std::ffi::CStr::as_ptr);
-    let res = unsafe { self::libmagic::magic_list(cookie, filename_ptr) };
+    let res = unsafe { libmagic::magic_list(cookie, filename_ptr) };
 
     match res {
         0 => Ok(()),
@@ -175,11 +170,11 @@ pub(crate) fn list(
 }
 
 pub(crate) fn load(
-    cookie: self::libmagic::magic_t,
+    cookie: libmagic::magic_t,
     filename: Option<&std::ffi::CStr>,
 ) -> Result<(), LibmagicError> {
     let filename_ptr = filename.map_or_else(std::ptr::null, std::ffi::CStr::as_ptr);
-    let res = unsafe { self::libmagic::magic_load(cookie, filename_ptr) };
+    let res = unsafe { libmagic::magic_load(cookie, filename_ptr) };
 
     match res {
         0 => Ok(()),
@@ -194,7 +189,7 @@ pub(crate) fn load(
 }
 
 pub(crate) fn load_buffers(
-    cookie: self::libmagic::magic_t,
+    cookie: libmagic::magic_t,
     buffers: &[&[u8]],
 ) -> Result<(), LibmagicError> {
     let mut ffi_buffers: Vec<*const u8> = Vec::with_capacity(buffers.len());
@@ -210,7 +205,7 @@ pub(crate) fn load_buffers(
     let ffi_sizes_ptr = ffi_sizes.as_mut_ptr();
 
     let res = unsafe {
-        self::libmagic::magic_load_buffers(cookie, ffi_buffers_ptr, ffi_sizes_ptr, ffi_nbuffers)
+        libmagic::magic_load_buffers(cookie, ffi_buffers_ptr, ffi_sizes_ptr, ffi_nbuffers)
     };
 
     match res {
@@ -228,8 +223,8 @@ pub(crate) fn load_buffers(
     }
 }
 
-pub(crate) fn open(flags: libc::c_int) -> Result<self::libmagic::magic_t, LibmagicError> {
-    let cookie = unsafe { self::libmagic::magic_open(flags) };
+pub(crate) fn open(flags: libc::c_int) -> Result<libmagic::magic_t, LibmagicError> {
+    let cookie = unsafe { libmagic::magic_open(flags) };
 
     if cookie.is_null() {
         Err(LibmagicError::Open {

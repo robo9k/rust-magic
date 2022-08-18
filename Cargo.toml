@@ -34,6 +34,7 @@ exclude = [
 	"LICENSES/",
 	".reuse/",
 ]
+edition = "2018"
 rust-version = "1.48"
 
 [package.metadata]
