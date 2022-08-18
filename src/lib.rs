@@ -220,18 +220,6 @@ bitflags::bitflags! {
     }
 }
 
-/// Returns the version of this crate in the format `MAJOR.MINOR.PATCH`.
-pub fn version() -> &'static str {
-    // TODO: There's also an optional _PRE part
-    concat!(
-        env!("CARGO_PKG_VERSION_MAJOR"),
-        ".",
-        env!("CARGO_PKG_VERSION_MINOR"),
-        ".",
-        env!("CARGO_PKG_VERSION_PATCH"),
-    )
-}
-
 fn db_filenames<P: AsRef<Path>>(filenames: &[P]) -> Result<Option<CString>, MagicError> {
     match filenames.len() {
         0 => Ok(None),
@@ -421,8 +409,6 @@ impl Cookie {
 
 #[cfg(test)]
 mod tests {
-    extern crate regex;
-
     use super::Cookie;
     use super::CookieFlags;
     use super::MagicError;
@@ -502,12 +488,6 @@ mod tests {
         assert!(cookie
             .load(&vec!["data/tests/db-images-png", "data/tests/db-python",])
             .is_ok());
-    }
-
-    #[test]
-    fn version() {
-        let version_regex = regex::Regex::new(r"\d+\.\d+.\d+").unwrap();
-        assert!(version_regex.is_match(super::version()));
     }
 
     static_assertions::assert_impl_all!(Cookie: std::fmt::Debug);
