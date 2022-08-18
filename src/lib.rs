@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: © The `magic` Rust crate authors
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT OR Apache-2.0
 
 //! # About
 //!
