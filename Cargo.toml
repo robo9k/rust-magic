@@ -1,7 +1,7 @@
 [package]
 name = "magic"
 description = "High level bindings for the `libmagic` C library"
-license = "MIT"
+license = "MIT OR Apache-2.0"
 keywords = [
     "magic",
     "file",
@@ -23,16 +23,8 @@ authors = [
 	"robo9k <robo9k@symlink.io>",
 ]
 version = "0.13.0"
-exclude = [
-	".gitignore",
-	"/.github/",
-	"rust-toolchain.toml",
-	"deny.toml",
-	"data/tests/",
-	".bumpversion.cfg",
-	"clippy.toml",
-	"LICENSES/",
-	".reuse/",
+include = [
+	"/src/",
 ]
 edition = "2018"
 rust-version = "1.48"

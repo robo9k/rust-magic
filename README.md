@@ -33,9 +33,16 @@ By default compiling `rust-magic` will search your system library paths for a ve
 
 # License
 
-This project is licensed under the MIT license (see [`LICENSE`](LICENSES/MIT.txt)).
+This project is licensed under either of
+ * Apache License, Version 2.0
+ ([LICENSES/Apache-2.0.txt](LICENSES/Apache-2.0.txt) or https://opensource.org/licenses/Apache-2.0)
+ * MIT license
+ ([LICENSES/MIT.txt](LICENSES/MIT.txt) or https://opensource.org/licenses/MIT)
 
-The `magic-sys` crate being used is licensed under the MIT license as well (see [`LICENSE-MIT`](https://github.com/robo9k/rust-magic-sys/blob/main/LICENSE-MIT)).
+at your option.
 
-The `file`/`libmagic` project is licensed under a modified BSD license (see [`COPYING`](https://github.com/file/file/blob/master/COPYING)).
-This crate contains partial test-data from its magic databases (`rust-magic/data/tests/db-images-png` is from `file/magic/Magdir/images`, `rust-magic/data/tests/db-python` is from `file/magic/Magdir/python`).
+For further details, see [LICENSE.md](LICENSE.md).
+
+# Contribution
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
