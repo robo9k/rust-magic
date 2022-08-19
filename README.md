@@ -5,31 +5,66 @@ rust-magic [![linux build status](https://github.com/robo9k/rust-magic/actions/w
 
 # Usage
 
-Create a new Cargo project (or edit your existing one):
+This [`magic` crate](https://crates.io/crates/magic) is published on the `crates.io` Rust package registry.
 
-```sh
-$ cargo new --bin magic-usage && cd magic-usage/
-$ $EDITOR Cargo.toml
+Use [`cargo add`](https://blog.rust-lang.org/2022/06/30/Rust-1.62.0.html#cargo-add) to [specify dependencies](https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html):
+
+```shell
+$ cargo add magic
 ```
 
-Add a dependency to your `Cargo.toml` (see [Cargo doc](https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#specifying-dependencies-from-cratesio)):
-
-```toml
-[dependencies]
-magic = "0.13"
+You might be familiar with `libmagic`'s CLI; `file`:
+```shell
+$ file data/tests/rust-logo-128x128-blk.png
+data/tests/rust-logo-128x128-blk.png: PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced
 ```
 
-Then use the [`magic` crate](https://crates.io/crates/magic) according to [its documentation](https://docs.rs/magic/#usage-example).
+You can implement something similar in Rust with the `magic` crate (see [examples/file-ish.rs](examples/file-ish.rs)):
+```rust
+fn file_example() -> Result<(), magic::MagicError> {
+    // Open a new configuration with flags
+    let cookie = magic::Cookie::open(magic::CookieFlags::ERROR)?;
+
+    // Load a specific database (so assertion below works regardless of your system's default database)
+    cookie.load(&vec!["data/tests/db-images-png"])?;
+
+    let file = "data/tests/rust-logo-128x128-blk.png";
+
+    // Analyze the file
+    assert_eq!(cookie.file(file)?, "PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced");
+
+    Ok(())
+}
+```
+```shell
+$ cargo run --example file-ish -- data/tests/rust-logo-128x128-blk.png
+PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced
+```
+
+Read the [`magic` rustdoc](https://docs.rs/magic/#usage-example) for further examples and info.
 
 # MSRV
 
-The Minimum Supported Rust Version (MSRV) is Rust 1.48 or higher.
+The Minimum Supported Rust Version (MSRV) is Rust 1.54 or higher.
 
 This version might be changed in the future, but it will be done with a crate version bump.
 
 # Requirements
 
-By default compiling `rust-magic` will search your system library paths for a version of `libmagic.so`. If you're cross-compiling, or need more control over which library is selected, see [how to build `rust-magic-sys`](https://github.com/robo9k/rust-magic-sys#building).
+By default, compiling the `magic` crate will search your system library paths for a shared library version of `libmagic` to link against. For this to work, you need to install the development version of `libmagic` in a standard location:
+```shell
+$ # On Debian based Linux systems:
+$ sudo apt-get install libmagic1 libmagic-dev
+
+$ # On MacOs:
+$ brew install libmagic
+
+$ # On Windows:
+$ cargo install cargo-vcpkg
+$ cargo vcpkg build
+```
+
+If you're cross-compiling, or need more control over which library is selected, see [how to build `magic-sys`](https://github.com/robo9k/rust-magic-sys#building).
 
 # License
 
