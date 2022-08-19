@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: © The `magic` Rust crate authors
+// SPDX-License-Identifier: MIT OR Apache-2.0
+
 //! Minimalist `file(1)` clone
 //!
 //! Prints the `libmagic` description of the file given as a command line argument:
