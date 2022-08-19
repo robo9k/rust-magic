@@ -8,7 +8,7 @@
 //!
 //! You might be familiar with `libmagic`'s CLI; [`file`](https://www.darwinsys.com/file/):
 //!
-//! ```sh
+//! ```shell
 //! $ file data/tests/rust-logo-128x128-blk.png
 //! data/tests/rust-logo-128x128-blk.png: PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced
 //! ```
@@ -18,7 +18,8 @@
 //! Understanding how the `libmagic` C library and thus this crate works requires a bit of glossary.
 //!
 //! `libmagic` at its core can analyze a file or buffer and return a mostly unstructured text that describes the analysis result.
-//! There are built-in tests for special cases and there are magic databases with signatures which can be supplied by the user for the generic cases.
+//! There are built-in tests for special cases such as symlinks and compressed files
+//! and there are magic databases with signatures which can be supplied by the user for the generic cases.
 //!
 //! The analysis behaviour can be influenced by so-called flags and parameters.
 //! Flags are either set or unset and do not have a value, parameters have a value.
@@ -35,10 +36,11 @@
 //! # fn main() -> Result<(), magic::MagicError> {
 //! // Open a new configuration with flags
 //! let cookie = magic::Cookie::open(magic::CookieFlags::ERROR)?;
-//! // Load the default database
-//! cookie.load::<&str>(&[])?;
-//! // Load an additional database for demonstration purposes
+//!
+//! // Load a specific database (so exact text assertion below works regardless of the system's default database)
 //! cookie.load(&vec!["data/tests/db-images-png"])?;
+//! // You can instead load the default database
+//! //cookie.load::<&str>(&[])?;
 //!
 //! // Analyze a test file
 //! let file_to_analyze = "data/tests/rust-logo-128x128-blk.png";
@@ -47,12 +49,22 @@
 //! # Ok(())
 //! # }
 //! ```
+//!
+//! See further examples in [`examples/`](https://github.com/robo9k/rust-magic/tree/main/examples).
+//!
 //! # Further reading
 //!
 //! * [`Cookie::open`]
-//! * [`CookieFlags`], in particular [`CookieFlags::ERROR`], [`CookieFlags::NO_CHECK_BUILTIN`]
+//! * [`CookieFlags`], in particular:
+//!     * [`CookieFlags::ERROR`]
+//!     * [`CookieFlags::NO_CHECK_BUILTIN`]
+//!     * [`CookieFlags::MIME`]
+//!     * [`CookieFlags::EXTENSION`]
 //! * [`Cookie::load`], [`Cookie::load_buffers`]
 //! * [`Cookie::file`], [`Cookie::buffer`]
+//!
+//! Note that while some `libmagic` functions return somewhat structured text, e.g. MIME types and file extensions,
+//! the `magic` crate does not attempt to parse them into Rust data types since the format is not guaranteed by the C FFI API.
 //!
 //! # Safety
 //!
@@ -118,6 +130,18 @@ bitflags::bitflags! {
         const DEVICES           = libmagic::MAGIC_DEVICES;
 
         /// Return a MIME type string, instead of a textual description
+        ///
+        /// See also: [`CookieFlags::MIME`]
+        ///
+        /// NOTE: `libmagic` uses non-standard MIME types for at least some built-in checks,
+        /// e.g. `inode/*` (also see [`CookieFlags::SYMLINK`], [`CookieFlags::DEVICES`]):
+        /// ```shell
+        /// $ file --mime-type /proc/self/exe
+        /// /proc/self/exe: inode/symlink
+        ///
+        /// $file --mime-type /dev/sda
+        /// /dev/sda: inode/blockdevice
+        /// ```
         #[doc(alias = "MAGIC_MIME_TYPE")]
         const MIME_TYPE         = libmagic::MAGIC_MIME_TYPE;
 
@@ -144,10 +168,26 @@ bitflags::bitflags! {
         const ERROR             = libmagic::MAGIC_ERROR;
 
         /// Return a MIME encoding, instead of a textual description
+        ///
+        /// See also: [`CookieFlags::MIME`]
+        ///
+        /// NOTE: `libmagic` uses non-standard MIME `charset` values, e.g. for binary files:
+        /// ```shell
+        /// $ file --mime-encoding /proc/self/exe
+        /// binary
+        /// ```
         #[doc(alias = "MAGIC_MIME_ENCODING")]
         const MIME_ENCODING     = libmagic::MAGIC_MIME_ENCODING;
 
         /// A shorthand for `MIME_TYPE | MIME_ENCODING`
+        ///
+        /// See also: [`CookieFlags::MIME_TYPE`], [`CookieFlags::MIME_ENCODING`]
+        ///
+        /// NOTE: `libmagic` returns a parseable MIME type with a `charset` field:
+        /// ```shell
+        /// $ file --mime /proc/self/exe
+        /// /proc/self/exe: inode/symlink; charset=binary
+        /// ```
         #[doc(alias = "MAGIC_MIME")]
         const MIME              = Self::MIME_TYPE.bits
                                 | Self::MIME_ENCODING.bits;
@@ -157,6 +197,15 @@ bitflags::bitflags! {
         const APPLE             = libmagic::MAGIC_APPLE;
 
         /// Return a slash-separated list of extensions for this file type
+        ///
+        /// NOTE: `libmagic` returns a list with one or more extensions without a leading "." dot:
+        /// ```shell
+        /// $ file --extension example.jpg
+        /// example.jpg: jpeg/jpg/jpe/jfif
+        ///
+        /// $ file --extension /proc/self/exe
+        /// /proc/self/exe: ???
+        /// ```
         #[doc(alias = "MAGIC_EXTENSION")]
         const EXTENSION         = libmagic::MAGIC_EXTENSION;
 
