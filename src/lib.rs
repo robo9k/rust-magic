@@ -523,3 +523,7 @@ mod tests {
         assert!(version > 500);
     }
 }
+
+#[cfg(doctest)]
+#[doc=include_str!("../README.md")]
+mod readme {}
