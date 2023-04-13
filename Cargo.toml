@@ -27,7 +27,7 @@ include = [
 	"/src/",
 ]
 edition = "2018"
-rust-version = "1.54"
+rust-version = "1.56"
 
 [package.metadata]
 msrv = "1.56.0"
