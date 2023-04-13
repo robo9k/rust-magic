@@ -45,7 +45,7 @@ Read the [`magic` rustdoc](https://docs.rs/magic/#usage-example) for further exa
 
 # MSRV
 
-The Minimum Supported Rust Version (MSRV) is Rust 1.54 or higher.
+The Minimum Supported Rust Version (MSRV) is Rust 1.56 or higher.
 
 This version might be changed in the future, but it will be done with a crate version bump.
 
