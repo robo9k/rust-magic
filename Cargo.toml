@@ -30,7 +30,7 @@ edition = "2018"
 rust-version = "1.54"
 
 [package.metadata]
-msrv = "1.54.0"
+msrv = "1.56.0"
 
 [package.metadata.docs.rs]
 all-features = true
