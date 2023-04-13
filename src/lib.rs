@@ -78,6 +78,19 @@
 //!
 //! This crate has not been audited nor is it ready for production use.
 //!
+//! # Use cases
+//!
+//! `libmagic` can help to identify unknown content. It does this by looking at byte patterns, among other things.
+//! This does not guarantee that e.g. a file which is detected as a PNG image is indeed a valid PNG image.
+//!
+//! Maybe you just want a mapping from file name extensions to MIME types instead, e.g. ".png" ↔ "image/png"?
+//! In this case you do not even need to look at file contents and could use e.g. the [`mime_guess` crate](https://crates.io/crates/mime_guess).
+//!
+//! Maybe you want to be certain that a file is valid for a kown format, e.g. a PNG image?
+//! In this case you should use a parser for that format specifically, e.g. the [`image` crate](https://crates.io/crates/image).
+//!
+//! Maybe you want to know if a file contains other, malicious content?
+//! In this case you should use an anti-virus software, e.g. [ClamAV](https://www.clamav.net/), [Virus Total](https://www.virustotal.com/).
 
 #![deny(unsafe_code)]
 
