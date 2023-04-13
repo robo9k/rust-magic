@@ -78,6 +78,8 @@
 //!
 //! This crate has not been audited nor is it ready for production use.
 //!
+//! This Rust project / crate is not affiliated with the original `file` / `libmagic` C project.
+//!
 //! # Use cases
 //!
 //! `libmagic` can help to identify unknown content. It does this by looking at byte patterns, among other things.
