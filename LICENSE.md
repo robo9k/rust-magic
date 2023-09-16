@@ -8,7 +8,8 @@ This project is licensed under either of
  * MIT license
  ([LICENSES/MIT.txt](LICENSES/MIT.txt) or https://opensource.org/licenses/MIT)
 
-at your option.
+at your option.  
+The machine-readable version of this is `SPDX-License-Identifier: Apache-2.0 OR MIT`.
 
 
 REUSE [![REUSE status](https://api.reuse.software/badge/github.com/robo9k/rust-magic)](https://api.reuse.software/info/github.com/robo9k/rust-magic)
