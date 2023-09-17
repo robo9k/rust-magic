@@ -7,10 +7,6 @@ Files: Cargo.toml README.md LICENSE.md CONTRIBUTING.md CHANGELOG.md
 Copyright: © The `magic` Rust crate authors
 License: MIT OR Apache-2.0
 
-Files: .bumpversion.cfg
-Copyright: © The `magic` Rust crate authors
-License: MIT OR Apache-2.0
-
 Files: .github/workflows/* clippy.toml deny.toml rust-toolchain.toml
 Copyright: © The `magic` Rust crate authors
 License: MIT OR Apache-2.0
