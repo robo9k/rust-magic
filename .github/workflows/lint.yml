@@ -1,54 +1,49 @@
 name: lint
 
-permissions:
-  contents: read
+permissions: {}
 
 on:
-  push:
-    branches: [ main ]
   pull_request:
     branches: [ main ]
 
 env:
-  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -Dwarnings
 
 jobs:
   cargo-fmt:
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
-      with:
-        egress-policy: audit
-    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v3.0.2
-    - uses: actions-rs/toolchain@b2417cde72dcf67f306c0ae8e0828a81bf0b189f # v1.0.6
-      with:
-        profile: minimal
-        toolchain: stable
-        components: rustfmt
-        override: true
-    - uses: actions-rs/cargo@ae10961054e4aa8b4aa7dffede299aaf087aa33b # v1.0.1
-      with:
-        command: fmt
-        args: --all -- --check
-
-  cargo-clippy:
     permissions:
-      checks: write # for actions-rs/clippy-check to write checks
-    runs-on: ubuntu-latest
-
+      contents: read
+    runs-on: ubuntu-22.04
     steps:
       - uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
         with:
           egress-policy: audit
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v3.0.2
-      - uses: actions-rs/toolchain@b2417cde72dcf67f306c0ae8e0828a81bf0b189f # v1.0.6
+
+      - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
+
+      - id: toolchain
+        uses: dtolnay/rust-toolchain@439cf607258077187679211f12aa6f19af4a0af7 # doesn't have usual versioned releases/tags
         with:
-          profile: minimal
           toolchain: stable
-          components: clippy
-          override: true
-      - uses: actions-rs/clippy-check@b5b5f21f4797c02da247df37026fcd0a5024aa4d # v1.0.7
+          components: rustfmt # minimal profile does not include it
+
+      - run: cargo +${{ steps.toolchain.outputs.name }} fmt --all --check
+
+  cargo-clippy:
+    permissions:
+      contents: read
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: --all-features
+          egress-policy: audit
+
+      - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
+
+      - id: toolchain
+        uses: dtolnay/rust-toolchain@439cf607258077187679211f12aa6f19af4a0af7 # doesn't have usual versioned releases/tags
+        with:
+          toolchain: stable
+          components: clippy # minimal profile does not include it
+
+      - run: cargo +${{ steps.toolchain.outputs.name }} clippy --all-targets --all-features
