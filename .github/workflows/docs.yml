@@ -30,6 +30,12 @@ jobs:
 
       - uses: actions/configure-pages@f156874f8191504dae5b037505266ed5dda6c382 # v3.0.6
 
+      - name: Fix permissions
+        run: |
+          chmod -c -R +rX "target/doc/" | while read line; do
+            echo "::warning title=Invalid file permissions automatically fixed::$line"
+          done
+
       - uses: actions/upload-pages-artifact@a753861a5debcf57bf8b404356158c8e1e33150c # v2.0.0
         with:
           path: target/doc/
