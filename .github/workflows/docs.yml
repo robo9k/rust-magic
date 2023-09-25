@@ -1,7 +1,6 @@
 name: docs
 
-permissions:
-  contents: read
+permissions: {}
 
 on:
   push:
@@ -9,38 +8,43 @@ on:
       - main
 
 jobs:
-  rustdoc:
+  build-rustdoc:
     permissions:
-      contents: write # for JamesIves/github-pages-deploy-action to push changes in repo
-    runs-on: ubuntu-latest
+      contents: read
+    runs-on: ubuntu-22.04
     steps:
       - uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v3.0.2
+      - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
 
-      - uses: actions-rs/toolchain@b2417cde72dcf67f306c0ae8e0828a81bf0b189f # v1.0.6
+      - uses: dtolnay/rust-toolchain@439cf607258077187679211f12aa6f19af4a0af7 # doesn't have usual versioned releases/tags
         with:
-          toolchain: stable
-          override: true
-          profile: minimal
+          toolchain: nightly # minimal profile includes rustc component which includes cargo and rustdoc
 
-      - uses: actions-rs/cargo@ae10961054e4aa8b4aa7dffede299aaf087aa33b # v1.0.1
+      - run: cargo doc --verbose --no-deps --all-features
+        env:
+          RUSTDOCFLAGS: --crate-version ${{ github.event.push.after }} -Z unstable-options --enable-index-page
+
+      - uses: actions/configure-pages@f156874f8191504dae5b037505266ed5dda6c382 # v3.0.6
+
+      - uses: actions/upload-pages-artifact@a753861a5debcf57bf8b404356158c8e1e33150c # v2.0.0
         with:
-          command: doc
-          args: --verbose --lib --no-deps --all-features
-
-      - run: |
-          echo '<meta http-equiv="refresh" content="0; url=magic/index.html">' > target/doc/index.html
-          touch target/doc/.nojekyll
-
-      - uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # v3.1.0
-        with:
-          name: rustdoc
           path: target/doc/
 
-      - uses: JamesIves/github-pages-deploy-action@13046b614c663b56cba4dda3f30b9736a748b80d # v4.4.0
+  deploy-pages:
+    permissions:
+      id-token: write
+      pages: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-22.04
+    needs: build-rustdoc
+    steps:
+      - uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
         with:
-          branch: gh-pages
-          folder: target/doc/
+          egress-policy: audit
+      - id: deployment
+        uses: actions/deploy-pages@9dbe3824824f8a1377b8e298bafde1a50ede43e5 # v2.0.4
