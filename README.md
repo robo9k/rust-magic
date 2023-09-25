@@ -78,6 +78,10 @@ at your option.
 
 For further details, see [LICENSE.md](LICENSE.md).
 
+# Security
+
+See [SECURITY.md](SECURITY.md).
+
 # Contribution
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
