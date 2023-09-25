@@ -1,7 +1,6 @@
 name: Scorecards supply-chain security
 
-permissions:
-  contents: read
+permissions: read-all
 
 on:
   branch_protection_rule:
@@ -29,7 +28,7 @@ jobs:
         with:
           results_file: results.sarif
           results_format: sarif
-          repo_token: ${{ secrets.SCORECARD_READ_TOKEN }}
+          repo_token: ${{ secrets.SCORECARD_TOKEN }}
 
           publish_results: true
 
