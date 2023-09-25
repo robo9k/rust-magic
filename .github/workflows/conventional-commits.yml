@@ -1,15 +1,17 @@
-permissions:
-    contents: read
+name: cog check
+
+permissions: {}
 
 on:
     pull_request:
         branches: [ main ]
 
 jobs:
-    check-commits:
-        # https://github.com/cocogitto/cocogitto-action
-        runs-on: ubuntu-latest
+    check-conventional-commits:
         name: check conventional commit compliance
+        permissions:
+          contents: read
+        runs-on: ubuntu-22.04
         steps:
             - uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
               with:
