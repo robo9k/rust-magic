@@ -1,7 +1,6 @@
 name: cargo deny
 
-permissions:
-  contents: read
+permissions: {}
 
 on:
   push:
@@ -22,7 +21,9 @@ env:
 
 jobs:
   cargo-deny:
-    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         checks:
@@ -36,8 +37,8 @@ jobs:
     - uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
       with:
         egress-policy: audit
-    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v3.0.2
-    - uses: EmbarkStudios/cargo-deny-action@7257a18a9c2fe3f92b85d41ae473520dff953c97 # v1.3.2
+    - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
+    - uses: EmbarkStudios/cargo-deny-action@a50c7d5f86370e02fae8472c398f15a36e517bb8 # v1.5.4
       with:
         command: check ${{ matrix.checks }}
         arguments: --all-features
