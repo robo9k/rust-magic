@@ -18,6 +18,9 @@ jobs:
       id-token: write # for ossf/scorecard-action to access GitHub's OIDC token when publishing
     
     steps:
+      - uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
+        with:
+          egress-policy: audit
       - name: "Checkout code"
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v3.0.2
         with:
