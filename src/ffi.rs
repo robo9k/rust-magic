@@ -14,7 +14,7 @@ use magic_sys as libmagic;
 pub(crate) enum LibmagicError {
     /// Error during `magic_open`
     #[error("Error calling `magic_open`, errno: {errno}")]
-    Open { errno: errno::Errno },
+    Open { errno: std::io::Error },
 
     /// Error for opened `magic_t` instance
     #[error("Error for cookie call ({}): {}",
@@ -26,7 +26,7 @@ pub(crate) enum LibmagicError {
     )]
     Cookie {
         explanation: std::ffi::CString,
-        errno: Option<errno::Errno>,
+        errno: Option<std::io::Error>,
     },
 
     /// Error during `magic_setflags`
@@ -50,7 +50,7 @@ fn last_error(cookie: libmagic::magic_t) -> Option<LibmagicError> {
             explanation: c_str.into(),
             errno: match errno {
                 0 => None,
-                _ => Some(errno::Errno(errno)),
+                _ => Some(std::io::Error::from_raw_os_error(errno)),
             },
         })
     }
@@ -228,7 +228,7 @@ pub(crate) fn open(flags: libc::c_int) -> Result<libmagic::magic_t, LibmagicErro
 
     if cookie.is_null() {
         Err(LibmagicError::Open {
-            errno: errno::errno(),
+            errno: std::io::Error::last_os_error(),
         })
     } else {
         Ok(cookie)
