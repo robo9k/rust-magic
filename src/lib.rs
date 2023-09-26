@@ -122,9 +122,12 @@ bitflags::bitflags! {
     /// let default_flags: magic::CookieFlags = Default::default();
     /// assert_eq!(default_flags, magic::CookieFlags::empty());
     /// ```
-    #[derive(std::default::Default)]
+    #[derive(std::default::Default, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
     pub struct CookieFlags: libc::c_int {
-        // MAGIC_NONE is 0/default, see https://docs.rs/bitflags/1.3.2/bitflags/#zero-flags
+        // MAGIC_NONE is 0/default, see https://docs.rs/bitflags/latest/bitflags/#zero-bit-flags
+
+        // Define unnamed flag for all other bits https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags
+        const _                 = !0;
 
         /// Print debugging messages to `stderr`
         ///
@@ -204,8 +207,8 @@ bitflags::bitflags! {
         /// /proc/self/exe: inode/symlink; charset=binary
         /// ```
         #[doc(alias = "MAGIC_MIME")]
-        const MIME              = Self::MIME_TYPE.bits
-                                | Self::MIME_ENCODING.bits;
+        const MIME              = Self::MIME_TYPE.bits()
+                                | Self::MIME_ENCODING.bits();
 
         /// Return the Apple creator and type
         #[doc(alias = "MAGIC_APPLE")]
@@ -230,9 +233,9 @@ bitflags::bitflags! {
 
         /// A shorthand for `EXTENSION | MIME | APPLE`
         #[doc(alias = "MAGIC_NODESC")]
-        const NODESC            = Self::EXTENSION.bits
-                                | Self::MIME.bits
-                                | Self::APPLE.bits;
+        const NODESC            = Self::EXTENSION.bits()
+                                | Self::MIME.bits()
+                                | Self::APPLE.bits();
 
         /// Don't look inside compressed files
         #[doc(alias = "MAGIC_NO_CHECK_COMPRESS")]
@@ -280,16 +283,16 @@ bitflags::bitflags! {
 
         /// No built-in tests; only consult the magic file
         #[doc(alias = "MAGIC_NO_CHECK_BUILTIN")]
-        const NO_CHECK_BUILTIN  = Self::NO_CHECK_COMPRESS.bits
-                                | Self::NO_CHECK_TAR.bits
-                                | Self::NO_CHECK_APPTYPE.bits
-                                | Self::NO_CHECK_ELF.bits
-                                | Self::NO_CHECK_TEXT.bits
-                                | Self::NO_CHECK_CSV.bits
-                                | Self::NO_CHECK_CDF.bits
-                                | Self::NO_CHECK_TOKENS.bits
-                                | Self::NO_CHECK_ENCODING.bits
-                                | Self::NO_CHECK_JSON.bits;
+        const NO_CHECK_BUILTIN  = Self::NO_CHECK_COMPRESS.bits()
+                                | Self::NO_CHECK_TAR.bits()
+                                | Self::NO_CHECK_APPTYPE.bits()
+                                | Self::NO_CHECK_ELF.bits()
+                                | Self::NO_CHECK_TEXT.bits()
+                                | Self::NO_CHECK_CSV.bits()
+                                | Self::NO_CHECK_CDF.bits()
+                                | Self::NO_CHECK_TOKENS.bits()
+                                | Self::NO_CHECK_ENCODING.bits()
+                                | Self::NO_CHECK_JSON.bits();
     }
 }
 
