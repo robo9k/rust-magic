@@ -3,6 +3,7 @@ name: docs
 permissions: {}
 
 on:
+  pull_request: 
   push:
     branches:
       - main
@@ -41,6 +42,7 @@ jobs:
           path: target/doc/
 
   deploy-pages:
+    if: github.event_name == 'push'
     permissions:
       id-token: write
       pages: write
