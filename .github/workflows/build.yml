@@ -10,7 +10,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build-and-test:
+  build:
     permissions:
       contents: read
     runs-on: ubuntu-22.04
@@ -30,4 +30,32 @@ jobs:
       - uses: Swatinem/rust-cache@a95ba195448af2da9b00fb742d14ffaaf3c21f43 # v2.7.0 
 
       - run: cargo +${{ steps.toolchain.outputs.name }} build --all-targets --all-features --verbose
-      - run: cargo +${{ steps.toolchain.outputs.name }} test --all-targets --all-features --verbose
+
+  test:
+    permissions:
+      contents: read
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+
+      - id: toolchain
+        uses: dtolnay/rust-toolchain@439cf607258077187679211f12aa6f19af4a0af7 # doesn't have usual versioned releases/tags
+        with:
+          toolchain: "stable"
+          # minimal profile includes rustc component which includes cargo and rustdoc
+
+      - uses: Swatinem/rust-cache@a95ba195448af2da9b00fb742d14ffaaf3c21f43 # v2.7.0
+
+      - uses: taiki-e/install-action@5b205dd5b807eef56fdbfeedeedcee63c5d44090 # v2.18.16
+        with:
+          tool: cargo-llvm-cov@0.5.32
+
+      - run: |
+          source <(cargo +${{ steps.toolchain.outputs.name }} llvm-cov show-env --export-prefix)
+          cargo +${{ steps.toolchain.outputs.name }} llvm-cov clean --workspace
+          cargo +${{ steps.toolchain.outputs.name }} test --all-targets --all-features --verbose
+          cargo +${{ steps.toolchain.outputs.name }} llvm-cov report --codecov --output-path codecov.json
