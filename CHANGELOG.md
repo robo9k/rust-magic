@@ -8,31 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.15.0](https://github.com/robo9k/rust-magic/compare/v0.14.0...v0.15.0) - 2023-09-26
 
-### Added
-- [**breaking**] Replace `errno` with `std::io::Error`
-
-### Other
+### Changed
+- *(deps)* [**breaking**] Replace `errno` with `std::io::Error`
 - *(deps)* [**breaking**] Upgrade to `bitflags` v2
-- *(deps)* Bump actions/checkout from 4.0.0 to 4.1.0
-- Fix Dependabot configuration for conventional commits
-- Add Dependabot configuration
-- Add `SECURITY.md` policy
-- Always run `cargo deny` workflow
-- Update build workflow
-- Update lint workflow
-- Fix docs workflow some more
-- Fix docs workflow
-- Update docs workflow
-- Update CI workflows
-- Add `step-security/harden-runner` to all CI steps
-- Update OpenSSF scorecard setup
-- Enforce conventional commits
-- Fix duplicate version in CHANGELOG
-- Fix duplicate version in CHANGELOG
-- Cleanup old release configuration
-- Mention SPDX license identifier
-- Backfill empty CHANGELOG for old releases
-- Use `release-plz` GitHub Action
 
 ## 0.14.0 - 2023-09-16
 
