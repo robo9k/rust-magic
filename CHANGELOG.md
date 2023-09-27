@@ -6,6 +6,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.1](https://github.com/robo9k/rust-magic/compare/v0.15.0...v0.15.1) - 2023-09-27
+
+### Other
+- Use `mold` linker
+- Fix docs workflow SHA for pull requests
+- *(deps)* Update `proc-macro2` dependency for nightly builds
+- Build docs on pull requests but do not deploy them
+- Add `Cargo.lock`
+- Run build workflow on push also
+- Add codecov badge to readme
+- Upload coverage to `codecov.io`
+- Report test coverage with `cargo-llvm-cov`
+- Fix CI build workflow badge in readme
+
 ## [0.15.0](https://github.com/robo9k/rust-magic/compare/v0.14.0...v0.15.0) - 2023-09-26
 
 ### Changed
