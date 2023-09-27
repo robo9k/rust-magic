@@ -36,6 +36,7 @@ jobs:
       - run: cargo +${{ steps.toolchain.outputs.name }} build --all-targets --all-features --verbose
 
   test:
+    name: "test (with coverage)"
     permissions:
       contents: read
     runs-on: ubuntu-22.04
@@ -60,20 +61,50 @@ jobs:
         with:
           tool: cargo-llvm-cov@0.5.32
 
-      - run: |
-          source <(cargo +${{ steps.toolchain.outputs.name }} llvm-cov show-env --export-prefix)
-          cargo +${{ steps.toolchain.outputs.name }} llvm-cov clean --workspace
-          cargo +${{ steps.toolchain.outputs.name }} test --all-targets --all-features --verbose
-          cargo +${{ steps.toolchain.outputs.name }} llvm-cov report --codecov --output-path codecov.json
+      - uses: taiki-e/install-action@5b205dd5b807eef56fdbfeedeedcee63c5d44090 # v2.18.16
+        with:
+          tool: cargo-careful@0.4.0
+
+      - run: cargo +${{ steps.toolchain.outputs.name }} llvm-cov test --codecov --output-path codecov.json --all-targets --all-features --verbose
 
       - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
         with:
           name: codecov.json
           path: codecov.json
 
+      # this will likely fail for forks, maybe adapt bencher.dev workaround with separate workflow for uploaded artifact
       - uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d # v3.1.4
         with:
           files: codecov.json
           fail_ci_if_error: true
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  test-careful:
+    name: "test (carefully)"
+    permissions:
+      contents: read
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+
+      - id: toolchain
+        uses: dtolnay/rust-toolchain@439cf607258077187679211f12aa6f19af4a0af7 # doesn't have usual versioned releases/tags
+        with:
+          toolchain: "nightly"
+          # minimal profile includes rustc component which includes cargo and rustdoc
+          components: rust-src
+
+      - uses: rui314/setup-mold@354d1662b2a6f02e5eccc9712f22657621bf645b # does not have recent tags
+
+      - uses: Swatinem/rust-cache@a95ba195448af2da9b00fb742d14ffaaf3c21f43 # v2.7.0
+
+      - uses: taiki-e/install-action@5b205dd5b807eef56fdbfeedeedcee63c5d44090 # v2.18.16
+        with:
+          tool: cargo-careful@0.4.0
+
+      - run: cargo +${{ steps.toolchain.outputs.name }} careful test --all-targets --all-features --verbose
