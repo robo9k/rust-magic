@@ -27,7 +27,7 @@ jobs:
 
       - run: cargo +${{ steps.toolchain.outputs.name }} doc --verbose --no-deps --all-features
         env:
-          RUSTDOCFLAGS: --crate-version ${{ github.event.after }} -Z unstable-options --enable-index-page
+          RUSTDOCFLAGS: --crate-version ${{ github.event.pull_request.head.sha || github.sha }} -Z unstable-options --enable-index-page
 
       - uses: actions/configure-pages@f156874f8191504dae5b037505266ed5dda6c382 # v3.0.6
 
