@@ -29,6 +29,8 @@ jobs:
           toolchain: "1.56.0" # hardcoded crate MSRV, see rust-toolchain.toml etc.
           # minimal profile includes rustc component which includes cargo and rustdoc
 
+      - uses: rui314/setup-mold@354d1662b2a6f02e5eccc9712f22657621bf645b # does not have recent tags
+
       - uses: Swatinem/rust-cache@a95ba195448af2da9b00fb742d14ffaaf3c21f43 # v2.7.0 
 
       - run: cargo +${{ steps.toolchain.outputs.name }} build --all-targets --all-features --verbose
@@ -49,6 +51,8 @@ jobs:
         with:
           toolchain: "stable"
           # minimal profile includes rustc component which includes cargo and rustdoc
+
+      - uses: rui314/setup-mold@354d1662b2a6f02e5eccc9712f22657621bf645b # does not have recent tags
 
       - uses: Swatinem/rust-cache@a95ba195448af2da9b00fb742d14ffaaf3c21f43 # v2.7.0
 
