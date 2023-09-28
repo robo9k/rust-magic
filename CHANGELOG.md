@@ -9,23 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.15.1](https://github.com/robo9k/rust-magic/compare/v0.15.0...v0.15.1) - 2023-09-28
 
 ### Other
-- Refactor workflow names and events
 - Fix clippy findings in rustdoc doctests
-- Run `cargo-rustdoc-clippy` as part of lint workflow
 - Fix clippy findings in tests
-- Run tests on nightly with `cargo-careful`
-- Configure `release-plz` to add "release" labels
-- Configure `release-plz` to use a GitHub App instead of PAT
-- Use `mold` linker
-- Fix docs workflow SHA for pull requests
-- *(deps)* Update `proc-macro2` dependency for nightly builds
-- Build docs on pull requests but do not deploy them
-- Add `Cargo.lock`
-- Run build workflow on push also
-- Add codecov badge to readme
-- Upload coverage to `codecov.io`
-- Report test coverage with `cargo-llvm-cov`
-- Fix CI build workflow badge in readme
 
 ## [0.15.0](https://github.com/robo9k/rust-magic/compare/v0.14.0...v0.15.0) - 2023-09-26
 
