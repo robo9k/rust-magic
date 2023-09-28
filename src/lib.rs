@@ -354,6 +354,10 @@ impl Drop for Cookie {
 
 impl Cookie {
     /// Returns a textual description of the contents of the `filename`
+    ///
+    /// # Panics
+    ///
+    /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error.
     #[doc(alias = "magic_file")]
     pub fn file<P: AsRef<Path>>(&self, filename: P) -> Result<String, MagicError> {
         let c_string = CString::new(filename.as_ref().to_string_lossy().into_owned()).unwrap();
@@ -364,6 +368,10 @@ impl Cookie {
     }
 
     /// Returns a textual description of the contents of the `buffer`
+    ///
+    /// # Panics
+    ///
+    /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error.
     #[doc(alias = "magic_buffer")]
     pub fn buffer(&self, buffer: &[u8]) -> Result<String, MagicError> {
         match crate::ffi::buffer(self.cookie, buffer) {
@@ -392,6 +400,10 @@ impl Cookie {
     // TODO: ^ also needs to implement multiple databases, possibly waiting for the Path reform
 
     /// Check the validity of entries in the database `filenames`
+    ///
+    /// # Panics
+    ///
+    /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
     #[doc(alias = "magic_check")]
     pub fn check<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), MagicError> {
         let db_filenames = db_filenames(filenames)?;
@@ -405,6 +417,10 @@ impl Cookie {
     /// Compiles the given database `filenames` for faster access
     ///
     /// The compiled files created are named from the `basename` of each file argument with '.mgc' appended to it.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
     #[doc(alias = "magic_compile")]
     pub fn compile<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), MagicError> {
         let db_filenames = db_filenames(filenames)?;
@@ -416,6 +432,10 @@ impl Cookie {
     }
 
     /// Dumps all magic entries in the given database `filenames` in a human readable format
+    ///
+    /// # Panics
+    ///
+    /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
     #[doc(alias = "magic_list")]
     pub fn list<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), MagicError> {
         let db_filenames = db_filenames(filenames)?;
@@ -444,6 +464,11 @@ impl Cookie {
     /// cookie.load(&["data/tests/db-images-png", "data/tests/db-python"])?;
     /// # Ok(())
     /// # }
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
     #[doc(alias = "magic_load")]
     pub fn load<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), MagicError> {
         let db_filenames = db_filenames(filenames)?;
@@ -463,6 +488,10 @@ impl Cookie {
     /// database via shared memory or other IPC means.
     ///
     /// Calling `Cookie::load_buffers` or [`Cookie::load`] replaces the previously loaded database/s.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
     #[doc(alias = "magic_load_buffers")]
     pub fn load_buffers(&self, buffers: &[&[u8]]) -> Result<(), MagicError> {
         match crate::ffi::load_buffers(self.cookie, buffers) {
