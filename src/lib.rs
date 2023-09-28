@@ -38,14 +38,14 @@
 //! let cookie = magic::Cookie::open(magic::CookieFlags::ERROR)?;
 //!
 //! // Load a specific database (so exact text assertion below works regardless of the system's default database)
-//! cookie.load(&vec!["data/tests/db-images-png"])?;
+//! cookie.load(&["data/tests/db-images-png"])?;
 //! // You can instead load the default database
 //! //cookie.load::<&str>(&[])?;
 //!
 //! // Analyze a test file
 //! let file_to_analyze = "data/tests/rust-logo-128x128-blk.png";
 //! let expected_analysis_result = "PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced";
-//! assert_eq!(cookie.file(&file_to_analyze)?, expected_analysis_result);
+//! assert_eq!(cookie.file(file_to_analyze)?, expected_analysis_result);
 //! # Ok(())
 //! # }
 //! ```
@@ -441,7 +441,7 @@ impl Cookie {
     /// cookie.load::<&str>(&[])?;
     ///
     /// // Load databases from files
-    /// cookie.load(&vec!["data/tests/db-images-png", "data/tests/db-python"])?;
+    /// cookie.load(&["data/tests/db-images-png", "data/tests/db-python"])?;
     /// # Ok(())
     /// # }
     #[doc(alias = "magic_load")]
