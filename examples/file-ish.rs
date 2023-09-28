@@ -12,7 +12,7 @@
 //! PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced
 //! ```
 
-fn main() -> Result<(), magic::MagicError> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Open a new configuration with flags
     let cookie = magic::Cookie::open(magic::CookieFlags::ERROR)?;
 

@@ -33,7 +33,7 @@
 //! # Usage example
 //!
 //! ```rust
-//! # fn main() -> Result<(), magic::MagicError> {
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! // Open a new configuration with flags
 //! let cookie = magic::Cookie::open(magic::CookieFlags::ERROR)?;
 //!
@@ -434,7 +434,7 @@ impl Cookie {
     ///
     /// # Examples
     /// ```rust
-    /// # fn main() -> Result<(), magic::MagicError> {
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     /// let cookie = magic::Cookie::open(Default::default())?;
     ///
     /// // Load the default database
@@ -473,14 +473,40 @@ impl Cookie {
 
     /// Creates a new configuration, `flags` specify how other functions should behave
     ///
-    /// This does not `load()` any databases yet.
+    /// This does not [`load()`](Cookie::load) any databases yet.
     #[doc(alias = "magic_open")]
-    pub fn open(flags: CookieFlags) -> Result<Cookie, MagicError> {
+    pub fn open(flags: CookieFlags) -> Result<Cookie, CookieOpenError> {
         match crate::ffi::open(flags.bits()) {
-            Err(err) => Err(err.into()),
+            Err(err) => Err(CookieOpenError {
+                flags,
+                kind: match err.errno().kind() {
+                    std::io::ErrorKind::InvalidInput => CookieOpenErrorKind::UnsupportedFlags,
+                    _ => CookieOpenErrorKind::Errno,
+                },
+                source: err,
+            }),
             Ok(cookie) => Ok(Cookie { cookie }),
         }
     }
+}
+
+/// Error within [`Cookie::open`](Cookie::open)
+#[derive(thiserror::Error, Debug)]
+#[error("could not open magic cookie")]
+pub struct CookieOpenError {
+    flags: CookieFlags,
+    kind: CookieOpenErrorKind,
+    //#[backtrace]
+    source: crate::ffi::OpenError,
+}
+
+/// Kind of [`CookieOpenError`]
+#[derive(Debug)]
+enum CookieOpenErrorKind {
+    /// Unsupported flags given
+    UnsupportedFlags,
+    /// Other kind
+    Errno,
 }
 
 #[cfg(test)]
