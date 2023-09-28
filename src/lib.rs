@@ -325,8 +325,7 @@ pub struct FfiError(#[from] crate::ffi::LibmagicError);
 pub enum MagicError {
     #[error(transparent)]
     Libmagic(#[from] FfiError),
-    #[error("`libmagic` flag {0:?} is not supported on this system")]
-    LibmagicFlagUnsupported(CookieFlags),
+
     #[error("invalid database file path")]
     InvalidDatabaseFilePath,
 }
@@ -375,15 +374,16 @@ impl Cookie {
 
     /// Sets the flags to use
     ///
-    /// Overwrites any previously set flags, e.g. those from `load()`.
+    /// Overwrites any previously set flags, e.g. those from [`load()`](Cookie::load).
     #[doc(alias = "magic_setflags")]
-    pub fn set_flags(&self, flags: CookieFlags) -> Result<(), MagicError> {
+    pub fn set_flags(&self, flags: CookieFlags) -> Result<(), CookieSetFlagsError> {
         let ret = crate::ffi::setflags(self.cookie, flags.bits());
         match ret {
             // according to `libmagic` man page this is the only flag that could be unsupported
-            Err(_) => Err(MagicError::LibmagicFlagUnsupported(
-                CookieFlags::PRESERVE_ATIME,
-            )),
+            Err(err) => Err(CookieSetFlagsError {
+                flags: CookieFlags::PRESERVE_ATIME,
+                source: err,
+            }),
             Ok(_) => Ok(()),
         }
     }
@@ -507,6 +507,15 @@ enum CookieOpenErrorKind {
     UnsupportedFlags,
     /// Other kind
     Errno,
+}
+
+/// Error within [`Cookie::set_flags`](Cookie::set_flags)
+#[derive(thiserror::Error, Debug)]
+#[error("could not set magic cookie flags")]
+pub struct CookieSetFlagsError {
+    flags: CookieFlags,
+    //#[backtrace]
+    source: crate::ffi::SetFlagsError,
 }
 
 #[cfg(test)]
