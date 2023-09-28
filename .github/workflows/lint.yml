@@ -47,3 +47,32 @@ jobs:
           components: clippy # minimal profile does not include it
 
       - run: cargo +${{ steps.toolchain.outputs.name }} clippy --all-targets --all-features
+
+  cargo-rustdoc-clippy:
+    permissions:
+      contents: read
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+
+      - id: toolchain
+        uses: dtolnay/rust-toolchain@439cf607258077187679211f12aa6f19af4a0af7 # doesn't have usual versioned releases/tags
+        with:
+          toolchain: nightly
+          components: clippy # minimal profile does not include it
+
+      # dependency of cargo-rustdoc-clippy
+      - run: |
+          sudo apt-get update
+          sudo apt-get install zsh
+
+      # https://github.com/rust-lang/rust/issues/56232#issuecomment-1248359946
+      - run: |
+          curl --output ~/.cargo/bin/cargo-rustdoc-clippy https://raw.githubusercontent.com/Nemo157/dotfiles/e6daf083068ff17d14b19dc2569ae62ea86bf23c/bin/cargo-rustdoc-clippy
+          chmod +x ~/.cargo/bin/cargo-rustdoc-clippy
+
+      - run: cargo +${{ steps.toolchain.outputs.name }} rustdoc-clippy --all-features
