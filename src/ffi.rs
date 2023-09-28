@@ -25,10 +25,6 @@ pub(crate) enum LibmagicError {
         errno: Option<std::io::Error>,
     },
 
-    /// Error during `magic_setflags`
-    #[error("Error calling `magic_setflags`, unsupported flags: {flags}")]
-    UnsupportedFlags { flags: libc::c_int },
-
     /// `libmagic` did not behave according to its API
     #[error("Error in `libmagic` behavior, violated its API: {description}")]
     ApiViolation { description: String },
@@ -100,11 +96,23 @@ pub(crate) fn buffer(
     }
 }
 
-pub(crate) fn setflags(cookie: libmagic::magic_t, flags: libc::c_int) -> Result<(), LibmagicError> {
+pub(crate) fn setflags(cookie: libmagic::magic_t, flags: libc::c_int) -> Result<(), SetFlagsError> {
     let ret = unsafe { libmagic::magic_setflags(cookie, flags) };
     match ret {
-        -1 => Err(LibmagicError::UnsupportedFlags { flags }),
+        -1 => Err(SetFlagsError { flags }),
         _ => Ok(()),
+    }
+}
+
+#[derive(thiserror::Error, Debug)]
+#[error("could not set magic cookie flags")]
+pub(crate) struct SetFlagsError {
+    flags: libc::c_int,
+}
+
+impl SetFlagsError {
+    pub fn flags(&self) -> libc::c_int {
+        self.flags
     }
 }
 
