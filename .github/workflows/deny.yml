@@ -1,4 +1,4 @@
-name: cargo deny
+name: "deny"
 
 permissions: {}
 
@@ -10,6 +10,7 @@ env:
 
 jobs:
   cargo-deny:
+    name: "cargo deny"
     permissions:
       contents: read
     runs-on: ubuntu-22.04
