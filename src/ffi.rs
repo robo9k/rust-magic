@@ -12,10 +12,6 @@ use magic_sys as libmagic;
 #[non_exhaustive]
 #[derive(thiserror::Error, Debug)]
 pub(crate) enum LibmagicError {
-    /// Error during `magic_open`
-    #[error("Error calling `magic_open`, errno: {errno}")]
-    Open { errno: std::io::Error },
-
     /// Error for opened `magic_t` instance
     #[error("Error for cookie call ({}): {}",
         match .errno {
@@ -223,15 +219,35 @@ pub(crate) fn load_buffers(
     }
 }
 
-pub(crate) fn open(flags: libc::c_int) -> Result<libmagic::magic_t, LibmagicError> {
+pub(crate) fn open(flags: libc::c_int) -> Result<libmagic::magic_t, OpenError> {
     let cookie = unsafe { libmagic::magic_open(flags) };
 
     if cookie.is_null() {
-        Err(LibmagicError::Open {
+        Err(OpenError {
+            flags,
+            // note that libmagic only really cares about MAGIC_PRESERVE_ATIME
+            // invalid bits in `flags` still result in a valid cookie pointer
             errno: std::io::Error::last_os_error(),
         })
     } else {
         Ok(cookie)
+    }
+}
+
+#[derive(thiserror::Error, Debug)]
+#[error("could not open magic cookie")]
+pub(crate) struct OpenError {
+    flags: libc::c_int,
+    errno: std::io::Error,
+}
+
+impl OpenError {
+    pub fn flags(&self) -> libc::c_int {
+        self.flags
+    }
+
+    pub fn errno(&self) -> &std::io::Error {
+        &self.errno
     }
 }
 

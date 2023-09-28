@@ -21,7 +21,7 @@ data/tests/rust-logo-128x128-blk.png: PNG image data, 128 x 128, 8-bit/color RGB
 
 You can implement something similar in Rust with the `magic` crate (see [examples/file-ish.rs](examples/file-ish.rs)):
 ```rust
-fn file_example() -> Result<(), magic::MagicError> {
+fn file_example() -> Result<(), Box<dyn std::error::Error>> {
     // Open a new configuration with flags
     let cookie = magic::Cookie::open(magic::CookieFlags::ERROR)?;
 
