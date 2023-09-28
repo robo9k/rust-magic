@@ -24,10 +24,6 @@ pub(crate) enum LibmagicError {
         explanation: std::ffi::CString,
         errno: Option<std::io::Error>,
     },
-
-    /// `libmagic` did not behave according to its API
-    #[error("Error in `libmagic` behavior, violated its API: {description}")]
-    ApiViolation { description: String },
 }
 
 fn last_error(cookie: libmagic::magic_t) -> Option<LibmagicError> {
@@ -48,10 +44,17 @@ fn last_error(cookie: libmagic::magic_t) -> Option<LibmagicError> {
     }
 }
 
+fn api_violation(cookie: libmagic::magic_t, description: String) -> ! {
+    panic!(
+        "`libmagic` API violation for magic cookie {:?}: {}",
+        cookie, description
+    );
+}
+
 fn expect_error(cookie: libmagic::magic_t, description: String) -> LibmagicError {
     match last_error(cookie) {
         Some(err) => err,
-        None => LibmagicError::ApiViolation { description },
+        _ => api_violation(cookie, description),
     }
 }
 
@@ -59,6 +62,9 @@ pub(crate) fn close(cookie: libmagic::magic_t) {
     unsafe { libmagic::magic_close(cookie) }
 }
 
+/// # Panics
+///
+/// Panics if `libmagic` violates its API contract, e.g. by not setting the last error.
 pub(crate) fn file(
     cookie: libmagic::magic_t,
     filename: &std::ffi::CStr, // TODO: Support NULL
@@ -77,6 +83,9 @@ pub(crate) fn file(
     }
 }
 
+/// # Panics
+///
+/// Panics if `libmagic` violates its API contract, e.g. by not setting the last error.
 pub(crate) fn buffer(
     cookie: libmagic::magic_t,
     buffer: &[u8],
@@ -116,6 +125,9 @@ impl SetFlagsError {
     }
 }
 
+/// # Panics
+///
+/// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
 pub(crate) fn check(
     cookie: libmagic::magic_t,
     filename: Option<&std::ffi::CStr>,
@@ -129,12 +141,16 @@ pub(crate) fn check(
             cookie,
             "`magic_check()` did not set last error".to_string(),
         )),
-        res => Err(LibmagicError::ApiViolation {
-            description: format!("Expected 0 or -1 but `magic_check()` returned {}", res),
-        }),
+        res => api_violation(
+            cookie,
+            format!("expected 0 or -1 but `magic_check()` returned {}", res),
+        ),
     }
 }
 
+/// # Panics
+///
+/// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
 pub(crate) fn compile(
     cookie: libmagic::magic_t,
     filename: Option<&std::ffi::CStr>,
@@ -148,12 +164,16 @@ pub(crate) fn compile(
             cookie,
             "`magic_compile()` did not set last error".to_string(),
         )),
-        res => Err(LibmagicError::ApiViolation {
-            description: format!("Expected 0 or -1 but `magic_compile()` returned {}", res),
-        }),
+        res => api_violation(
+            cookie,
+            format!("Expected 0 or -1 but `magic_compile()` returned {}", res),
+        ),
     }
 }
 
+/// # Panics
+///
+/// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
 pub(crate) fn list(
     cookie: libmagic::magic_t,
     filename: Option<&std::ffi::CStr>,
@@ -167,12 +187,16 @@ pub(crate) fn list(
             cookie,
             "`magic_list()` did not set last error".to_string(),
         )),
-        res => Err(LibmagicError::ApiViolation {
-            description: format!("Expected 0 or -1 but `magic_list()` returned {}", res),
-        }),
+        res => api_violation(
+            cookie,
+            format!("Expected 0 or -1 but `magic_list()` returned {}", res),
+        ),
     }
 }
 
+/// # Panics
+///
+/// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
 pub(crate) fn load(
     cookie: libmagic::magic_t,
     filename: Option<&std::ffi::CStr>,
@@ -186,12 +210,16 @@ pub(crate) fn load(
             cookie,
             "`magic_load()` did not set last error".to_string(),
         )),
-        res => Err(LibmagicError::ApiViolation {
-            description: format!("Expected 0 or -1 but `magic_load()` returned {}", res),
-        }),
+        res => api_violation(
+            cookie,
+            format!("Expected 0 or -1 but `magic_load()` returned {}", res),
+        ),
     }
 }
 
+/// # Panics
+///
+/// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
 pub(crate) fn load_buffers(
     cookie: libmagic::magic_t,
     buffers: &[&[u8]],
@@ -218,12 +246,13 @@ pub(crate) fn load_buffers(
             cookie,
             "`magic_load_buffers()` did not set last error".to_string(),
         )),
-        res => Err(LibmagicError::ApiViolation {
-            description: format!(
+        res => api_violation(
+            cookie,
+            format!(
                 "Expected 0 or -1 but `magic_load_buffers()` returned {}",
                 res
             ),
-        }),
+        ),
     }
 }
 
