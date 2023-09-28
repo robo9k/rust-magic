@@ -296,7 +296,7 @@ bitflags::bitflags! {
     }
 }
 
-fn db_filenames<P: AsRef<Path>>(filenames: &[P]) -> Result<Option<CString>, MagicError> {
+fn db_filenames<P: AsRef<Path>>(filenames: &[P]) -> Result<Option<CString>, CookieDatabaseError> {
     match filenames.len() {
         0 => Ok(None),
         // this is not the most efficient nor correct for Windows, but consistent with previous behaviour
@@ -308,32 +308,35 @@ fn db_filenames<P: AsRef<Path>>(filenames: &[P]) -> Result<Option<CString>, Magi
                     .collect::<Vec<String>>()
                     .join(":"),
             )
-            .map_err(|_| MagicError::InvalidDatabaseFilePath)?,
+            .map_err(|_| CookieDatabaseError {
+                kind: CookieDatabaseErrorKind::InvalidDatabaseFilePath,
+            })?,
         )),
     }
 }
 
-/// FFI error while calling `libmagic`
-// This is a newtype wrapper to avoid making `ffi::LibmagicError` fields public
+/// Error within several [`Cookie`] database functions
 #[derive(thiserror::Error, Debug)]
-#[error("`libmagic` error: {0:?}")]
-pub struct FfiError(#[from] crate::ffi::LibmagicError);
+#[error("magic cookie database error")]
+pub struct CookieDatabaseError {
+    kind: CookieDatabaseErrorKind,
+}
 
-/// The error type used in this crate
-#[non_exhaustive]
-#[derive(thiserror::Error, Debug)]
-pub enum MagicError {
-    #[error(transparent)]
-    Libmagic(#[from] FfiError),
-
-    #[error("invalid database file path")]
+#[derive(Debug)]
+enum CookieDatabaseErrorKind {
+    Libmagic {
+        function: &'static str,
+        source: crate::ffi::CookieError,
+    },
     InvalidDatabaseFilePath,
 }
 
-impl From<crate::ffi::LibmagicError> for MagicError {
-    fn from(libmagic_error: crate::ffi::LibmagicError) -> Self {
-        FfiError::from(libmagic_error).into()
-    }
+/// Error within several [`Cookie`] functions
+#[derive(thiserror::Error, Debug)]
+#[error("magic cookie error")]
+pub struct CookieError {
+    function: &'static str,
+    source: crate::ffi::CookieError,
 }
 
 /// Configuration of which `CookieFlags` and magic databases to use
@@ -359,11 +362,14 @@ impl Cookie {
     ///
     /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error.
     #[doc(alias = "magic_file")]
-    pub fn file<P: AsRef<Path>>(&self, filename: P) -> Result<String, MagicError> {
+    pub fn file<P: AsRef<Path>>(&self, filename: P) -> Result<String, CookieError> {
         let c_string = CString::new(filename.as_ref().to_string_lossy().into_owned()).unwrap();
         match crate::ffi::file(self.cookie, c_string.as_c_str()) {
             Ok(res) => Ok(res.to_string_lossy().to_string()),
-            Err(err) => Err(err.into()),
+            Err(err) => Err(CookieError {
+                function: "magic_file",
+                source: err,
+            }),
         }
     }
 
@@ -373,10 +379,13 @@ impl Cookie {
     ///
     /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error.
     #[doc(alias = "magic_buffer")]
-    pub fn buffer(&self, buffer: &[u8]) -> Result<String, MagicError> {
+    pub fn buffer(&self, buffer: &[u8]) -> Result<String, CookieError> {
         match crate::ffi::buffer(self.cookie, buffer) {
             Ok(res) => Ok(res.to_string_lossy().to_string()),
-            Err(err) => Err(err.into()),
+            Err(err) => Err(CookieError {
+                function: "magic_buffer",
+                source: err,
+            }),
         }
     }
 
@@ -405,11 +414,16 @@ impl Cookie {
     ///
     /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
     #[doc(alias = "magic_check")]
-    pub fn check<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), MagicError> {
+    pub fn check<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), CookieDatabaseError> {
         let db_filenames = db_filenames(filenames)?;
 
         match crate::ffi::check(self.cookie, db_filenames.as_deref()) {
-            Err(err) => Err(err.into()),
+            Err(err) => Err(CookieDatabaseError {
+                kind: CookieDatabaseErrorKind::Libmagic {
+                    function: "magic_check",
+                    source: err,
+                },
+            }),
             Ok(_) => Ok(()),
         }
     }
@@ -422,11 +436,16 @@ impl Cookie {
     ///
     /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
     #[doc(alias = "magic_compile")]
-    pub fn compile<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), MagicError> {
+    pub fn compile<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), CookieDatabaseError> {
         let db_filenames = db_filenames(filenames)?;
 
         match crate::ffi::compile(self.cookie, db_filenames.as_deref()) {
-            Err(err) => Err(err.into()),
+            Err(err) => Err(CookieDatabaseError {
+                kind: CookieDatabaseErrorKind::Libmagic {
+                    function: "magic_check",
+                    source: err,
+                },
+            }),
             Ok(_) => Ok(()),
         }
     }
@@ -437,11 +456,16 @@ impl Cookie {
     ///
     /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
     #[doc(alias = "magic_list")]
-    pub fn list<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), MagicError> {
+    pub fn list<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), CookieDatabaseError> {
         let db_filenames = db_filenames(filenames)?;
 
         match crate::ffi::list(self.cookie, db_filenames.as_deref()) {
-            Err(err) => Err(err.into()),
+            Err(err) => Err(CookieDatabaseError {
+                kind: CookieDatabaseErrorKind::Libmagic {
+                    function: "magic_list",
+                    source: err,
+                },
+            }),
             Ok(_) => Ok(()),
         }
     }
@@ -470,11 +494,16 @@ impl Cookie {
     ///
     /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
     #[doc(alias = "magic_load")]
-    pub fn load<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), MagicError> {
+    pub fn load<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), CookieDatabaseError> {
         let db_filenames = db_filenames(filenames)?;
 
         match crate::ffi::load(self.cookie, db_filenames.as_deref()) {
-            Err(err) => Err(err.into()),
+            Err(err) => Err(CookieDatabaseError {
+                kind: CookieDatabaseErrorKind::Libmagic {
+                    function: "magic_load",
+                    source: err,
+                },
+            }),
             Ok(_) => Ok(()),
         }
     }
@@ -493,9 +522,12 @@ impl Cookie {
     ///
     /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
     #[doc(alias = "magic_load_buffers")]
-    pub fn load_buffers(&self, buffers: &[&[u8]]) -> Result<(), MagicError> {
+    pub fn load_buffers(&self, buffers: &[&[u8]]) -> Result<(), CookieError> {
         match crate::ffi::load_buffers(self.cookie, buffers) {
-            Err(err) => Err(err.into()),
+            Err(err) => Err(CookieError {
+                function: "magic_load_buffers",
+                source: err,
+            }),
             Ok(_) => Ok(()),
         }
     }
@@ -551,7 +583,6 @@ pub struct CookieSetFlagsError {
 mod tests {
     use super::Cookie;
     use super::CookieFlags;
-    use super::MagicError;
 
     // Using relative paths to test files should be fine, since cargo doc
     // https://doc.rust-lang.org/cargo/reference/build-scripts.html#inputs-to-the-build-script
@@ -599,10 +630,7 @@ mod tests {
         assert!(cookie.load::<&str>(&[]).is_ok());
 
         let ret = cookie.file("non-existent_file.txt");
-        match ret {
-            Err(e @ MagicError::Libmagic { .. }) => println!("{}", e),
-            ref e => panic!("result is not a `Libmagic` error: {:?}", e),
-        }
+        assert!(ret.is_err());
     }
 
     #[test]
