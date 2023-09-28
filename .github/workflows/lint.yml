@@ -1,16 +1,16 @@
-name: lint
+name: "lint"
 
 permissions: {}
 
 on:
   pull_request:
-    branches: [ main ]
 
 env:
   RUSTFLAGS: -Dwarnings
 
 jobs:
   cargo-fmt:
+    name: "cargo fmt"
     permissions:
       contents: read
     runs-on: ubuntu-22.04
@@ -30,6 +30,7 @@ jobs:
       - run: cargo +${{ steps.toolchain.outputs.name }} fmt --all --check
 
   cargo-clippy:
+    name: "cargo clippy"
     permissions:
       contents: read
     runs-on: ubuntu-22.04
@@ -49,6 +50,7 @@ jobs:
       - run: cargo +${{ steps.toolchain.outputs.name }} clippy --all-targets --all-features
 
   cargo-rustdoc-clippy:
+    name: "cargo rustdoc-clippy"
     permissions:
       contents: read
     runs-on: ubuntu-22.04

@@ -1,15 +1,16 @@
-name: docs
+name: "docs"
 
 permissions: {}
 
 on:
   pull_request: 
+  # run "deploy-pages" job to deploy main branch to GitHub pages
   push:
-    branches:
-      - main
+    branches: [ "main" ]
 
 jobs:
   build-rustdoc:
+    name: "cargo doc"
     permissions:
       contents: read
     runs-on: ubuntu-22.04
@@ -42,6 +43,7 @@ jobs:
           path: target/doc/
 
   deploy-pages:
+    name: "deploy GitHub pages"
     if: github.event_name == 'push'
     permissions:
       id-token: write

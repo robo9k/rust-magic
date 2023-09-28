@@ -1,14 +1,13 @@
-name: cog check
+name: "conventional commits"
 
 permissions: {}
 
 on:
-    pull_request:
-        branches: [ main ]
+  pull_request:
 
 jobs:
-    check-conventional-commits:
-        name: check conventional commit compliance
+    cog-check:
+        name: "cog check"
         permissions:
           contents: read
         runs-on: ubuntu-22.04

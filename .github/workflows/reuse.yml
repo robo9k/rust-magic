@@ -1,11 +1,16 @@
-name: REUSE compliance check
+name: "REUSE"
 
 permissions: {}
 
-on: [push, pull_request]
+on:
+  # also run on push to main branch for badge
+  push:
+    branches: [ main ]
+  pull_request:
 
 jobs:
-  test:
+  lint:
+    name: "reuse lint"
     permissions:
       contents: read
     runs-on: ubuntu-latest
