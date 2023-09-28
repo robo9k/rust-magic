@@ -26,7 +26,7 @@ fn file_example() -> Result<(), magic::MagicError> {
     let cookie = magic::Cookie::open(magic::CookieFlags::ERROR)?;
 
     // Load a specific database (so exact text assertion below works regardless of the system's default database)
-    cookie.load(&vec!["data/tests/db-images-png"])?;
+    cookie.load(&["data/tests/db-images-png"])?;
 
     let file = "data/tests/rust-logo-128x128-blk.png";
 
