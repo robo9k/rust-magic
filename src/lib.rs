@@ -496,33 +496,28 @@ mod tests {
     #[test]
     fn file() {
         let cookie = Cookie::open(Default::default()).ok().unwrap();
-        assert!(cookie.load(&vec!["data/tests/db-images-png"]).is_ok());
+        assert!(cookie.load(&["data/tests/db-images-png"]).is_ok());
 
         let path = "data/tests/rust-logo-128x128-blk.png";
 
         assert_eq!(
-            cookie.file(&path).ok().unwrap(),
+            cookie.file(path).ok().unwrap(),
             "PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced"
         );
 
         cookie.set_flags(CookieFlags::MIME_TYPE).unwrap();
-        assert_eq!(cookie.file(&path).ok().unwrap(), "image/png");
+        assert_eq!(cookie.file(path).ok().unwrap(), "image/png");
 
         cookie
             .set_flags(CookieFlags::MIME_TYPE | CookieFlags::MIME_ENCODING)
             .unwrap();
-        assert_eq!(
-            cookie.file(&path).ok().unwrap(),
-            "image/png; charset=binary"
-        );
+        assert_eq!(cookie.file(path).ok().unwrap(), "image/png; charset=binary");
     }
 
     #[test]
     fn buffer() {
         let cookie = Cookie::open(Default::default()).ok().unwrap();
-        assert!(cookie
-            .load(&vec!["data/tests/db-python"].as_slice())
-            .is_ok());
+        assert!(cookie.load(&["data/tests/db-python"]).is_ok());
 
         let s = b"#!/usr/bin/env python\nprint('Hello, world!')";
         assert_eq!(
@@ -555,14 +550,14 @@ mod tests {
     #[test]
     fn load_one() {
         let cookie = Cookie::open(CookieFlags::ERROR).ok().unwrap();
-        assert!(cookie.load(&vec!["data/tests/db-images-png"]).is_ok());
+        assert!(cookie.load(&["data/tests/db-images-png"]).is_ok());
     }
 
     #[test]
     fn load_multiple() {
         let cookie = Cookie::open(CookieFlags::ERROR).ok().unwrap();
         assert!(cookie
-            .load(&vec!["data/tests/db-images-png", "data/tests/db-python",])
+            .load(&["data/tests/db-images-png", "data/tests/db-python",])
             .is_ok());
     }
 
@@ -574,11 +569,11 @@ mod tests {
         // file --compile --magic-file data/tests/db-images-png
         let magic_database = std::fs::read("data/tests/db-images-png-precompiled.mgc").unwrap();
         let buffers = vec![magic_database.as_slice()];
-        cookie.load_buffers(&*buffers).unwrap();
+        cookie.load_buffers(&buffers).unwrap();
 
         let path = "data/tests/rust-logo-128x128-blk.png";
         assert_eq!(
-            cookie.file(&path).ok().unwrap(),
+            cookie.file(path).ok().unwrap(),
             "PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced"
         );
     }
