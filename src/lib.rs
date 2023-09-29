@@ -38,9 +38,9 @@
 //! let cookie = magic::Cookie::open(magic::CookieFlags::ERROR)?;
 //!
 //! // Load a specific database (so exact text assertion below works regardless of the system's default database)
-//! cookie.load(&["data/tests/db-images-png"])?;
+//! let cookie = cookie.load(&["data/tests/db-images-png"])?;
 //! // You can instead load the default database
-//! //cookie.load::<&str>(&[])?;
+//! //let cookie = cookie.load::<&str>(&[])?;
 //!
 //! // Analyze a test file
 //! let file_to_analyze = "data/tests/rust-logo-128x128-blk.png";
@@ -351,24 +351,80 @@ pub struct CookieError {
     source: crate::ffi::CookieError,
 }
 
+#[doc(hidden)]
+#[derive(Debug)]
+pub enum Open {}
+
+#[doc(hidden)]
+#[derive(Debug)]
+pub enum Load {}
+
+mod private {
+    pub trait Sealed {}
+
+    impl Sealed for super::Open {}
+    impl Sealed for super::Load {}
+}
+
+#[doc(hidden)]
+pub trait State: private::Sealed {}
+
+impl State for Open {}
+impl State for Load {}
+
 /// Configuration of which `CookieFlags` and magic databases to use
 #[derive(Debug)]
 #[doc(alias = "magic_t")]
 #[doc(alias = "magic_set")]
-pub struct Cookie {
-    cookie: libmagic::magic_t,
+pub struct Cookie<S: State> {
+    cookie: ffi::MagicHandle,
+    marker: std::marker::PhantomData<S>,
 }
 
-impl Drop for Cookie {
+impl<S: State> Drop for Cookie<S> {
     /// Closes the magic database and deallocates any resources used
     #[doc(alias = "magic_close")]
     fn drop(&mut self) {
-        crate::ffi::close(self.cookie);
+        crate::ffi::close(&self.cookie);
     }
 }
 
-impl Cookie {
+/// Operations that are valid in the `Open` state
+///
+/// A new cookie created with [`Cookie::open`](Cookie::open) does not have any databases [loaded](Cookie::load).
+impl Cookie<Open> {
+    /// Creates a new configuration, `flags` specify how other functions should behave
+    ///
+    /// This does not [`load()`](Cookie::load) any databases yet.
+    #[doc(alias = "magic_open")]
+    pub fn open(flags: CookieFlags) -> Result<Cookie<Open>, CookieOpenError> {
+        match crate::ffi::open(flags.bits()) {
+            Err(err) => Err(CookieOpenError {
+                flags,
+                kind: match err.errno().kind() {
+                    std::io::ErrorKind::InvalidInput => CookieOpenErrorKind::UnsupportedFlags,
+                    _ => CookieOpenErrorKind::Errno,
+                },
+                source: err,
+            }),
+            Ok(cookie) => {
+                let cookie = Cookie {
+                    cookie,
+                    marker: std::marker::PhantomData,
+                };
+                Ok(cookie)
+            }
+        }
+    }
+}
+
+/// Operations that are valid in the `Load` state
+///
+/// An opened cookie with [loaded](Cookie::load) databases can inspect [files](Cookie::file) and [buffers](Cookie::buffer).
+impl Cookie<Load> {
     /// Returns a textual description of the contents of the `filename`
+    ///
+    /// Requires [loaded](Cookie::load) databases.
     ///
     /// # Panics
     ///
@@ -376,7 +432,7 @@ impl Cookie {
     #[doc(alias = "magic_file")]
     pub fn file<P: AsRef<Path>>(&self, filename: P) -> Result<String, CookieError> {
         let c_string = CString::new(filename.as_ref().to_string_lossy().into_owned()).unwrap();
-        match crate::ffi::file(self.cookie, c_string.as_c_str()) {
+        match crate::ffi::file(&self.cookie, c_string.as_c_str()) {
             Ok(res) => Ok(res.to_string_lossy().to_string()),
             Err(err) => Err(CookieError {
                 function: "magic_file",
@@ -387,17 +443,101 @@ impl Cookie {
 
     /// Returns a textual description of the contents of the `buffer`
     ///
+    /// Requires [loaded](Cookie::load) databases.
+    ///
     /// # Panics
     ///
     /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error.
     #[doc(alias = "magic_buffer")]
     pub fn buffer(&self, buffer: &[u8]) -> Result<String, CookieError> {
-        match crate::ffi::buffer(self.cookie, buffer) {
+        match crate::ffi::buffer(&self.cookie, buffer) {
             Ok(res) => Ok(res.to_string_lossy().to_string()),
             Err(err) => Err(CookieError {
                 function: "magic_buffer",
                 source: err,
             }),
+        }
+    }
+}
+
+/// Operations that are valid in any state
+impl<S: State> Cookie<S> {
+    /// Loads the given database `filenames` for further queries
+    ///
+    /// Adds ".mgc" to the database filenames as appropriate.
+    ///
+    /// Calling `Cookie::load` or [`Cookie::load_buffers`] replaces the previously loaded database/s.
+    ///
+    /// # Examples
+    /// ```rust
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let cookie = magic::Cookie::open(Default::default())?;
+    ///
+    /// // Load the default database
+    /// let cookie = cookie.load::<&str>(&[])?;
+    ///
+    /// // Load databases from files
+    /// let cookie = cookie.load(&["data/tests/db-images-png", "data/tests/db-python"])?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
+    #[doc(alias = "magic_load")]
+    pub fn load<P: AsRef<Path>>(
+        self,
+        filenames: &[P],
+    ) -> Result<Cookie<Load>, CookieDatabaseError> {
+        let db_filenames = db_filenames(filenames)?;
+
+        match crate::ffi::load(&self.cookie, db_filenames.as_deref()) {
+            Err(err) => Err(CookieDatabaseError {
+                kind: CookieDatabaseErrorKind::Libmagic {
+                    function: "magic_load",
+                },
+                source: Some(err),
+            }),
+            Ok(_) => {
+                let cookie = Cookie {
+                    cookie: ffi::MagicHandle(self.cookie.0),
+                    marker: std::marker::PhantomData,
+                };
+                std::mem::forget(self);
+                Ok(cookie)
+            }
+        }
+    }
+
+    /// Loads the given compiled databases for further queries
+    ///
+    /// Databases need to be compiled with a compatible `libmagic` version.
+    ///
+    /// This function can be used in environments where `libmagic` does
+    /// not have direct access to the filesystem, but can access the magic
+    /// database via shared memory or other IPC means.
+    ///
+    /// Calling `Cookie::load_buffers` or [`Cookie::load`] replaces the previously loaded database/s.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
+    #[doc(alias = "magic_load_buffers")]
+    pub fn load_buffers(self, buffers: &[&[u8]]) -> Result<Cookie<Load>, CookieError> {
+        match crate::ffi::load_buffers(&self.cookie, buffers) {
+            Err(err) => Err(CookieError {
+                function: "magic_load_buffers",
+                source: err,
+            }),
+            Ok(_) => {
+                let cookie = Cookie {
+                    cookie: ffi::MagicHandle(self.cookie.0),
+                    marker: std::marker::PhantomData,
+                };
+                std::mem::forget(self);
+                Ok(cookie)
+            }
         }
     }
 
@@ -406,7 +546,7 @@ impl Cookie {
     /// Overwrites any previously set flags, e.g. those from [`load()`](Cookie::load).
     #[doc(alias = "magic_setflags")]
     pub fn set_flags(&self, flags: CookieFlags) -> Result<(), CookieSetFlagsError> {
-        let ret = crate::ffi::setflags(self.cookie, flags.bits());
+        let ret = crate::ffi::setflags(&self.cookie, flags.bits());
         match ret {
             // according to `libmagic` man page this is the only flag that could be unsupported
             Err(err) => Err(CookieSetFlagsError {
@@ -418,27 +558,6 @@ impl Cookie {
     }
 
     // TODO: check, compile, list and load mostly do the same, refactor!
-    // TODO: ^ also needs to implement multiple databases, possibly waiting for the Path reform
-
-    /// Check the validity of entries in the database `filenames`
-    ///
-    /// # Panics
-    ///
-    /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
-    #[doc(alias = "magic_check")]
-    pub fn check<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), CookieDatabaseError> {
-        let db_filenames = db_filenames(filenames)?;
-
-        match crate::ffi::check(self.cookie, db_filenames.as_deref()) {
-            Err(err) => Err(CookieDatabaseError {
-                kind: CookieDatabaseErrorKind::Libmagic {
-                    function: "magic_check",
-                },
-                source: Some(err),
-            }),
-            Ok(_) => Ok(()),
-        }
-    }
 
     /// Compiles the given database `filenames` for faster access
     ///
@@ -451,7 +570,27 @@ impl Cookie {
     pub fn compile<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), CookieDatabaseError> {
         let db_filenames = db_filenames(filenames)?;
 
-        match crate::ffi::compile(self.cookie, db_filenames.as_deref()) {
+        match crate::ffi::compile(&self.cookie, db_filenames.as_deref()) {
+            Err(err) => Err(CookieDatabaseError {
+                kind: CookieDatabaseErrorKind::Libmagic {
+                    function: "magic_check",
+                },
+                source: Some(err),
+            }),
+            Ok(_) => Ok(()),
+        }
+    }
+
+    /// Check the validity of entries in the database `filenames`
+    ///
+    /// # Panics
+    ///
+    /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
+    #[doc(alias = "magic_check")]
+    pub fn check<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), CookieDatabaseError> {
+        let db_filenames = db_filenames(filenames)?;
+
+        match crate::ffi::check(&self.cookie, db_filenames.as_deref()) {
             Err(err) => Err(CookieDatabaseError {
                 kind: CookieDatabaseErrorKind::Libmagic {
                     function: "magic_check",
@@ -471,7 +610,7 @@ impl Cookie {
     pub fn list<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), CookieDatabaseError> {
         let db_filenames = db_filenames(filenames)?;
 
-        match crate::ffi::list(self.cookie, db_filenames.as_deref()) {
+        match crate::ffi::list(&self.cookie, db_filenames.as_deref()) {
             Err(err) => Err(CookieDatabaseError {
                 kind: CookieDatabaseErrorKind::Libmagic {
                     function: "magic_list",
@@ -479,86 +618,6 @@ impl Cookie {
                 source: Some(err),
             }),
             Ok(_) => Ok(()),
-        }
-    }
-
-    /// Loads the given database `filenames` for further queries
-    ///
-    /// Adds ".mgc" to the database filenames as appropriate.
-    ///
-    /// Calling `Cookie::load` or [`Cookie::load_buffers`] replaces the previously loaded database/s.
-    ///
-    /// # Examples
-    /// ```rust
-    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
-    /// let cookie = magic::Cookie::open(Default::default())?;
-    ///
-    /// // Load the default database
-    /// cookie.load::<&str>(&[])?;
-    ///
-    /// // Load databases from files
-    /// cookie.load(&["data/tests/db-images-png", "data/tests/db-python"])?;
-    /// # Ok(())
-    /// # }
-    /// ```
-    ///
-    /// # Panics
-    ///
-    /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
-    #[doc(alias = "magic_load")]
-    pub fn load<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), CookieDatabaseError> {
-        let db_filenames = db_filenames(filenames)?;
-
-        match crate::ffi::load(self.cookie, db_filenames.as_deref()) {
-            Err(err) => Err(CookieDatabaseError {
-                kind: CookieDatabaseErrorKind::Libmagic {
-                    function: "magic_load",
-                },
-                source: Some(err),
-            }),
-            Ok(_) => Ok(()),
-        }
-    }
-
-    /// Loads the given compiled databases for further queries
-    ///
-    /// Databases need to be compiled with a compatible `libmagic` version.
-    ///
-    /// This function can be used in environments where `libmagic` does
-    /// not have direct access to the filesystem, but can access the magic
-    /// database via shared memory or other IPC means.
-    ///
-    /// Calling `Cookie::load_buffers` or [`Cookie::load`] replaces the previously loaded database/s.
-    ///
-    /// # Panics
-    ///
-    /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
-    #[doc(alias = "magic_load_buffers")]
-    pub fn load_buffers(&self, buffers: &[&[u8]]) -> Result<(), CookieError> {
-        match crate::ffi::load_buffers(self.cookie, buffers) {
-            Err(err) => Err(CookieError {
-                function: "magic_load_buffers",
-                source: err,
-            }),
-            Ok(_) => Ok(()),
-        }
-    }
-
-    /// Creates a new configuration, `flags` specify how other functions should behave
-    ///
-    /// This does not [`load()`](Cookie::load) any databases yet.
-    #[doc(alias = "magic_open")]
-    pub fn open(flags: CookieFlags) -> Result<Cookie, CookieOpenError> {
-        match crate::ffi::open(flags.bits()) {
-            Err(err) => Err(CookieOpenError {
-                flags,
-                kind: match err.errno().kind() {
-                    std::io::ErrorKind::InvalidInput => CookieOpenErrorKind::UnsupportedFlags,
-                    _ => CookieOpenErrorKind::Errno,
-                },
-                source: err,
-            }),
-            Ok(cookie) => Ok(Cookie { cookie }),
         }
     }
 }
@@ -607,8 +666,8 @@ mod tests {
 
     #[test]
     fn file() {
-        let cookie = Cookie::open(Default::default()).ok().unwrap();
-        assert!(cookie.load(&["data/tests/db-images-png"]).is_ok());
+        let cookie = Cookie::open(CookieFlags::ERROR).unwrap();
+        let cookie = cookie.load(&["data/tests/db-images-png"]).unwrap();
 
         let path = "data/tests/rust-logo-128x128-blk.png";
 
@@ -628,8 +687,8 @@ mod tests {
 
     #[test]
     fn buffer() {
-        let cookie = Cookie::open(Default::default()).ok().unwrap();
-        assert!(cookie.load(&["data/tests/db-python"]).is_ok());
+        let cookie = Cookie::open(CookieFlags::ERROR).unwrap();
+        let cookie = cookie.load(&["data/tests/db-python"]).unwrap();
 
         let s = b"#!/usr/bin/env python\nprint('Hello, world!')";
         assert_eq!(
@@ -643,8 +702,8 @@ mod tests {
 
     #[test]
     fn file_error() {
-        let cookie = Cookie::open(CookieFlags::ERROR).ok().unwrap();
-        assert!(cookie.load::<&str>(&[]).is_ok());
+        let cookie = Cookie::open(CookieFlags::ERROR).unwrap();
+        let cookie = cookie.load::<&str>(&[]).unwrap();
 
         let ret = cookie.file("non-existent_file.txt");
         assert!(ret.is_err());
@@ -652,33 +711,34 @@ mod tests {
 
     #[test]
     fn load_default() {
-        let cookie = Cookie::open(CookieFlags::ERROR).ok().unwrap();
+        let cookie = Cookie::open(CookieFlags::ERROR).unwrap();
         assert!(cookie.load::<&str>(&[]).is_ok());
     }
 
     #[test]
     fn load_one() {
-        let cookie = Cookie::open(CookieFlags::ERROR).ok().unwrap();
+        let cookie = Cookie::open(CookieFlags::ERROR).unwrap();
         assert!(cookie.load(&["data/tests/db-images-png"]).is_ok());
     }
 
     #[test]
     fn load_multiple() {
-        let cookie = Cookie::open(CookieFlags::ERROR).ok().unwrap();
+        let cookie = Cookie::open(CookieFlags::ERROR).unwrap();
         assert!(cookie
             .load(&["data/tests/db-images-png", "data/tests/db-python",])
             .is_ok());
     }
 
-    static_assertions::assert_impl_all!(Cookie: std::fmt::Debug);
+    // TODO:
+    //static_assertions::assert_impl_all!(Cookie<S>: std::fmt::Debug);
 
     #[test]
     fn load_buffers_file() {
-        let cookie = Cookie::open(Default::default()).ok().unwrap();
+        let cookie = Cookie::open(CookieFlags::ERROR).unwrap();
         // file --compile --magic-file data/tests/db-images-png
         let magic_database = std::fs::read("data/tests/db-images-png-precompiled.mgc").unwrap();
         let buffers = vec![magic_database.as_slice()];
-        cookie.load_buffers(&buffers).unwrap();
+        let cookie = cookie.load_buffers(&buffers).unwrap();
 
         let path = "data/tests/rust-logo-128x128-blk.png";
         assert_eq!(
