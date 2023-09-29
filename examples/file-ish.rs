@@ -17,7 +17,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cookie = magic::Cookie::open(magic::CookieFlags::ERROR)?;
 
     // Load the system's default database
-    cookie.load::<&str>(&[])?;
+    let cookie = cookie.load::<&str>(&[])?;
 
     let file = std::env::args_os()
         .nth(1)

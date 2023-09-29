@@ -9,6 +9,10 @@
 
 use magic_sys as libmagic;
 
+#[derive(Debug)]
+// non-copy wrapper around raw pointer
+pub(crate) struct MagicHandle(pub libmagic::magic_t);
+
 /// Error for opened `magic_t` instance
 #[derive(thiserror::Error, Debug)]
 #[error("magic cookie error ({}): {}",
@@ -23,9 +27,9 @@ pub(crate) struct CookieError {
     errno: Option<std::io::Error>,
 }
 
-fn last_error(cookie: libmagic::magic_t) -> Option<CookieError> {
-    let error = unsafe { libmagic::magic_error(cookie) };
-    let errno = unsafe { libmagic::magic_errno(cookie) };
+fn last_error(cookie: &MagicHandle) -> Option<CookieError> {
+    let error = unsafe { libmagic::magic_error(cookie.0) };
+    let errno = unsafe { libmagic::magic_errno(cookie.0) };
 
     if error.is_null() {
         None
@@ -41,33 +45,33 @@ fn last_error(cookie: libmagic::magic_t) -> Option<CookieError> {
     }
 }
 
-fn api_violation(cookie: libmagic::magic_t, description: String) -> ! {
+fn api_violation(cookie: &MagicHandle, description: String) -> ! {
     panic!(
         "`libmagic` API violation for magic cookie {:?}: {}",
         cookie, description
     );
 }
 
-fn expect_error(cookie: libmagic::magic_t, description: String) -> CookieError {
+fn expect_error(cookie: &MagicHandle, description: String) -> CookieError {
     match last_error(cookie) {
         Some(err) => err,
         _ => api_violation(cookie, description),
     }
 }
 
-pub(crate) fn close(cookie: libmagic::magic_t) {
-    unsafe { libmagic::magic_close(cookie) }
+pub(crate) fn close(cookie: &MagicHandle) {
+    unsafe { libmagic::magic_close(cookie.0) }
 }
 
 /// # Panics
 ///
 /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error.
 pub(crate) fn file(
-    cookie: libmagic::magic_t,
+    cookie: &MagicHandle,
     filename: &std::ffi::CStr, // TODO: Support NULL
 ) -> Result<std::ffi::CString, CookieError> {
     let filename_ptr = filename.as_ptr();
-    let res = unsafe { libmagic::magic_file(cookie, filename_ptr) };
+    let res = unsafe { libmagic::magic_file(cookie.0, filename_ptr) };
 
     if res.is_null() {
         Err(expect_error(
@@ -84,12 +88,12 @@ pub(crate) fn file(
 ///
 /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error.
 pub(crate) fn buffer(
-    cookie: libmagic::magic_t,
+    cookie: &MagicHandle,
     buffer: &[u8],
 ) -> Result<std::ffi::CString, CookieError> {
     let buffer_ptr = buffer.as_ptr();
     let buffer_len = buffer.len() as libc::size_t;
-    let res = unsafe { libmagic::magic_buffer(cookie, buffer_ptr, buffer_len) };
+    let res = unsafe { libmagic::magic_buffer(cookie.0, buffer_ptr, buffer_len) };
 
     if res.is_null() {
         Err(expect_error(
@@ -102,8 +106,8 @@ pub(crate) fn buffer(
     }
 }
 
-pub(crate) fn setflags(cookie: libmagic::magic_t, flags: libc::c_int) -> Result<(), SetFlagsError> {
-    let ret = unsafe { libmagic::magic_setflags(cookie, flags) };
+pub(crate) fn setflags(cookie: &MagicHandle, flags: libc::c_int) -> Result<(), SetFlagsError> {
+    let ret = unsafe { libmagic::magic_setflags(cookie.0, flags) };
     match ret {
         -1 => Err(SetFlagsError { flags }),
         _ => Ok(()),
@@ -120,11 +124,11 @@ pub(crate) struct SetFlagsError {
 ///
 /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
 pub(crate) fn check(
-    cookie: libmagic::magic_t,
+    cookie: &MagicHandle,
     filename: Option<&std::ffi::CStr>,
 ) -> Result<(), CookieError> {
     let filename_ptr = filename.map_or_else(std::ptr::null, std::ffi::CStr::as_ptr);
-    let res = unsafe { libmagic::magic_check(cookie, filename_ptr) };
+    let res = unsafe { libmagic::magic_check(cookie.0, filename_ptr) };
 
     match res {
         0 => Ok(()),
@@ -143,11 +147,11 @@ pub(crate) fn check(
 ///
 /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
 pub(crate) fn compile(
-    cookie: libmagic::magic_t,
+    cookie: &MagicHandle,
     filename: Option<&std::ffi::CStr>,
 ) -> Result<(), CookieError> {
     let filename_ptr = filename.map_or_else(std::ptr::null, std::ffi::CStr::as_ptr);
-    let res = unsafe { libmagic::magic_compile(cookie, filename_ptr) };
+    let res = unsafe { libmagic::magic_compile(cookie.0, filename_ptr) };
 
     match res {
         0 => Ok(()),
@@ -166,11 +170,11 @@ pub(crate) fn compile(
 ///
 /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
 pub(crate) fn list(
-    cookie: libmagic::magic_t,
+    cookie: &MagicHandle,
     filename: Option<&std::ffi::CStr>,
 ) -> Result<(), CookieError> {
     let filename_ptr = filename.map_or_else(std::ptr::null, std::ffi::CStr::as_ptr);
-    let res = unsafe { libmagic::magic_list(cookie, filename_ptr) };
+    let res = unsafe { libmagic::magic_list(cookie.0, filename_ptr) };
 
     match res {
         0 => Ok(()),
@@ -189,11 +193,11 @@ pub(crate) fn list(
 ///
 /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
 pub(crate) fn load(
-    cookie: libmagic::magic_t,
+    cookie: &MagicHandle,
     filename: Option<&std::ffi::CStr>,
 ) -> Result<(), CookieError> {
     let filename_ptr = filename.map_or_else(std::ptr::null, std::ffi::CStr::as_ptr);
-    let res = unsafe { libmagic::magic_load(cookie, filename_ptr) };
+    let res = unsafe { libmagic::magic_load(cookie.0, filename_ptr) };
 
     match res {
         0 => Ok(()),
@@ -211,10 +215,7 @@ pub(crate) fn load(
 /// # Panics
 ///
 /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
-pub(crate) fn load_buffers(
-    cookie: libmagic::magic_t,
-    buffers: &[&[u8]],
-) -> Result<(), CookieError> {
+pub(crate) fn load_buffers(cookie: &MagicHandle, buffers: &[&[u8]]) -> Result<(), CookieError> {
     let mut ffi_buffers: Vec<*const u8> = Vec::with_capacity(buffers.len());
     let mut ffi_sizes: Vec<libc::size_t> = Vec::with_capacity(buffers.len());
     let ffi_nbuffers = buffers.len() as libc::size_t;
@@ -228,7 +229,7 @@ pub(crate) fn load_buffers(
     let ffi_sizes_ptr = ffi_sizes.as_mut_ptr();
 
     let res = unsafe {
-        libmagic::magic_load_buffers(cookie, ffi_buffers_ptr, ffi_sizes_ptr, ffi_nbuffers)
+        libmagic::magic_load_buffers(cookie.0, ffi_buffers_ptr, ffi_sizes_ptr, ffi_nbuffers)
     };
 
     match res {
@@ -247,7 +248,7 @@ pub(crate) fn load_buffers(
     }
 }
 
-pub(crate) fn open(flags: libc::c_int) -> Result<libmagic::magic_t, OpenError> {
+pub(crate) fn open(flags: libc::c_int) -> Result<MagicHandle, OpenError> {
     let cookie = unsafe { libmagic::magic_open(flags) };
 
     if cookie.is_null() {
@@ -258,7 +259,7 @@ pub(crate) fn open(flags: libc::c_int) -> Result<libmagic::magic_t, OpenError> {
             errno: std::io::Error::last_os_error(),
         })
     } else {
-        Ok(cookie)
+        Ok(MagicHandle(cookie))
     }
 }
 

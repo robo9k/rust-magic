@@ -26,7 +26,7 @@ fn file_example() -> Result<(), Box<dyn std::error::Error>> {
     let cookie = magic::Cookie::open(magic::CookieFlags::ERROR)?;
 
     // Load a specific database (so exact text assertion below works regardless of the system's default database)
-    cookie.load(&["data/tests/db-images-png"])?;
+    let cookie = cookie.load(&["data/tests/db-images-png"])?;
 
     let file = "data/tests/rust-logo-128x128-blk.png";
 
