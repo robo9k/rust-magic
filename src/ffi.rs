@@ -111,15 +111,9 @@ pub(crate) fn setflags(cookie: libmagic::magic_t, flags: libc::c_int) -> Result<
 }
 
 #[derive(thiserror::Error, Debug)]
-#[error("could not set magic cookie flags")]
+#[error("could not set magic cookie flags {}", .flags)]
 pub(crate) struct SetFlagsError {
     flags: libc::c_int,
-}
-
-impl SetFlagsError {
-    pub fn flags(&self) -> libc::c_int {
-        self.flags
-    }
 }
 
 /// # Panics
@@ -269,17 +263,13 @@ pub(crate) fn open(flags: libc::c_int) -> Result<libmagic::magic_t, OpenError> {
 }
 
 #[derive(thiserror::Error, Debug)]
-#[error("could not open magic cookie")]
+#[error("could not open magic cookie with flags {}: {}", .flags, .errno)]
 pub(crate) struct OpenError {
     flags: libc::c_int,
     errno: std::io::Error,
 }
 
 impl OpenError {
-    pub fn flags(&self) -> libc::c_int {
-        self.flags
-    }
-
     pub fn errno(&self) -> &std::io::Error {
         &self.errno
     }
