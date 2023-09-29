@@ -296,6 +296,12 @@ bitflags::bitflags! {
     }
 }
 
+impl std::fmt::Display for CookieFlags {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        bitflags::parser::to_writer(self, f)
+    }
+}
+
 fn db_filenames<P: AsRef<Path>>(filenames: &[P]) -> Result<Option<CString>, CookieDatabaseError> {
     match filenames.len() {
         0 => Ok(None),
@@ -310,6 +316,7 @@ fn db_filenames<P: AsRef<Path>>(filenames: &[P]) -> Result<Option<CString>, Cook
             )
             .map_err(|_| CookieDatabaseError {
                 kind: CookieDatabaseErrorKind::InvalidDatabaseFilePath,
+                source: None,
             })?,
         )),
     }
@@ -317,25 +324,30 @@ fn db_filenames<P: AsRef<Path>>(filenames: &[P]) -> Result<Option<CString>, Cook
 
 /// Error within several [`Cookie`] database functions
 #[derive(thiserror::Error, Debug)]
-#[error("magic cookie database error")]
+#[error("magic cookie database error: {}",
+    match .kind {
+        CookieDatabaseErrorKind::Libmagic { function, .. } => format!("in `libmagic` function {}", function),
+        CookieDatabaseErrorKind::InvalidDatabaseFilePath => "invalid database files path".to_string(),
+    }
+)]
 pub struct CookieDatabaseError {
     kind: CookieDatabaseErrorKind,
+    //#[backtrace]
+    source: Option<crate::ffi::CookieError>,
 }
 
 #[derive(Debug)]
 enum CookieDatabaseErrorKind {
-    Libmagic {
-        function: &'static str,
-        source: crate::ffi::CookieError,
-    },
+    Libmagic { function: &'static str },
     InvalidDatabaseFilePath,
 }
 
 /// Error within several [`Cookie`] functions
 #[derive(thiserror::Error, Debug)]
-#[error("magic cookie error")]
+#[error("magic cookie error in `libmagic` function {}", .function)]
 pub struct CookieError {
     function: &'static str,
+    //#[backtrace]
     source: crate::ffi::CookieError,
 }
 
@@ -421,8 +433,8 @@ impl Cookie {
             Err(err) => Err(CookieDatabaseError {
                 kind: CookieDatabaseErrorKind::Libmagic {
                     function: "magic_check",
-                    source: err,
                 },
+                source: Some(err),
             }),
             Ok(_) => Ok(()),
         }
@@ -443,8 +455,8 @@ impl Cookie {
             Err(err) => Err(CookieDatabaseError {
                 kind: CookieDatabaseErrorKind::Libmagic {
                     function: "magic_check",
-                    source: err,
                 },
+                source: Some(err),
             }),
             Ok(_) => Ok(()),
         }
@@ -463,8 +475,8 @@ impl Cookie {
             Err(err) => Err(CookieDatabaseError {
                 kind: CookieDatabaseErrorKind::Libmagic {
                     function: "magic_list",
-                    source: err,
                 },
+                source: Some(err),
             }),
             Ok(_) => Ok(()),
         }
@@ -501,8 +513,8 @@ impl Cookie {
             Err(err) => Err(CookieDatabaseError {
                 kind: CookieDatabaseErrorKind::Libmagic {
                     function: "magic_load",
-                    source: err,
                 },
+                source: Some(err),
             }),
             Ok(_) => Ok(()),
         }
@@ -553,7 +565,12 @@ impl Cookie {
 
 /// Error within [`Cookie::open`](Cookie::open)
 #[derive(thiserror::Error, Debug)]
-#[error("could not open magic cookie")]
+#[error("could not open magic cookie: {}",
+match .kind {
+    CookieOpenErrorKind::UnsupportedFlags => format!("unsupported flags {}", .flags),
+    CookieOpenErrorKind::Errno => "other error".to_string(),
+}
+)]
 pub struct CookieOpenError {
     flags: CookieFlags,
     kind: CookieOpenErrorKind,
@@ -572,7 +589,7 @@ enum CookieOpenErrorKind {
 
 /// Error within [`Cookie::set_flags`](Cookie::set_flags)
 #[derive(thiserror::Error, Debug)]
-#[error("could not set magic cookie flags")]
+#[error("could not set magic cookie flags {}", .flags)]
 pub struct CookieSetFlagsError {
     flags: CookieFlags,
     //#[backtrace]
