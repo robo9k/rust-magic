@@ -45,7 +45,7 @@ magic-sys = "0.3.0"
 thiserror = "1.0.30"
 
 [dependencies.libc]
-version = "0.2.105"
+version = "0.2.148"
 default-features = false
 
 [dev-dependencies]
