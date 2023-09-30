@@ -14,7 +14,7 @@
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Open a new configuration with flags
-    let cookie = magic::Cookie::open(magic::CookieFlags::ERROR)?;
+    let cookie = magic::Cookie::open(magic::cookie::Flags::ERROR)?;
 
     // Load the system's default database
     let database = &Default::default();
