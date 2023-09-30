@@ -26,7 +26,7 @@ use std::convert::TryInto;
 
 fn file_example() -> Result<(), Box<dyn std::error::Error>> {
     // Open a new configuration with flags
-    let cookie = magic::Cookie::open(magic::CookieFlags::ERROR)?;
+    let cookie = magic::Cookie::open(magic::cookie::Flags::ERROR)?;
 
     // Load a specific database
     // (so exact test text assertion below works regardless of the system's default database version)
