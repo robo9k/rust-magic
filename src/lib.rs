@@ -34,13 +34,17 @@
 //!
 //! ```rust
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! # use std::convert::TryInto;
 //! // Open a new configuration with flags
 //! let cookie = magic::Cookie::open(magic::CookieFlags::ERROR)?;
 //!
-//! // Load a specific database (so exact text assertion below works regardless of the system's default database)
-//! let cookie = cookie.load(&["data/tests/db-images-png"])?;
+//! // Load a specific database
+//! // (so exact test text assertion below works regardless of the system's default database version)
+//! let database = &["data/tests/db-images-png"].try_into()?;
 //! // You can instead load the default database
-//! //let cookie = cookie.load::<&str>(&[])?;
+//! //let database = &Default::default();
+//!
+//! let cookie = cookie.load(database)?;
 //!
 //! // Analyze a test file
 //! let file_to_analyze = "data/tests/rust-logo-128x128-blk.png";
@@ -96,6 +100,7 @@
 
 #![deny(unsafe_code)]
 
+use std::convert::TryFrom;
 use std::ffi::CString;
 use std::path::Path;
 
@@ -302,44 +307,114 @@ impl std::fmt::Display for CookieFlags {
     }
 }
 
-fn db_filenames<P: AsRef<Path>>(filenames: &[P]) -> Result<Option<CString>, CookieDatabaseError> {
-    match filenames.len() {
-        0 => Ok(None),
-        // this is not the most efficient nor correct for Windows, but consistent with previous behaviour
-        _ => Ok(Some(
-            CString::new(
-                filenames
-                    .iter()
-                    .map(|f| f.as_ref().to_string_lossy().into_owned())
-                    .collect::<Vec<String>>()
-                    .join(":"),
-            )
-            .map_err(|_| CookieDatabaseError {
-                kind: CookieDatabaseErrorKind::InvalidDatabaseFilePath,
-                source: None,
-            })?,
-        )),
-    }
-}
-
-/// Error within several [`Cookie`] database functions
+/// Invalid [`DatabasePaths`]
 #[derive(thiserror::Error, Debug)]
-#[error("magic cookie database error: {}",
-    match .kind {
-        CookieDatabaseErrorKind::Libmagic { function, .. } => format!("in `libmagic` function {}", function),
-        CookieDatabaseErrorKind::InvalidDatabaseFilePath => "invalid database files path".to_string(),
-    }
-)]
-pub struct CookieDatabaseError {
-    kind: CookieDatabaseErrorKind,
-    //#[backtrace]
-    source: Option<crate::ffi::CookieError>,
+#[error("invalid database files path")]
+pub struct InvalidDatabasePathError {}
+
+/// Database file paths
+///
+/// `libmagic` requires database file paths for certain operations that must:
+/// - be a valid C string
+/// - not contain ":", since that is used to separate multiple file paths
+///
+/// The default unnamed database can be constructed with [`Default::default`](DatabasePaths::default).  
+/// Can be constructed manually with [new()](DatabasePaths::new) or by fallible conversion from an array, slice or Vec
+/// containing something convertible as [`std::path::Path`].
+///
+/// # Examples
+///
+/// ```
+/// # use std::convert::TryInto;
+/// # use magic::DatabasePaths;
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// // `: DatabasePaths` type annotation is only needed for these examples
+/// // if you pass it to Cookie::load() Rust will figure it out
+///
+/// // construct default unnamed database
+/// let database: DatabasePaths = Default::default();
+///
+/// // construct from multiple paths in array
+/// let array: [&'static str; 2] = [
+///     "first-directory/first-database",
+///     "second-directory/second-database",
+/// ];
+/// let database: DatabasePaths = array.try_into()?;
+///
+/// // construct from multiple paths in slice
+/// let database: DatabasePaths = [
+///     "first-directory/first-database".as_ref(),
+///     std::path::Path::new("second-directory/second-database"),
+/// ]
+/// .try_into()?;
+///
+/// // construct from multiple paths in Vec
+/// let database: DatabasePaths = vec![
+///     std::ffi::OsStr::new("first-directory/first-database"),
+///     "second-directory/second-database".as_ref(),
+/// ]
+/// .try_into()?;
+/// # Ok(())
+/// # }
+/// ```
+pub struct DatabasePaths {
+    filenames: Option<CString>,
 }
 
-#[derive(Debug)]
-enum CookieDatabaseErrorKind {
-    Libmagic { function: &'static str },
-    InvalidDatabaseFilePath,
+const DATABASE_FILENAME_SEPARATOR: &str = ":";
+
+impl DatabasePaths {
+    pub fn new<I, P>(paths: I) -> Result<Self, InvalidDatabasePathError>
+    where
+        I: IntoIterator<Item = P>,
+        P: AsRef<Path>,
+    {
+        // this is not the most efficient nor correct for Windows, but consistent with previous behaviour
+
+        let filename = paths
+            .into_iter()
+            .map(|f| f.as_ref().to_string_lossy().into_owned())
+            .collect::<Vec<String>>()
+            .join(DATABASE_FILENAME_SEPARATOR);
+
+        Ok(Self {
+            filenames: match filename.is_empty() {
+                true => None,
+                _ => Some(CString::new(filename).map_err(|_| InvalidDatabasePathError {})?),
+            },
+        })
+    }
+}
+
+impl Default for DatabasePaths {
+    /// Returns the default unnamed database
+    fn default() -> Self {
+        Self { filenames: None }
+    }
+}
+
+impl<P: AsRef<std::path::Path>, const N: usize> TryFrom<[P; N]> for DatabasePaths {
+    type Error = InvalidDatabasePathError;
+
+    fn try_from(value: [P; N]) -> Result<Self, <Self as TryFrom<[P; N]>>::Error> {
+        Self::new(value)
+    }
+}
+
+impl<P: AsRef<std::path::Path>> TryFrom<Vec<P>> for DatabasePaths {
+    type Error = InvalidDatabasePathError;
+
+    fn try_from(value: Vec<P>) -> Result<Self, <Self as TryFrom<Vec<P>>>::Error> {
+        Self::new(value)
+    }
+}
+
+impl<P: AsRef<std::path::Path>> TryFrom<&'_ [P]> for DatabasePaths {
+    type Error = InvalidDatabasePathError;
+
+    fn try_from(value: &[P]) -> Result<Self, <Self as TryFrom<&[P]>>::Error> {
+        Self::new(value)
+    }
 }
 
 /// Error within several [`Cookie`] functions
@@ -470,14 +545,17 @@ impl<S: State> Cookie<S> {
     ///
     /// # Examples
     /// ```rust
+    /// # use std::convert::TryInto;
     /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     /// let cookie = magic::Cookie::open(Default::default())?;
     ///
-    /// // Load the default database
-    /// let cookie = cookie.load::<&str>(&[])?;
+    /// // Load the default unnamed database
+    /// let database = &Default::default();
+    /// let cookie = cookie.load(database)?;
     ///
     /// // Load databases from files
-    /// let cookie = cookie.load(&["data/tests/db-images-png", "data/tests/db-python"])?;
+    /// let database = &["data/tests/db-images-png", "data/tests/db-python"].try_into()?;
+    /// let cookie = cookie.load(database)?;
     /// # Ok(())
     /// # }
     /// ```
@@ -486,18 +564,11 @@ impl<S: State> Cookie<S> {
     ///
     /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
     #[doc(alias = "magic_load")]
-    pub fn load<P: AsRef<Path>>(
-        self,
-        filenames: &[P],
-    ) -> Result<Cookie<Load>, CookieDatabaseError> {
-        let db_filenames = db_filenames(filenames)?;
-
-        match crate::ffi::load(&self.cookie, db_filenames.as_deref()) {
-            Err(err) => Err(CookieDatabaseError {
-                kind: CookieDatabaseErrorKind::Libmagic {
-                    function: "magic_load",
-                },
-                source: Some(err),
+    pub fn load(self, filenames: &DatabasePaths) -> Result<Cookie<Load>, CookieError> {
+        match crate::ffi::load(&self.cookie, filenames.filenames.as_deref()) {
+            Err(err) => Err(CookieError {
+                function: "magic_load",
+                source: err,
             }),
             Ok(_) => {
                 let cookie = Cookie {
@@ -567,15 +638,11 @@ impl<S: State> Cookie<S> {
     ///
     /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
     #[doc(alias = "magic_compile")]
-    pub fn compile<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), CookieDatabaseError> {
-        let db_filenames = db_filenames(filenames)?;
-
-        match crate::ffi::compile(&self.cookie, db_filenames.as_deref()) {
-            Err(err) => Err(CookieDatabaseError {
-                kind: CookieDatabaseErrorKind::Libmagic {
-                    function: "magic_check",
-                },
-                source: Some(err),
+    pub fn compile(&self, filenames: &DatabasePaths) -> Result<(), CookieError> {
+        match crate::ffi::compile(&self.cookie, filenames.filenames.as_deref()) {
+            Err(err) => Err(CookieError {
+                function: "magic_compile",
+                source: err,
             }),
             Ok(_) => Ok(()),
         }
@@ -587,15 +654,11 @@ impl<S: State> Cookie<S> {
     ///
     /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
     #[doc(alias = "magic_check")]
-    pub fn check<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), CookieDatabaseError> {
-        let db_filenames = db_filenames(filenames)?;
-
-        match crate::ffi::check(&self.cookie, db_filenames.as_deref()) {
-            Err(err) => Err(CookieDatabaseError {
-                kind: CookieDatabaseErrorKind::Libmagic {
-                    function: "magic_check",
-                },
-                source: Some(err),
+    pub fn check(&self, filenames: &DatabasePaths) -> Result<(), CookieError> {
+        match crate::ffi::check(&self.cookie, filenames.filenames.as_deref()) {
+            Err(err) => Err(CookieError {
+                function: "magic_check",
+                source: err,
             }),
             Ok(_) => Ok(()),
         }
@@ -607,15 +670,11 @@ impl<S: State> Cookie<S> {
     ///
     /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
     #[doc(alias = "magic_list")]
-    pub fn list<P: AsRef<Path>>(&self, filenames: &[P]) -> Result<(), CookieDatabaseError> {
-        let db_filenames = db_filenames(filenames)?;
-
-        match crate::ffi::list(&self.cookie, db_filenames.as_deref()) {
-            Err(err) => Err(CookieDatabaseError {
-                kind: CookieDatabaseErrorKind::Libmagic {
-                    function: "magic_list",
-                },
-                source: Some(err),
+    pub fn list(&self, filenames: &DatabasePaths) -> Result<(), CookieError> {
+        match crate::ffi::list(&self.cookie, filenames.filenames.as_deref()) {
+            Err(err) => Err(CookieError {
+                function: "magic_list",
+                source: err,
             }),
             Ok(_) => Ok(()),
         }
@@ -659,6 +718,7 @@ pub struct CookieSetFlagsError {
 mod tests {
     use super::Cookie;
     use super::CookieFlags;
+    use std::convert::TryInto;
 
     // Using relative paths to test files should be fine, since cargo doc
     // https://doc.rust-lang.org/cargo/reference/build-scripts.html#inputs-to-the-build-script
@@ -667,7 +727,8 @@ mod tests {
     #[test]
     fn file() {
         let cookie = Cookie::open(CookieFlags::ERROR).unwrap();
-        let cookie = cookie.load(&["data/tests/db-images-png"]).unwrap();
+        let databases = &["data/tests/db-images-png"].try_into().unwrap();
+        let cookie = cookie.load(databases).unwrap();
 
         let path = "data/tests/rust-logo-128x128-blk.png";
 
@@ -688,7 +749,8 @@ mod tests {
     #[test]
     fn buffer() {
         let cookie = Cookie::open(CookieFlags::ERROR).unwrap();
-        let cookie = cookie.load(&["data/tests/db-python"]).unwrap();
+        let databases = &["data/tests/db-python"].try_into().unwrap();
+        let cookie = cookie.load(databases).unwrap();
 
         let s = b"#!/usr/bin/env python\nprint('Hello, world!')";
         assert_eq!(
@@ -703,7 +765,7 @@ mod tests {
     #[test]
     fn file_error() {
         let cookie = Cookie::open(CookieFlags::ERROR).unwrap();
-        let cookie = cookie.load::<&str>(&[]).unwrap();
+        let cookie = cookie.load(&Default::default()).unwrap();
 
         let ret = cookie.file("non-existent_file.txt");
         assert!(ret.is_err());
@@ -712,21 +774,23 @@ mod tests {
     #[test]
     fn load_default() {
         let cookie = Cookie::open(CookieFlags::ERROR).unwrap();
-        assert!(cookie.load::<&str>(&[]).is_ok());
+        assert!(cookie.load(&Default::default()).is_ok());
     }
 
     #[test]
     fn load_one() {
         let cookie = Cookie::open(CookieFlags::ERROR).unwrap();
-        assert!(cookie.load(&["data/tests/db-images-png"]).is_ok());
+        let databases = &["data/tests/db-images-png"].try_into().unwrap();
+        assert!(cookie.load(databases).is_ok());
     }
 
     #[test]
     fn load_multiple() {
         let cookie = Cookie::open(CookieFlags::ERROR).unwrap();
-        assert!(cookie
-            .load(&["data/tests/db-images-png", "data/tests/db-python",])
-            .is_ok());
+        let databases = &["data/tests/db-images-png", "data/tests/db-python"]
+            .try_into()
+            .unwrap();
+        assert!(cookie.load(databases).is_ok());
     }
 
     // TODO:
