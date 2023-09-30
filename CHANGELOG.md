@@ -6,6 +6,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0](https://github.com/robo9k/rust-magic/compare/v0.15.1...v0.16.0) - 2023-09-30
+
+### Added
+- [**breaking**] Introduce `DatabasePaths` for valid filename inputs
+- [**breaking**] Use typestate for opened/loaded cookies
+- Improve new error display output
+- [**breaking**] Replace `MagicError` error `CookieError` and `CookieDatabaseError`
+- [**breaking**] Replace internal `ApiViolation` error for `libmagic` with `panic!`
+- [**breaking**] Introduce `magic::CookieSetFlagsError`
+- [**breaking**] Introduce `magic::CookieOpenError`
+
+### Other
+- Split project/crate README
+- [**breaking**] Move everything `Cookie` into mod `cookie`
+- *(deps)* Bump thiserror from 1.0.40 to 1.0.49
+- *(deps)* Bump libc from 0.2.141 to 0.2.148
+- *(deps)* Bump taiki-e/install-action from 2.18.16 to 2.19.1
+- *(deps)* Bump github/codeql-action from 2.21.8 to 2.21.9
+- *(deps)* Bump EmbarkStudios/cargo-deny-action from 1.5.4 to 1.5.5
+
 ## [0.15.1](https://github.com/robo9k/rust-magic/compare/v0.15.0...v0.15.1) - 2023-09-28
 
 ### Other
