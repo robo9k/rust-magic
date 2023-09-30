@@ -3,7 +3,7 @@ Upstream-Name: The `magic` Rust crate
 Upstream-Contact: robot9001 <robo9k@symlink.io>
 Source: https://github.com/robo9k/rust-magic
 
-Files: Cargo.toml Cargo.lock README.md LICENSE.md CONTRIBUTING.md CHANGELOG.md SECURITY.md
+Files: Cargo.toml Cargo.lock README.md README-crate.md LICENSE.md CONTRIBUTING.md CHANGELOG.md SECURITY.md
 Copyright: © The `magic` Rust crate authors
 License: MIT OR Apache-2.0
 

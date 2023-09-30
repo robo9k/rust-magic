@@ -1,6 +1,7 @@
 [package]
 name = "magic"
 description = "High level bindings for the `libmagic` C library"
+readme = "README-crate.md"
 license = "MIT OR Apache-2.0"
 keywords = [
     "magic",
