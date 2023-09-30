@@ -70,6 +70,8 @@
 //! Note that while some `libmagic` functions return somewhat structured text, e.g. MIME types and file extensions,
 //! the `magic` crate does not attempt to parse them into Rust data types since the format is not guaranteed by the C FFI API.
 //!
+//! Check the [crate README](https://crates.io/crates/magic) for required dependencies and MSRV.
+//!
 //! # Safety
 //!
 //! This crate is a binding to the `libmagic` C library and as such subject to its security problems.
@@ -825,5 +827,5 @@ mod tests {
 }
 
 #[cfg(doctest)]
-#[doc=include_str!("../README.md")]
+#[doc=include_str!("../README-crate.md")]
 mod readme {}
