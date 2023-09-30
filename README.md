@@ -21,12 +21,20 @@ data/tests/rust-logo-128x128-blk.png: PNG image data, 128 x 128, 8-bit/color RGB
 
 You can implement something similar in Rust with the `magic` crate (see [examples/file-ish.rs](examples/file-ish.rs)):
 ```rust
+// only for Rust Edition 2018, see https://doc.rust-lang.org/edition-guide/rust-2021/prelude.html
+use std::convert::TryInto;
+
 fn file_example() -> Result<(), Box<dyn std::error::Error>> {
     // Open a new configuration with flags
     let cookie = magic::Cookie::open(magic::CookieFlags::ERROR)?;
 
-    // Load a specific database (so exact text assertion below works regardless of the system's default database)
-    let cookie = cookie.load(&["data/tests/db-images-png"])?;
+    // Load a specific database
+    // (so exact test text assertion below works regardless of the system's default database version)
+    let database = &["data/tests/db-images-png"].try_into()?;
+    // You can instead load the default database
+    //let database = &Default::default();
+
+    let cookie = cookie.load(database)?;
 
     let file = "data/tests/rust-logo-128x128-blk.png";
 
