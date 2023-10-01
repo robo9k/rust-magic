@@ -6,7 +6,7 @@
 //! This crate provides bindings for the `libmagic` C library, which recognizes the
 //! type of data contained in a file (or buffer).
 //!
-//! You might be familiar with `libmagic`'s CLI; [`file`](https://www.darwinsys.com/file/):
+//! You might be familiar with `libmagic`'s command-line-interface; [`file`](https://www.darwinsys.com/file/):
 //!
 //! ```shell
 //! $ file data/tests/rust-logo-128x128-blk.png
@@ -15,11 +15,12 @@
 //!
 //! ## `libmagic`
 //!
-//! Understanding how the `libmagic` C library and thus this crate works requires a bit of glossary.
+//! Understanding how the `libmagic` C library and thus this Rust crate works requires a bit of glossary.
 //!
 //! `libmagic` at its core can analyze a file or buffer and return a mostly unstructured text that describes the analysis result.
 //! There are built-in tests for special cases such as symlinks and compressed files
-//! and there are magic databases with signatures which can be supplied by the user for the generic cases.
+//! and there are magic databases with signatures which can be supplied by the user for the generic cases
+//! ("if those bytes look like this, it's a PNG image file").
 //!
 //! The analysis behaviour can be influenced by so-called flags and parameters.
 //! Flags are either set or unset and do not have a value, parameters have a value.
@@ -40,11 +41,11 @@
 //!
 //! // Load a specific database
 //! // (so exact test text assertion below works regardless of the system's default database version)
-//! let database = &["data/tests/db-images-png"].try_into()?;
+//! let database = ["data/tests/db-images-png"].try_into()?;
 //! // You can instead load the default database
-//! //let database = &Default::default();
+//! //let database = Default::default();
 //!
-//! let cookie = cookie.load(database)?;
+//! let cookie = cookie.load(&database)?;
 //!
 //! // Analyze a test file
 //! let file_to_analyze = "data/tests/rust-logo-128x128-blk.png";
@@ -56,16 +57,76 @@
 //!
 //! See further examples in [`examples/`](https://github.com/robo9k/rust-magic/tree/main/examples).
 //!
+//! # MIME example
+//!
+//! Return a MIME type with "charset" encoding parameter:
+//!
+//! ```shell
+//! $ file --mime data/tests/rust-logo-128x128-blk.png
+//! data/tests/rust-logo-128x128-blk.png: image/png; charset=binary
+//! ```
+//! ```rust
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! # use std::convert::TryInto;
+//! // set flags for mime and extension
+//! let flags = magic::cookie::Flags::MIME_TYPE | magic::cookie::Flags::MIME_ENCODING;
+//! let cookie = magic::Cookie::open(flags)?;
+//!
+//! // Load a specific database
+//! let database = ["data/tests/db-images-png"].try_into()?;
+//! let cookie = cookie.load(&database)?;
+//!
+//! // Analyze a test file
+//! let file_to_analyze = "data/tests/rust-logo-128x128-blk.png";
+//! let expected_analysis_result = "image/png; charset=binary";
+//! assert_eq!(cookie.file(file_to_analyze)?, expected_analysis_result);
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! See [`magic::cookie::Flags::MIME`](crate::cookie::Flags::MIME).
+//!
+//! # Filename extensions example
+//!
+//! Return slash-separated filename extensions (the ".png" in "example.png")
+//! from file contents (the input filename is not used for detection):
+//!
+//! ```shell
+//! $ file --extension data/tests/rust-logo-128x128-blk.png
+//! data/tests/rust-logo-128x128-blk.png: png
+//! ```
+//! ```rust
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! # use std::convert::TryInto;
+//! // set flags for mime and extension
+//! let flags = magic::cookie::Flags::EXTENSION;
+//! let cookie = magic::Cookie::open(flags)?;
+//!
+//! // Load a specific database
+//! let database = ["data/tests/db-images-png"].try_into()?;
+//! let cookie = cookie.load(&database)?;
+//!
+//! // Analyze a test file
+//! let file_to_analyze = "data/tests/rust-logo-128x128-blk.png";
+//! let expected_analysis_result = "png";
+//! assert_eq!(cookie.file(file_to_analyze)?, expected_analysis_result);
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! See [`magic::cookie::Flags::EXTENSION`](crate::cookie::Flags::EXTENSION).
+//!
 //! # Further reading
 //!
-//! * [`Cookie::open`]
+//! * [`Cookie::open()`][Cookie::open]
 //! * cookie [`Flags`](crate::cookie::Flags), in particular:
 //!     * [`Flags::ERROR`](crate::cookie::Flags::ERROR)
-//!     * [`Flags::NO_CHECK_BUILTIN`](crate::cookie::Flags::NO_CHECK_BUILTIN)
 //!     * [`Flags::MIME`](crate::cookie::Flags::MIME)
 //!     * [`Flags::EXTENSION`](crate::cookie::Flags::EXTENSION)
-//! * [`Cookie::load`], [`Cookie::load_buffers`]
-//! * [`Cookie::file`], [`Cookie::buffer`]
+//!     * [`Flags::CONTINUE`](crate::cookie::Flags::CONTINUE)
+//!     * [`Flags::NO_CHECK_BUILTIN`](crate::cookie::Flags::NO_CHECK_BUILTIN)
+//! * [`Cookie::load()`](Cookie::load), [`Cookie::load_buffers()`](Cookie::load_buffers)
+//! * [`Cookie::file()`](Cookie::file), [`Cookie::buffer()`](Cookie::buffer)
 //!
 //! Note that while some `libmagic` functions return somewhat structured text, e.g. MIME types and file extensions,
 //! the `magic` crate does not attempt to parse them into Rust data types since the format is not guaranteed by the C FFI API.
@@ -113,7 +174,7 @@ pub fn libmagic_version() -> libc::c_int {
     crate::ffi::version()
 }
 
-// Functionality for [`Cookie`]
+/// Functionality for [`Cookie`]
 pub mod cookie {
     use std::convert::TryFrom;
     use std::ffi::CString;
@@ -122,11 +183,47 @@ pub mod cookie {
     use magic_sys as libmagic;
 
     bitflags::bitflags! {
-        /// Bitmask flags that specify how `Cookie` functions should behave
+        /// Configuration bits for [`Cookie`]
         ///
-        /// NOTE: The descriptions are taken from `man libmagic 3`.
+        /// A bitflags instance is a combined set of individual flags.
+        /// `cookie::Flags` are configuration bits for `Cookie` instances that specify how the cookie should behave.
         ///
-        /// `MAGIC_NONE` is the default, meaning "No special handling".
+        /// `cookie::Flags` influence several functions, e.g. [`Cookie::file()`](Cookie::file)
+        /// but also [`Cookie::load()`](Cookie::load).
+        ///
+        /// Flags are initially set when a new cookie is created with [`Cookie::open()`](Cookie::open)
+        /// and can be overwritten lateron with [`Cookie::set_flags()`](Cookie::set_flags).
+        ///
+        /// Flags of particular interest:
+        /// - [`ERROR`](Flags::ERROR)
+        /// - [`MIME`](Flags::MIME)
+        /// - [`EXTENSION`](Flags::EXTENSION)
+        /// - [`CONTINUE`](Flags::CONTINUE)
+        /// - [`NO_CHECK_BUILTIN`](Flags::NO_CHECK_BUILTIN)
+        ///
+        /// # Examples
+        ///
+        /// ```
+        /// // default flags
+        /// // `: Flags` type annotation is only needed for this example
+        /// // if you pass it to Cookie::open() etc., Rust will figure it out
+        /// let flags: magic::cookie::Flags = Default::default();
+        ///
+        /// // custom flags combination
+        /// let flags = magic::cookie::Flags::COMPRESS | magic::cookie::Flags::DEVICES;
+        /// ```
+        ///
+        /// # Errors
+        ///
+        /// Some flags might not be supported on all platforms, i.e.
+        /// - [`Cookie::open()`](Cookie::open) might return a [`cookie::OpenError`](OpenError)
+        /// - [`Cookie::set_flags()`](Cookie::set_flags) might return a [`cookie::SetFlagsError`](SetFlagsError)
+        ///
+        /// # Misc
+        ///
+        /// NOTE: The flag descriptions are mostly copied from `man libmagic 3`.
+        ///
+        /// `MAGIC_NONE` is the default, meaning "No special handling" and has no constant.
         /// ```
         /// let default_flags: magic::cookie::Flags = Default::default();
         /// assert_eq!(default_flags, magic::cookie::Flags::empty());
@@ -140,25 +237,39 @@ pub mod cookie {
 
             /// Print debugging messages to `stderr`
             ///
+            /// This is equivalent to the `file` CLI option `--debug`.
+            ///
             /// NOTE: Those messages are printed by `libmagic` itself, no this Rust crate.
             #[doc(alias = "MAGIC_DEBUG")]
+            #[doc(alias = "--debug")]
             const DEBUG             = libmagic::MAGIC_DEBUG;
 
             /// If the file queried is a symlink, follow it
+            ///
+            /// This is equivalent to the `file` CLI option `--dereference`.
             #[doc(alias = "MAGIC_SYMLINK")]
+            #[doc(alias = "--dereference")]
             const SYMLINK           = libmagic::MAGIC_SYMLINK;
 
             /// If the file is compressed, unpack it and look at the contents
+            ///
+            /// This is equivalent to the `file` CLI option `--uncompress`.
             #[doc(alias = "MAGIC_COMPRESS")]
+            #[doc(alias = "--uncompress")]
             const COMPRESS          = libmagic::MAGIC_COMPRESS;
 
             /// If the file is a block or character special device, then open the device and try to look in its contents
+            ///
+            /// This is equivalent to the `file` CLI option `--special-files`.
             #[doc(alias = "MAGIC_DEVICES")]
+            #[doc(alias = "--special-files")]
             const DEVICES           = libmagic::MAGIC_DEVICES;
 
             /// Return a MIME type string, instead of a textual description
             ///
             /// See also: [`Flags::MIME`]
+            ///
+            /// This is equivalent to the `file` CLI option `--mime-type`.
             ///
             /// NOTE: `libmagic` uses non-standard MIME types for at least some built-in checks,
             /// e.g. `inode/*` (also see [`Flags::SYMLINK`], [`Flags::DEVICES`]):
@@ -166,14 +277,18 @@ pub mod cookie {
             /// $ file --mime-type /proc/self/exe
             /// /proc/self/exe: inode/symlink
             ///
-            /// $file --mime-type /dev/sda
+            /// $ file --mime-type /dev/sda
             /// /dev/sda: inode/blockdevice
             /// ```
             #[doc(alias = "MAGIC_MIME_TYPE")]
+            #[doc(alias = "--mime-type")]
             const MIME_TYPE         = libmagic::MAGIC_MIME_TYPE;
 
             /// Return all matches, not just the first
+            ///
+            /// This is equivalent to the `file` CLI option `--keep-going`.
             #[doc(alias = "MAGIC_CONTINUE")]
+            #[doc(alias = "--keep-going")]
             const CONTINUE          = libmagic::MAGIC_CONTINUE;
 
             /// Check the magic database for consistency and print warnings to `stderr`
@@ -183,11 +298,17 @@ pub mod cookie {
             const CHECK             = libmagic::MAGIC_CHECK;
 
             /// On systems that support `utime(2)` or `utimes(2)`, attempt to preserve the access time of files analyzed
+            ///
+            /// This is equivalent to the `file` CLI option `--preserve-date`.
             #[doc(alias = "MAGIC_PRESERVE_ATIME")]
+            #[doc(alias = "--preserve-date")]
             const PRESERVE_ATIME    = libmagic::MAGIC_PRESERVE_ATIME;
 
             /// Don't translate unprintable characters to a `\\ooo` octal representation
+            ///
+            /// This is equivalent to the `file` CLI option `--raw`.
             #[doc(alias = "MAGIC_RAW")]
+            #[doc(alias = "--raw")]
             const RAW               = libmagic::MAGIC_RAW;
 
             /// Treat operating system errors while trying to open files and follow symlinks as real errors, instead of printing them in the magic buffer
@@ -198,17 +319,22 @@ pub mod cookie {
             ///
             /// See also: [`Flags::MIME`]
             ///
+            /// This is equivalent to the `file` CLI option `--mime-encoding`.
+            ///
             /// NOTE: `libmagic` uses non-standard MIME `charset` values, e.g. for binary files:
             /// ```shell
             /// $ file --mime-encoding /proc/self/exe
             /// binary
             /// ```
             #[doc(alias = "MAGIC_MIME_ENCODING")]
+            #[doc(alias = "--mime-encoding")]
             const MIME_ENCODING     = libmagic::MAGIC_MIME_ENCODING;
 
             /// A shorthand for `MIME_TYPE | MIME_ENCODING`
             ///
             /// See also: [`Flags::MIME_TYPE`], [`Flags::MIME_ENCODING`]
+            ///
+            /// This is equivalent to the `file` CLI option `--mime`.
             ///
             /// NOTE: `libmagic` returns a parseable MIME type with a `charset` field:
             /// ```shell
@@ -216,16 +342,22 @@ pub mod cookie {
             /// /proc/self/exe: inode/symlink; charset=binary
             /// ```
             #[doc(alias = "MAGIC_MIME")]
+            #[doc(alias = "--mime")]
             const MIME              = Self::MIME_TYPE.bits()
                                     | Self::MIME_ENCODING.bits();
 
             /// Return the Apple creator and type
+            ///
+            /// This is equivalent to the `file` CLI option `--apple`.
             #[doc(alias = "MAGIC_APPLE")]
+            #[doc(alias = "--apple")]
             const APPLE             = libmagic::MAGIC_APPLE;
 
             /// Return a slash-separated list of extensions for this file type
             ///
-            /// NOTE: `libmagic` returns a list with one or more extensions without a leading "." dot:
+            /// This is equivalent to the `file` CLI option `--extension`.
+            ///
+            /// NOTE: `libmagic` returns a list with one or more extensions without a leading "." (dot):
             /// ```shell
             /// $ file --extension example.jpg
             /// example.jpg: jpeg/jpg/jpe/jfif
@@ -234,10 +366,14 @@ pub mod cookie {
             /// /proc/self/exe: ???
             /// ```
             #[doc(alias = "MAGIC_EXTENSION")]
+            #[doc(alias = "--extension")]
             const EXTENSION         = libmagic::MAGIC_EXTENSION;
 
             /// Don't report on compression, only report about the uncompressed data
+            ///
+            /// This is equivalent to the `file` CLI option `--uncompress-noreport`.
             #[doc(alias = "MAGIC_COMPRESS_TRANSP")]
+            #[doc(alias = "--uncompress-noreport")]
             const COMPRESS_TRANSP   = libmagic::MAGIC_COMPRESS_TRANSP;
 
             /// A shorthand for `EXTENSION | MIME | APPLE`
@@ -247,47 +383,80 @@ pub mod cookie {
                                     | Self::APPLE.bits();
 
             /// Don't look inside compressed files
+            ///
+            /// This is equivalent to the `file` CLI option `--exclude compress`.
             #[doc(alias = "MAGIC_NO_CHECK_COMPRESS")]
+            #[doc(alias = "--exclude compress")]
             const NO_CHECK_COMPRESS = libmagic::MAGIC_NO_CHECK_COMPRESS;
 
             /// Don't examine tar files
+            ///
+            /// This is equivalent to the `file` CLI option `--exclude tar`.
             #[doc(alias = "MAGIC_NO_CHECK_TAR")]
+            #[doc(alias = "--exclude tar")]
             const NO_CHECK_TAR      = libmagic::MAGIC_NO_CHECK_TAR;
 
             /// Don't consult magic files
+            ///
+            /// This is equivalent to the `file` CLI option `--exclude soft`.
             #[doc(alias = "MAGIC_NO_CHECK_SOFT")]
+            #[doc(alias = "--exclude soft")]
             const NO_CHECK_SOFT     = libmagic::MAGIC_NO_CHECK_SOFT;
 
             /// Check for EMX application type (only on EMX)
+            ///
+            /// This is equivalent to the `file` CLI option `--exclude apptype`.
             #[doc(alias = "MAGIC_NO_CHECK_APPTYPE")]
+            #[doc(alias = "--exclude apptype")]
             const NO_CHECK_APPTYPE  = libmagic::MAGIC_NO_CHECK_APPTYPE;
 
             /// Don't print ELF details
+            ///
+            /// This is equivalent to the `file` CLI option `--exclude elf`.
             #[doc(alias = "MAGIC_NO_CHECK_ELF")]
+            #[doc(alias = "--exclude elf")]
             const NO_CHECK_ELF      = libmagic::MAGIC_NO_CHECK_ELF;
 
             /// Don't check for various types of text files
+            ///
+            /// This is equivalent to the `file` CLI option `--exclude text`.
             #[doc(alias = "MAGIC_NO_CHECK_TEXT")]
+            #[doc(alias = "--exclude text")]
             const NO_CHECK_TEXT     = libmagic::MAGIC_NO_CHECK_TEXT;
 
             /// Don't get extra information on MS Composite Document Files
+            ///
+            /// This is equivalent to the `file` CLI option `--exclude cdf`.
             #[doc(alias = "MAGIC_NO_CHECK_CDF")]
+            #[doc(alias = "--exclude cdf")]
             const NO_CHECK_CDF      = libmagic::MAGIC_NO_CHECK_CDF;
 
             /// Don't examine CSV files
+            ///
+            /// This is equivalent to the `file` CLI option `--exclude csv`.
             #[doc(alias = "MAGIC_NO_CHECK_CSV")]
+            #[doc(alias = "--exclude csv")]
             const NO_CHECK_CSV      = libmagic::MAGIC_NO_CHECK_CSV;
 
             /// Don't look for known tokens inside ascii files
+            ///
+            /// This is equivalent to the `file` CLI option `--exclude tokens`.
             #[doc(alias = "MAGIC_NO_CHECK_TOKENS")]
+            #[doc(alias = "--exclude tokens")]
             const NO_CHECK_TOKENS   = libmagic::MAGIC_NO_CHECK_TOKENS;
 
             /// Don't check text encodings
+            ///
+            /// This is equivalent to the `file` CLI option `--exclude encoding`.
             #[doc(alias = "MAGIC_NO_CHECK_ENCODING")]
+            #[doc(alias = "--exclude encoding")]
             const NO_CHECK_ENCODING = libmagic::MAGIC_NO_CHECK_ENCODING;
 
             /// Don't examine JSON files
+            ///
+            /// This is equivalent to the `file` CLI option `--exclude json`.
             #[doc(alias = "MAGIC_NO_CHECK_JSON")]
+            #[doc(alias = "--exclude json")]
             const NO_CHECK_JSON     = libmagic::MAGIC_NO_CHECK_JSON;
 
             /// No built-in tests; only consult the magic file
@@ -312,19 +481,28 @@ pub mod cookie {
     }
 
     /// Invalid [`DatabasePaths`]
+    ///
+    /// This is returned from [`DatabasePaths::new()`](DatabasePaths::new)
     #[derive(thiserror::Error, Debug)]
     #[error("invalid database files path")]
     pub struct InvalidDatabasePathError {}
 
-    /// Database file paths
+    /// Magic database file paths
     ///
-    /// `libmagic` requires database file paths for certain operations that must:
+    /// `libmagic` requires database file paths for certain operations on a [`Cookie`] that must:
     /// - be a valid C string
-    /// - not contain ":", since that is used to separate multiple file paths
+    /// - not contain ":" (colon), since that is used to separate multiple file paths (on all platforms)
     ///
-    /// The default unnamed database can be constructed with [`Default::default`](DatabasePaths::default).  
-    /// Can be constructed manually with [new()](DatabasePaths::new) or by fallible conversion from an array, slice or Vec
+    /// Those operations are [`Cookie::load()`](Cookie::load), [`Cookie::compile()`](Cookie::compile), [`Cookie::check()`](Cookie::check), [`Cookie::list()`](Cookie::list).
+    /// [`Cookie::file()`](Cookie::file) does not take database file paths but the single file to inspect instead.
+    ///
+    /// The default unnamed database can be constructed with [`Default::default()`](DatabasePaths::default).  
+    /// Explicit paths can be constructed manually with [`new()`](DatabasePaths::new) or by fallible conversion from an array, slice or Vec
     /// containing something convertible as [`std::path::Path`].
+    ///
+    /// Note that this only ensures the paths themselves are valid.
+    /// Operating on those database file paths can still fail,
+    /// for example if they refer to files that do not exist, can not be opened or do not have the required format.
     ///
     /// # Examples
     ///
@@ -333,7 +511,7 @@ pub mod cookie {
     /// # use magic::cookie::DatabasePaths;
     /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     /// // `: DatabasePaths` type annotation is only needed for these examples
-    /// // if you pass it to Cookie::load() Rust will figure it out
+    /// // if you pass it to Cookie::load() etc., Rust will figure it out
     ///
     /// // construct default unnamed database
     /// let database: DatabasePaths = Default::default();
@@ -368,6 +546,16 @@ pub mod cookie {
     const DATABASE_FILENAME_SEPARATOR: &str = ":";
 
     impl DatabasePaths {
+        /// Create a new database paths instance
+        ///
+        /// Using one of the `TryFrom` implementations is recommended instead, see [`DatabasePaths`] examples.
+        ///
+        /// Empty `paths` returns [`Default::default()`](DatabasePaths::default).
+        ///
+        /// # Errors
+        ///
+        /// If the `paths` contain a ":" (colon), a [`cookie::InvalidDatabasePathError`](InvalidDatabasePathError) will be returned.
+        ///
         pub fn new<I, P>(paths: I) -> Result<Self, InvalidDatabasePathError>
         where
             I: IntoIterator<Item = P>,
@@ -391,7 +579,28 @@ pub mod cookie {
     }
 
     impl Default for DatabasePaths {
-        /// Returns the default unnamed database
+        /// Returns the path for the default unnamed database/s
+        ///
+        /// Note that the default database/s can be overwritten by setting the "MAGIC" environment variable
+        /// to a colon-separated text of database file paths:
+        /// ```shell
+        /// $ export MAGIC='data/tests/db-python:data/tests/db-images-png-precompiled.mgc'
+        /// $ # file-ish uses `DatabasePaths::default()`
+        /// $ cargo run --example file-ish -- data/tests/rust-logo-128x128-blk.png
+        /// ```
+        /// This is a feature of `libmagic` itself, not of this Rust crate.
+        ///
+        /// Note that the `file` CLI (which uses `libmagic`) prints the location of its default database with:
+        /// ```shell
+        /// $ file --version
+        /// file-5.38
+        /// magic file from /etc/magic:/usr/share/misc/magic
+        ///
+        /// $ export MAGIC='data/tests/db-python:data/tests/db-images-png-precompiled.mgc'
+        /// $ file --version
+        /// file-5.39
+        /// magic file from data/tests/db-python:data/tests/db-images-png-precompiled.mgc
+        /// ```
         fn default() -> Self {
             Self { filenames: None }
         }
@@ -400,6 +609,7 @@ pub mod cookie {
     impl<P: AsRef<std::path::Path>, const N: usize> TryFrom<[P; N]> for DatabasePaths {
         type Error = InvalidDatabasePathError;
 
+        /// Invokes [`DatabasePaths::new()`](DatabasePaths::new)
         fn try_from(value: [P; N]) -> Result<Self, <Self as TryFrom<[P; N]>>::Error> {
             Self::new(value)
         }
@@ -408,6 +618,7 @@ pub mod cookie {
     impl<P: AsRef<std::path::Path>> TryFrom<Vec<P>> for DatabasePaths {
         type Error = InvalidDatabasePathError;
 
+        /// Invokes [`DatabasePaths::new()`](DatabasePaths::new)
         fn try_from(value: Vec<P>) -> Result<Self, <Self as TryFrom<Vec<P>>>::Error> {
             Self::new(value)
         }
@@ -416,12 +627,16 @@ pub mod cookie {
     impl<P: AsRef<std::path::Path>> TryFrom<&'_ [P]> for DatabasePaths {
         type Error = InvalidDatabasePathError;
 
+        /// Invokes [`DatabasePaths::new()`](DatabasePaths::new)
         fn try_from(value: &[P]) -> Result<Self, <Self as TryFrom<&[P]>>::Error> {
             Self::new(value)
         }
     }
 
     /// Error within several [`Cookie`] functions
+    ///
+    /// Most functions on a [`Cookie`] can return an error from `libmagic`,
+    /// which unfortunately is not very structured.
     #[derive(thiserror::Error, Debug)]
     #[error("magic cookie error in `libmagic` function {}", .function)]
     pub struct Error {
@@ -451,7 +666,33 @@ pub mod cookie {
     impl State for Open {}
     impl State for Load {}
 
-    /// Configuration of which `Flags` and magic databases to use
+    /// Combined configuration of [`Flags`], parameters and databases
+    ///
+    /// A "cookie" is `libmagic` lingo for a combined configuration of
+    /// - [`cookie::Flags`](crate::cookie::Flags)
+    /// - parameters (not implemented yet)
+    /// - loaded datbases, e.g. [`cookie::DatabasePaths`](crate::cookie::DatabasePaths)
+    ///
+    /// A cookie advances through 2 states: opened, then loaded.
+    /// ```
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// // create new cookie in initial opened state with given flags
+    /// let cookie = magic::Cookie::open(magic::cookie::Flags::default())?;
+    ///
+    /// // advance cookie into loaded state
+    /// let cookie = cookie.load(&magic::cookie::DatabasePaths::default())?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// In either state, you can use operations that do not require
+    /// already loaded magic databases:
+    /// - [`Cookie::load()`](Cookie::load), [`Cookie::load_buffers()`](Cookie::load_buffers) to load databases and transition into the loaded state
+    /// - [`Cookie::set_flags()`](Cookie::set_flags) to overwrite the initial flags given in [`Cookie::open()`](Cookie::open)
+    /// - [`Cookie::compile()`](Cookie::compile), [`Cookie::check()`](Cookie::check), [`Cookie::list()`](Cookie::list) to operate on magic database files
+    ///
+    /// Once in the loaded state, you can perform magic "queries":
+    /// - [`Cookie::file()`](Cookie::file), [`Cookie::buffer()`](Cookie::buffer)
     #[derive(Debug)]
     #[doc(alias = "magic_t")]
     #[doc(alias = "magic_set")]
@@ -461,7 +702,7 @@ pub mod cookie {
     }
 
     impl<S: State> Drop for Cookie<S> {
-        /// Closes the magic database and deallocates any resources used
+        /// Closes the loaded magic database files and deallocates any resources used
         #[doc(alias = "magic_close")]
         fn drop(&mut self) {
             crate::ffi::close(&self.cookie);
@@ -472,9 +713,31 @@ pub mod cookie {
     ///
     /// A new cookie created with [`Cookie::open`](Cookie::open) does not have any databases [loaded](Cookie::load).
     impl Cookie<Open> {
-        /// Creates a new configuration, `flags` specify how other functions should behave
+        /// Creates a new configuration cookie, `flags` specify how other operations on this cookie should behave
         ///
         /// This does not [`load()`](Cookie::load) any databases yet.
+        ///
+        /// The `flags` can be changed lateron with [`set_flags()`](Cookie::set_flags).
+        ///
+        /// # Examples
+        ///
+        /// ```
+        /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+        /// // open a new cookie with default flags
+        /// let cookie = magic::Cookie::open(Default::default())?;
+        ///
+        /// // open a new cookie with custom flags
+        /// let flags = magic::cookie::Flags::COMPRESS | magic::cookie::Flags::DEVICES;
+        /// let cookie = magic::Cookie::open(flags)?;
+        /// # Ok(())
+        /// # }
+        /// ```
+        ///
+        /// # Errors
+        ///
+        /// If there was an `libmagic` internal error allocating a new cookie, a [`cookie::OpenError`](OpenError) will be returned.
+        ///
+        /// If the given `flags` are unsupported on the current platform, a [`cookie::OpenError`](OpenError) will be returned.
         #[doc(alias = "magic_open")]
         pub fn open(flags: Flags) -> Result<Cookie<Open>, OpenError> {
             match crate::ffi::open(flags.bits()) {
@@ -501,9 +764,25 @@ pub mod cookie {
     ///
     /// An opened cookie with [loaded](Cookie::load) databases can inspect [files](Cookie::file) and [buffers](Cookie::buffer).
     impl Cookie<Load> {
-        /// Returns a textual description of the contents of the `filename`
+        /// Returns a textual description of the contents of the file `filename`
         ///
-        /// Requires [loaded](Cookie::load) databases.
+        /// Requires to [`load()`](Cookie::load) databases before calling.
+        ///
+        /// # Examples
+        ///
+        /// ```
+        /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+        /// // open a new cookie with default flags and database
+        /// let cookie = magic::Cookie::open(Default::default())?.load(&Default::default())?;
+        ///
+        /// let file_description = cookie.file("data/tests/rust-logo-128x128-blk.png");
+        /// # Ok(())
+        /// # }
+        /// ```
+        ///
+        /// # Errors
+        ///
+        /// If there was an `libmagic` internal error, a [`cookie::Error`](Error) will be returned.
         ///
         /// # Panics
         ///
@@ -522,7 +801,24 @@ pub mod cookie {
 
         /// Returns a textual description of the contents of the `buffer`
         ///
-        /// Requires [loaded](Cookie::load) databases.
+        /// Requires to [`load()`](Cookie::load) databases before calling.
+        ///
+        /// # Examples
+        ///
+        /// ```
+        /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+        /// // open a new cookie with default flags and database
+        /// let cookie = magic::Cookie::open(Default::default())?.load(&Default::default())?;
+        ///
+        /// let buffer = b"%PDF-\xE2\x80\xA6";
+        /// let buffer_description = cookie.buffer(buffer);
+        /// # Ok(())
+        /// # }
+        /// ```
+        ///
+        /// # Errors
+        ///
+        /// If there was an `libmagic` internal error, a [`cookie::Error`](Error) will be returned.
         ///
         /// # Panics
         ///
@@ -545,29 +841,42 @@ pub mod cookie {
         ///
         /// Adds ".mgc" to the database filenames as appropriate.
         ///
-        /// Calling `Cookie::load` or [`Cookie::load_buffers`] replaces the previously loaded database/s.
+        /// Calling `load()` or [`load_buffers()`](Cookie::load_buffers) replaces the previously loaded database/s.
+        ///
+        /// This is equivalent to the using the `file` CLI:
+        /// ```shell
+        /// $ file --magic-file 'data/tests/db-images-png:data/tests/db-python' --version
+        /// file-5.39
+        /// magic file from data/tests/db-images-png:data/tests/db-python
+        /// ```
         ///
         /// # Examples
         /// ```rust
         /// # use std::convert::TryInto;
         /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+        /// // open a new cookie with default flags
         /// let cookie = magic::Cookie::open(Default::default())?;
         ///
         /// // Load the default unnamed database
-        /// let database = &Default::default();
-        /// let cookie = cookie.load(database)?;
+        /// let database = Default::default();
+        /// let cookie = cookie.load(&database)?;
         ///
         /// // Load databases from files
-        /// let database = &["data/tests/db-images-png", "data/tests/db-python"].try_into()?;
-        /// let cookie = cookie.load(database)?;
+        /// let databases = ["data/tests/db-images-png", "data/tests/db-python"].try_into()?;
+        /// let cookie = cookie.load(&databases)?;
         /// # Ok(())
         /// # }
         /// ```
+        ///
+        /// # Errors
+        ///
+        /// If there was an `libmagic` internal error, a [`cookie::Error`](Error) will be returned.
         ///
         /// # Panics
         ///
         /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
         #[doc(alias = "magic_load")]
+        #[doc(alias = "--magic-file")]
         pub fn load(self, filenames: &DatabasePaths) -> Result<Cookie<Load>, Error> {
             match crate::ffi::load(&self.cookie, filenames.filenames.as_deref()) {
                 Err(err) => Err(Error {
@@ -585,7 +894,7 @@ pub mod cookie {
             }
         }
 
-        /// Loads the given compiled databases for further queries
+        /// Loads the given compiled databases `buffers` for further queries
         ///
         /// Databases need to be compiled with a compatible `libmagic` version.
         ///
@@ -593,7 +902,11 @@ pub mod cookie {
         /// not have direct access to the filesystem, but can access the magic
         /// database via shared memory or other IPC means.
         ///
-        /// Calling `Cookie::load_buffers` or [`Cookie::load`] replaces the previously loaded database/s.
+        /// Calling `load_buffers()` or [`load()`](Cookie::load) replaces the previously loaded database/s.
+        ///
+        /// # Errors
+        ///
+        /// If there was an `libmagic` internal error, a [`cookie::Error`](Error) will be returned.
         ///
         /// # Panics
         ///
@@ -616,9 +929,26 @@ pub mod cookie {
             }
         }
 
-        /// Sets the flags to use
+        /// Sets the `flags` to use for this configuration
         ///
         /// Overwrites any previously set flags, e.g. those from [`load()`](Cookie::load).
+        ///
+        /// # Examples
+        /// ```rust
+        /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+        /// // open a new cookie with initial default flags
+        /// let cookie = magic::Cookie::open(Default::default())?;
+        ///
+        /// // overwrite the initial flags
+        /// let flags = magic::cookie::Flags::COMPRESS | magic::cookie::Flags::DEVICES;
+        /// cookie.set_flags(flags)?;
+        /// # Ok(())
+        /// # }
+        /// ```
+        ///
+        /// # Errors
+        ///
+        /// If the given `flags` are unsupported on the current platform, an [`cookie::SetFlagsError`](SetFlagsError) will be returned.
         #[doc(alias = "magic_setflags")]
         pub fn set_flags(&self, flags: Flags) -> Result<(), SetFlagsError> {
             let ret = crate::ffi::setflags(&self.cookie, flags.bits());
@@ -634,14 +964,24 @@ pub mod cookie {
 
         // TODO: check, compile, list and load mostly do the same, refactor!
 
-        /// Compiles the given database `filenames` for faster access
+        /// Compiles the given database files `filenames` for faster access
         ///
-        /// The compiled files created are named from the `basename` of each file argument with '.mgc' appended to it.
+        /// The compiled files created are named from the `basename` of each file argument with ".mgc" appended to it.
+        ///
+        /// This is equivalent to the following `file` CLI command:
+        /// ```shell
+        /// $ file --compile --magic-file data/tests/db-images-png:data/tests/db-python
+        /// ```
+        ///
+        /// # Errors
+        ///
+        /// If there was an `libmagic` internal error, a [`cookie::Error`](Error) will be returned.
         ///
         /// # Panics
         ///
         /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
         #[doc(alias = "magic_compile")]
+        #[doc(alias = "--compile")]
         pub fn compile(&self, filenames: &DatabasePaths) -> Result<(), Error> {
             match crate::ffi::compile(&self.cookie, filenames.filenames.as_deref()) {
                 Err(err) => Err(Error {
@@ -652,7 +992,11 @@ pub mod cookie {
             }
         }
 
-        /// Check the validity of entries in the database `filenames`
+        /// Checks the validity of entries in the database files `filenames`
+        ///
+        /// # Errors
+        ///
+        /// If there was an `libmagic` internal error, a [`cookie::Error`](Error) will be returned.
         ///
         /// # Panics
         ///
@@ -668,12 +1012,22 @@ pub mod cookie {
             }
         }
 
-        /// Dumps all magic entries in the given database `filenames` in a human readable format
+        /// Dumps all magic entries in the given database files `filenames` in a human readable format
+        ///
+        /// This is equivalent to the following `file` CLI command:
+        /// ```shell
+        /// $ file --checking-printout --magic-file data/tests/db-images-png:data/tests/db-python
+        /// ```
+        ///
+        /// # Errors
+        ///
+        /// If there was an `libmagic` internal error, a [`cookie::Error`](Error) will be returned.
         ///
         /// # Panics
         ///
         /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
         #[doc(alias = "magic_list")]
+        #[doc(alias = "--checking-printout")]
         pub fn list(&self, filenames: &DatabasePaths) -> Result<(), Error> {
             match crate::ffi::list(&self.cookie, filenames.filenames.as_deref()) {
                 Err(err) => Err(Error {
@@ -685,14 +1039,16 @@ pub mod cookie {
         }
     }
 
-    /// Error within [`Cookie::open`](Cookie::open)
+    /// Error within [`Cookie::open()`](Cookie::open)
+    ///
+    /// Note that a similar [`cookie::SetFlagsError`](SetFlagsError) can also occur
     #[derive(thiserror::Error, Debug)]
     #[error("could not open magic cookie: {}",
-match .kind {
-    OpenErrorKind::UnsupportedFlags => format!("unsupported flags {}", .flags),
-    OpenErrorKind::Errno => "other error".to_string(),
-}
-)]
+        match .kind {
+            OpenErrorKind::UnsupportedFlags => format!("unsupported flags {}", .flags),
+            OpenErrorKind::Errno => "other error".to_string(),
+        }
+    )]
     pub struct OpenError {
         flags: Flags,
         kind: OpenErrorKind,
@@ -709,7 +1065,9 @@ match .kind {
         Errno,
     }
 
-    /// Error within [`Cookie::set_flags`](Cookie::set_flags)
+    /// Error within [`Cookie::set_flags()`](Cookie::set_flags)
+    ///
+    /// Note that a similar [`cookie::OpenError`](OpenError) can also occur
     #[derive(thiserror::Error, Debug)]
     #[error("could not set magic cookie flags {}", .flags)]
     pub struct SetFlagsError {

@@ -23,11 +23,11 @@ fn file_example() -> Result<(), Box<dyn std::error::Error>> {
 
     // Load a specific database
     // (so exact test text assertion below works regardless of the system's default database version)
-    let database = &["data/tests/db-images-png"].try_into()?;
+    let database = ["data/tests/db-images-png"].try_into()?;
     // You can instead load the default database
-    //let database = &Default::default();
+    //let database = Default::default();
 
-    let cookie = cookie.load(database)?;
+    let cookie = cookie.load(&database)?;
 
     let file = "data/tests/rust-logo-128x128-blk.png";
 
