@@ -1,5 +1,6 @@
 0 string \x89PNG\x0d\x0a\x1a\x0a PNG image data
 !:mime image/png
+!:ext   png
 >16 belong x \b, %d x
 >20 belong x %d,
 >24 byte x %d-bit
