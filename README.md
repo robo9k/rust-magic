@@ -3,7 +3,17 @@
 
 [//]: # (The crate has a separate README-crate.md )
 
-rust-magic [![build status](https://github.com/robo9k/rust-magic/actions/workflows/build.yml/badge.svg)](https://github.com/robo9k/rust-magic/actions/workflows/linux.yml) [![Documentation](https://docs.rs/magic/badge.svg)](https://docs.rs/magic) [![REUSE status](https://api.reuse.software/badge/github.com/robo9k/rust-magic)](https://api.reuse.software/info/github.com/robo9k/rust-magic) [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/5709/badge)](https://bestpractices.coreinfrastructure.org/projects/5709) [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/robo9k/rust-magic/badge)](https://securityscorecards.dev/viewer/?uri=github.com/robo9k/rust-magic) [![codecov](https://codecov.io/gh/robo9k/rust-magic/graph/badge.svg?token=YnazJQdLXI)](https://codecov.io/gh/robo9k/rust-magic) 
+rust-magic
+[![maintenance status](https://img.shields.io/maintenance/passively/2023?color=yellow)](https://casuallymaintained.tech/)
+[![build status](https://img.shields.io/github/actions/workflow/status/robo9k/rust-magic/build.yml?logo=githubactions)](https://github.com/robo9k/rust-magic/actions/workflows/build.yml)
+[![Rust safety dance](https://img.shields.io/badge/unsafe-C%20FFI-red?logo=rust)](https://docs.rs/magic/latest/magic/#safety)
+[![crates.io version](https://img.shields.io/crates/v/magic?logo=rust)](https://crates.io/crates/magic)
+[![crates.io license](https://img.shields.io/crates/l/magic?logo=opensourceinitiative)](LICENSE.md)
+[![docs.rs status](https://img.shields.io/docsrs/magic?logo=docsdotrs&label=docs.rs)](https://docs.rs/magic)
+[![REUSE status](https://img.shields.io/reuse/compliance/github.com%2Frobo9k%2Frust-magic?label=REUSE)](https://api.reuse.software/info/github.com/robo9k/rust-magic)
+[![OpenSSF best practices](https://img.shields.io/cii/summary/5709?label=OpenSSF%20best%20practices)](https://bestpractices.coreinfrastructure.org/projects/5709)
+[![OpenSSF scorecard](https://img.shields.io/ossf-scorecard/github.com/robo9k/rust-magic?label=OpenSSF%20scorecard)](https://securityscorecards.dev/viewer/?uri=github.com/robo9k/rust-magic)
+[![Codecov](https://img.shields.io/codecov/c/gh/robo9k/rust-magic?token=YnazJQdLXI&logo=codecov&label=Codecov)](https://codecov.io/gh/robo9k/rust-magic) 
 ==========
 
 [`libmagic`](https://www.darwinsys.com/file/) bindings for the [Rust programming language](https://www.rust-lang.org/).
