@@ -13,10 +13,10 @@
 //! ```
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Open a new configuration with flags
+    // open a new configuration with flags
     let cookie = magic::Cookie::open(magic::cookie::Flags::ERROR)?;
 
-    // Load the system's default database
+    // load the system's default database
     let database = &Default::default();
     let cookie = cookie.load(database)?;
 
@@ -24,7 +24,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .nth(1)
         .expect("One command line argument");
 
-    // Analyze the file
+    // analyze the file
     println!("{}", cookie.file(file)?);
 
     Ok(())
