@@ -36,18 +36,18 @@
 //! ```rust
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! # use std::convert::TryInto;
-//! // Open a new configuration with flags
+//! // open a new configuration with flags
 //! let cookie = magic::Cookie::open(magic::cookie::Flags::ERROR)?;
 //!
-//! // Load a specific database
+//! // load a specific database
 //! // (so exact test text assertion below works regardless of the system's default database version)
 //! let database = ["data/tests/db-images-png"].try_into()?;
-//! // You can instead load the default database
+//! // you can instead load the default database
 //! //let database = Default::default();
 //!
 //! let cookie = cookie.load(&database)?;
 //!
-//! // Analyze a test file
+//! // analyze a test file
 //! let file_to_analyze = "data/tests/rust-logo-128x128-blk.png";
 //! let expected_analysis_result = "PNG image data, 128 x 128, 8-bit/color RGBA, non-interlaced";
 //! assert_eq!(cookie.file(file_to_analyze)?, expected_analysis_result);
@@ -68,15 +68,15 @@
 //! ```rust
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! # use std::convert::TryInto;
-//! // set flags for mime and extension
+//! // open a new configuration with flags for mime type and encoding
 //! let flags = magic::cookie::Flags::MIME_TYPE | magic::cookie::Flags::MIME_ENCODING;
 //! let cookie = magic::Cookie::open(flags)?;
 //!
-//! // Load a specific database
+//! // load a specific database
 //! let database = ["data/tests/db-images-png"].try_into()?;
 //! let cookie = cookie.load(&database)?;
 //!
-//! // Analyze a test file
+//! // analyze a test file
 //! let file_to_analyze = "data/tests/rust-logo-128x128-blk.png";
 //! let expected_analysis_result = "image/png; charset=binary";
 //! assert_eq!(cookie.file(file_to_analyze)?, expected_analysis_result);
@@ -98,15 +98,15 @@
 //! ```rust
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! # use std::convert::TryInto;
-//! // set flags for mime and extension
+//! // open a new configuration with flags for filename extension
 //! let flags = magic::cookie::Flags::EXTENSION;
 //! let cookie = magic::Cookie::open(flags)?;
 //!
-//! // Load a specific database
+//! // load a specific database
 //! let database = ["data/tests/db-images-png"].try_into()?;
 //! let cookie = cookie.load(&database)?;
 //!
-//! // Analyze a test file
+//! // analyze a test file
 //! let file_to_analyze = "data/tests/rust-logo-128x128-blk.png";
 //! let expected_analysis_result = "png";
 //! assert_eq!(cookie.file(file_to_analyze)?, expected_analysis_result);
@@ -513,7 +513,7 @@ pub mod cookie {
     /// // `: DatabasePaths` type annotation is only needed for these examples
     /// // if you pass it to Cookie::load() etc., Rust will figure it out
     ///
-    /// // construct default unnamed database
+    /// // construct default unnamed database paths
     /// let database: DatabasePaths = Default::default();
     ///
     /// // construct from multiple paths in array
@@ -857,11 +857,11 @@ pub mod cookie {
         /// // open a new cookie with default flags
         /// let cookie = magic::Cookie::open(Default::default())?;
         ///
-        /// // Load the default unnamed database
+        /// // load the default unnamed database
         /// let database = Default::default();
         /// let cookie = cookie.load(&database)?;
         ///
-        /// // Load databases from files
+        /// // load databases from files
         /// let databases = ["data/tests/db-images-png", "data/tests/db-python"].try_into()?;
         /// let cookie = cookie.load(&databases)?;
         /// # Ok(())
