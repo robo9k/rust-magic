@@ -27,8 +27,18 @@ jobs:
     - uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
       with:
         egress-policy: audit
+
     - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
-    - uses: EmbarkStudios/cargo-deny-action@1e59595bed8fc55c969333d08d7817b36888f0c5 # v1.5.5
+
+    - id: toolchain
+      uses: dtolnay/rust-toolchain@439cf607258077187679211f12aa6f19af4a0af7 # doesn't have usual versioned releases/tags
       with:
-        command: check ${{ matrix.checks }}
-        arguments: --all-features
+        toolchain: "stable"
+
+    - uses: Swatinem/rust-cache@a95ba195448af2da9b00fb742d14ffaaf3c21f43 # v2.7.0
+
+    - uses: taiki-e/install-action@57aaba576a0253b74662df51e62715622f02127b # v2.19.2
+      with:
+        tool: cargo-deny@0.14.3
+
+    - run: cargo +${{ steps.toolchain.outputs.name }} deny --log-level info --all-features check ${{ matrix.checks }}
