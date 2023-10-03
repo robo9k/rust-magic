@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.1](https://github.com/robo9k/rust-magic/compare/v0.16.0...v0.16.1) - 2023-10-03
+
+### Other
+- Speedup `release-plz` by caching
+- Run `cargo-deny` binary without Docker GHA
+- *(deps)* Bump MarcoIeni/release-plz-action from 0.5.23 to 0.5.24
+- *(deps)* Bump actions/create-github-app-token from 1.2.1 to 1.2.2
+- *(deps)* Bump taiki-e/install-action from 2.19.1 to 2.19.2
+- Use `shields.io` badges in GitHub README
+- Make docs more consistent
+- Add a whole lot of rustdoc
+
 ## [0.16.0](https://github.com/robo9k/rust-magic/compare/v0.15.1...v0.16.0) - 2023-09-30
 
 ### Changed
