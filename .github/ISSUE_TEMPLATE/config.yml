@@ -5,7 +5,7 @@ contact_links:
     about: Please ask and answer questions here.
   - name: Security policy
     url: https://github.com/robo9k/rust-magic/security/policy
-    about: Please report security vulnerabilities here.
-  - name: `magic-sys` crate
+    about: Please view the security policy here.
+  - name: magic-sys crate
     url: https://github.com/robo9k/rust-magic-sys
-    about: Please find the separate `magic-sys` crate here.
+    about: Please find the separate magic-sys crate here.

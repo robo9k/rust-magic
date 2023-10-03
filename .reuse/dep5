@@ -7,7 +7,7 @@ Files: Cargo.toml Cargo.lock README.md README-crate.md LICENSE.md CONTRIBUTING.m
 Copyright: © The `magic` Rust crate authors
 License: MIT OR Apache-2.0
 
-Files: .github/workflows/* .github/ISSUE_TEMPLATE/* .github/PULL_REQUEST_TEMPLATE/* .github/dependabot.yml clippy.toml deny.toml release-plz.toml rust-toolchain.toml
+Files: .github/workflows/* .github/ISSUE_TEMPLATE/* .github/pull_request_template.md .github/dependabot.yml clippy.toml deny.toml release-plz.toml rust-toolchain.toml
 Copyright: © The `magic` Rust crate authors
 License: MIT OR Apache-2.0
 
