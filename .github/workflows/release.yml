@@ -15,15 +15,25 @@ jobs:
       - uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
         with:
           egress-policy: audit
+
+      - id: toolchain
+        uses: dtolnay/rust-toolchain@439cf607258077187679211f12aa6f19af4a0af7 # doesn't have usual versioned releases/tags
+        with:
+          toolchain: "stable"
+
+      - uses: Swatinem/rust-cache@a95ba195448af2da9b00fb742d14ffaaf3c21f43 # v2.7.0 
+
       - uses: actions/create-github-app-token@5804f049e1ab39f8b6e41c4c42f121d2e04c781b # v1.2.2
         id: app-token
         with:
           app_id: ${{ vars.APP_ID }}
           private_key: ${{ secrets.APP_PRIVATE_KEY }}
+
       - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
         with:
           fetch-depth: 0
           token: ${{ steps.app-token.outputs.token }}
+
       - uses: MarcoIeni/release-plz-action@31e374c56df9fc4eca2c9829661be075a5ce62c2 # v0.5.24
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
