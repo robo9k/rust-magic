@@ -701,6 +701,53 @@ pub mod cookie {
         marker: std::marker::PhantomData<S>,
     }
 
+    /// Error within [`Cookie::load()`](Cookie::load) or [`Cookie::load_buffers()`](Cookie::load_buffers)
+    ///
+    /// This is like [`cookie:Error`](Error) but also has the cookie in its original state.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::convert::TryInto;
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let cookie = magic::Cookie::open(Default::default())?;
+    /// let databases = ["data/tests/db-images-png"].try_into()?;
+    /// // try to load an existing database, consuming and returning early
+    /// let cookie = cookie.load(&databases)?;
+    ///
+    /// let databases = ["doesntexist.mgc"].try_into()?;
+    /// // load a database that does not exist
+    /// let cookie = match cookie.load(&databases) {
+    ///     Err(err) => {
+    ///         println!("whoopsie: {:?}", err);
+    ///         // recover the loaded cookie without dropping it
+    ///         err.cookie()
+    ///     },
+    ///     Ok(cookie) => cookie,
+    /// };
+    ///
+    /// let databases = ["data/tests/db-python"].try_into()?;
+    /// // try to load another existing database
+    /// let cookie = cookie.load(&databases)?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    #[derive(thiserror::Error, Debug)]
+    #[error("magic cookie error in `libmagic` function {}", .function)]
+    pub struct LoadError<S: State> {
+        function: &'static str,
+        //#[backtrace]
+        source: crate::ffi::CookieError,
+        cookie: Cookie<S>,
+    }
+
+    impl<S: State> LoadError<S> {
+        /// Returns the cookie in its original state
+        pub fn cookie(self) -> Cookie<S> {
+            self.cookie
+        }
+    }
+
     impl<S: State> Drop for Cookie<S> {
         /// Closes the loaded magic database files and deallocates any resources used
         #[doc(alias = "magic_close")]
@@ -870,18 +917,20 @@ pub mod cookie {
         ///
         /// # Errors
         ///
-        /// If there was an `libmagic` internal error, a [`cookie::Error`](Error) will be returned.
+        /// If there was an `libmagic` internal error, a [`cookie::LoadError`](LoadError) will be returned,
+        /// which contains the cookie in its original state.
         ///
         /// # Panics
         ///
         /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
         #[doc(alias = "magic_load")]
         #[doc(alias = "--magic-file")]
-        pub fn load(self, filenames: &DatabasePaths) -> Result<Cookie<Load>, Error> {
+        pub fn load(self, filenames: &DatabasePaths) -> Result<Cookie<Load>, LoadError<S>> {
             match crate::ffi::load(&self.cookie, filenames.filenames.as_deref()) {
-                Err(err) => Err(Error {
+                Err(err) => Err(LoadError {
                     function: "magic_load",
                     source: err,
+                    cookie: self,
                 }),
                 Ok(_) => {
                     let mut cookie = std::mem::ManuallyDrop::new(self);
@@ -907,17 +956,19 @@ pub mod cookie {
         ///
         /// # Errors
         ///
-        /// If there was an `libmagic` internal error, a [`cookie::Error`](Error) will be returned.
+        /// If there was an `libmagic` internal error, a [`cookie::LoadError`](LoadError) will be returned,
+        /// which contains the cookie in its original state.
         ///
         /// # Panics
         ///
         /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
         #[doc(alias = "magic_load_buffers")]
-        pub fn load_buffers(self, buffers: &[&[u8]]) -> Result<Cookie<Load>, Error> {
+        pub fn load_buffers(self, buffers: &[&[u8]]) -> Result<Cookie<Load>, LoadError<S>> {
             match crate::ffi::load_buffers(&self.cookie, buffers) {
-                Err(err) => Err(Error {
+                Err(err) => Err(LoadError {
                     function: "magic_load_buffers",
                     source: err,
+                    cookie: self,
                 }),
                 Ok(_) => {
                     let mut cookie = std::mem::ManuallyDrop::new(self);
