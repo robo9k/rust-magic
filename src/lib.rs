@@ -493,12 +493,12 @@ pub mod cookie {
     /// - be a valid C string
     /// - not contain ":" (colon), since that is used to separate multiple file paths (on all platforms)
     ///
-    /// Those operations are [`Cookie::load()`](Cookie::load), [`Cookie::compile()`](Cookie::compile), [`Cookie::check()`](Cookie::check), [`Cookie::list()`](Cookie::list).
+    /// Those operations are [`Cookie::load()`](Cookie::load), [`Cookie::compile()`](Cookie::compile), [`Cookie::check()`](Cookie::check), [`Cookie::list()`](Cookie::list).\
     /// [`Cookie::file()`](Cookie::file) does not take database file paths but the single file to inspect instead.
     ///
     /// The default unnamed database can be constructed with [`Default::default()`](DatabasePaths::default).  
     /// Explicit paths can be constructed manually with [`new()`](DatabasePaths::new) or by fallible conversion from an array, slice or Vec
-    /// containing something convertible as [`std::path::Path`].
+    /// containing something convertible as [`std::path::Path`], or a single something.
     ///
     /// Note that this only ensures the paths themselves are valid.
     /// Operating on those database file paths can still fail,
@@ -515,6 +515,11 @@ pub mod cookie {
     ///
     /// // construct default unnamed database paths
     /// let database: DatabasePaths = Default::default();
+    ///
+    /// // construct from single path
+    /// let database: DatabasePaths = "first-directory/first-database".try_into()?;
+    /// let database: DatabasePaths =
+    ///     std::path::Path::new("second-directory/second-database").try_into()?;
     ///
     /// // construct from multiple paths in array
     /// let array: [&'static str; 2] = [
@@ -633,6 +638,31 @@ pub mod cookie {
         }
     }
 
+    macro_rules! databasepaths_try_from_impl {
+        ($t:ty) => {
+            impl TryFrom<$t> for DatabasePaths {
+                type Error = InvalidDatabasePathError;
+
+                /// Invokes [`DatabasePaths::new()`](DatabasePaths::new)
+                fn try_from(value: $t) -> Result<Self, <Self as TryFrom<$t>>::Error> {
+                    DatabasePaths::new(std::iter::once(value))
+                }
+            }
+        };
+    }
+
+    // missing for now are:
+    // - Cow<'_, OsStr>
+    // - std::path::Component<'_>
+    // - std::path::Components<'_>
+    // - std::path::Iter<'_>
+    databasepaths_try_from_impl!(&str);
+    databasepaths_try_from_impl!(&std::ffi::OsStr);
+    databasepaths_try_from_impl!(std::ffi::OsString);
+    databasepaths_try_from_impl!(&std::path::Path);
+    databasepaths_try_from_impl!(std::path::PathBuf);
+    databasepaths_try_from_impl!(String);
+
     /// Error within several [`Cookie`] functions
     ///
     /// Most functions on a [`Cookie`] can return an error from `libmagic`,
@@ -711,13 +741,13 @@ pub mod cookie {
     /// # use std::convert::TryInto;
     /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     /// let cookie = magic::Cookie::open(Default::default())?;
-    /// let databases = ["data/tests/db-images-png"].try_into()?;
+    /// let database = "data/tests/db-images-png".try_into()?;
     /// // try to load an existing database, consuming and returning early
-    /// let cookie = cookie.load(&databases)?;
+    /// let cookie = cookie.load(&database)?;
     ///
-    /// let databases = ["doesntexist.mgc"].try_into()?;
+    /// let database = "doesntexist.mgc".try_into()?;
     /// // load a database that does not exist
-    /// let cookie = match cookie.load(&databases) {
+    /// let cookie = match cookie.load(&database) {
     ///     Err(err) => {
     ///         println!("whoopsie: {:?}", err);
     ///         // recover the loaded cookie without dropping it
@@ -726,9 +756,9 @@ pub mod cookie {
     ///     Ok(cookie) => cookie,
     /// };
     ///
-    /// let databases = ["data/tests/db-python"].try_into()?;
+    /// let database = "data/tests/db-python".try_into()?;
     /// // try to load another existing database
-    /// let cookie = cookie.load(&databases)?;
+    /// let cookie = cookie.load(&database)?;
     /// # Ok(())
     /// # }
     /// ```
@@ -911,6 +941,10 @@ pub mod cookie {
         /// // load databases from files
         /// let databases = ["data/tests/db-images-png", "data/tests/db-python"].try_into()?;
         /// let cookie = cookie.load(&databases)?;
+        ///
+        /// // load precompiled database from file
+        /// let database = "data/tests/db-images-png-precompiled.mgc".try_into()?;
+        /// let cookie = cookie.load(&database)?;
         /// # Ok(())
         /// # }
         /// ```
