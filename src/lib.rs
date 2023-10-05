@@ -697,7 +697,7 @@ pub mod cookie {
     #[doc(alias = "magic_t")]
     #[doc(alias = "magic_set")]
     pub struct Cookie<S: State> {
-        cookie: crate::ffi::MagicHandle,
+        cookie: crate::ffi::Cookie,
         marker: std::marker::PhantomData<S>,
     }
 
@@ -705,7 +705,7 @@ pub mod cookie {
         /// Closes the loaded magic database files and deallocates any resources used
         #[doc(alias = "magic_close")]
         fn drop(&mut self) {
-            crate::ffi::close(&self.cookie);
+            crate::ffi::close(&mut self.cookie);
         }
     }
 
@@ -884,11 +884,12 @@ pub mod cookie {
                     source: err,
                 }),
                 Ok(_) => {
+                    let mut cookie = std::mem::ManuallyDrop::new(self);
+
                     let cookie = Cookie {
-                        cookie: crate::ffi::MagicHandle(self.cookie.0),
+                        cookie: crate::ffi::Cookie::new(&mut cookie.cookie),
                         marker: std::marker::PhantomData,
                     };
-                    std::mem::forget(self);
                     Ok(cookie)
                 }
             }
@@ -919,11 +920,12 @@ pub mod cookie {
                     source: err,
                 }),
                 Ok(_) => {
+                    let mut cookie = std::mem::ManuallyDrop::new(self);
+
                     let cookie = Cookie {
-                        cookie: crate::ffi::MagicHandle(self.cookie.0),
+                        cookie: crate::ffi::Cookie::new(&mut cookie.cookie),
                         marker: std::marker::PhantomData,
                     };
-                    std::mem::forget(self);
                     Ok(cookie)
                 }
             }
