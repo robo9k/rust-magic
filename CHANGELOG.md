@@ -9,18 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.16.2](https://github.com/robo9k/rust-magic/compare/v0.16.1...v0.16.2) - 2023-10-05
 
 ### Added
-- Implement `TryFrom` for a few select database path types
+- Implement `TryFrom` for a few more database path types
 - Allow recovering cookie from state transition errors
-
-### Other
-- Test using `release-plz` with automatic Git author
-- Improve internal handling of cookie pointer
-- Extend CONTRIBUTING about how to actually contribute
-- Fix pull request template, issue templates and config
-- Set license and copyright for issue and pull request templates
-- Update pull request templates
-- Add issue template configuration
-- Update issue templates
 
 ## [0.16.1](https://github.com/robo9k/rust-magic/compare/v0.16.0...v0.16.1) - 2023-10-03
 
