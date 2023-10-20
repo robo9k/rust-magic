@@ -37,7 +37,7 @@ jobs:
 
     - uses: Swatinem/rust-cache@a95ba195448af2da9b00fb742d14ffaaf3c21f43 # v2.7.0
 
-    - uses: taiki-e/install-action@47d27149ff6b3422864ec504071d5cc7873d642e # v2.20.3
+    - uses: taiki-e/install-action@347bed327eb126943543a5e1634a6863a7bc88ab # v2.20.10
       with:
         tool: cargo-deny@0.14.3
 
