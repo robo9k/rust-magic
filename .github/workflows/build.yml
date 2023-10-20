@@ -59,11 +59,11 @@ jobs:
 
       - uses: Swatinem/rust-cache@a95ba195448af2da9b00fb742d14ffaaf3c21f43 # v2.7.0
 
-      - uses: taiki-e/install-action@347bed327eb126943543a5e1634a6863a7bc88ab # v2.20.10
+      - uses: taiki-e/install-action@a5fec49c329e02567ce4dcb720b8680b536e3491 # v2.20.11
         with:
           tool: cargo-llvm-cov@0.5.32
 
-      - uses: taiki-e/install-action@347bed327eb126943543a5e1634a6863a7bc88ab # v2.20.10
+      - uses: taiki-e/install-action@a5fec49c329e02567ce4dcb720b8680b536e3491 # v2.20.11
         with:
           tool: cargo-careful@0.4.0
 
@@ -106,7 +106,7 @@ jobs:
 
       - uses: Swatinem/rust-cache@a95ba195448af2da9b00fb742d14ffaaf3c21f43 # v2.7.0
 
-      - uses: taiki-e/install-action@347bed327eb126943543a5e1634a6863a7bc88ab # v2.20.10
+      - uses: taiki-e/install-action@a5fec49c329e02567ce4dcb720b8680b536e3491 # v2.20.11
         with:
           tool: cargo-careful@0.4.0
 
