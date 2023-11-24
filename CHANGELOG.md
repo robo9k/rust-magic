@@ -6,6 +6,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.3](https://github.com/robo9k/rust-magic/compare/v0.16.2...v0.16.3) - 2023-11-24
+
+### Other
+- *(deps)* Bump github/codeql-action from 2.22.5 to 2.22.8
+- *(deps)* Bump taiki-e/install-action from 2.21.10 to 2.21.18
+- *(deps)* Bump step-security/harden-runner from 2.6.0 to 2.6.1
+- *(deps)* Bump libc from 0.2.149 to 0.2.150
+- *(deps)* Bump taiki-e/install-action from 2.21.7 to 2.21.10
+- *(deps)* Bump MarcoIeni/release-plz-action from 0.5.25 to 0.5.26
+- *(deps)* Bump actions/create-github-app-token from 1.5.0 to 1.5.1
+- *(deps)* Bump github/codeql-action from 2.22.4 to 2.22.5
+- *(deps)* Bump taiki-e/install-action from 2.20.17 to 2.21.7
+- *(deps)* Bump ossf/scorecard-action from 2.3.0 to 2.3.1
+- *(deps)* Bump Swatinem/rust-cache from 2.7.0 to 2.7.1
+- *(deps)* Bump taiki-e/install-action from 2.20.11 to 2.20.17
+- *(deps)* Bump github/codeql-action from 2.22.3 to 2.22.4
+- *(deps)* Bump taiki-e/install-action from 2.20.10 to 2.20.11
+- Use regular `release-plz-action` version again
+- *(deps)* Bump bitflags from 2.4.0 to 2.4.1
+- *(deps)* Use precise version for `bitflags`
+- *(deps)* Bump thiserror from 1.0.49 to 1.0.50
+- *(deps)* Bump taiki-e/install-action from 2.20.3 to 2.20.10
+- *(deps)* Bump actions/checkout from 4.1.0 to 4.1.1
+- *(deps)* Bump libc from 0.2.148 to 0.2.149
+- *(deps)* Bump github/codeql-action from 2.21.9 to 2.22.3
+- *(deps)* Bump actions/create-github-app-token from 1.3.0 to 1.5.0
+- *(deps)* Bump taiki-e/install-action from 2.19.4 to 2.20.3
+- *(deps)* Bump ossf/scorecard-action from 2.2.0 to 2.3.0
+- *(deps)* Bump actions/create-github-app-token from 1.2.2 to 1.3.0
+- *(deps)* Bump taiki-e/install-action from 2.19.2 to 2.19.4
+- *(deps)* Bump step-security/harden-runner from 2.5.1 to 2.6.0
+
 ## [0.16.2](https://github.com/robo9k/rust-magic/compare/v0.16.1...v0.16.2) - 2023-10-05
 
 ### Added
