@@ -22,7 +22,7 @@ jobs:
                 # pick the pr HEAD instead of the merge commit
                 ref: ${{ github.event.pull_request.head.sha }}
 
-            - uses: taiki-e/install-action@8f354f35e51028c902e8ab954045e37739acf562 # v2.21.18
+            - uses: taiki-e/install-action@21526ba3bb38834e625c185ae4f2f942f1fb8f27 # v2.21.24
               with:
                 tool: cocogitto@5.5.0
 
