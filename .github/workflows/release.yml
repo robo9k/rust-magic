@@ -34,7 +34,7 @@ jobs:
           fetch-depth: 0
           token: ${{ steps.app-token.outputs.token }}
 
-      - uses: MarcoIeni/release-plz-action@f31395d4bb1fd72474d4a1c80ab5cb54e82a5eb9 # v0.5.27
+      - uses: MarcoIeni/release-plz-action@808c095f2120b9f52af95a8ce071e68a09424432 # v0.5.29
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
