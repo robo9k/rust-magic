@@ -43,7 +43,7 @@ maintenance = { status = "passively-maintained" }
 [dependencies]
 bitflags = "2.4.1"
 magic-sys = "0.3.0"
-thiserror = "1.0.50"
+thiserror = "1.0.52"
 
 [dependencies.libc]
 version = "0.2.151"
