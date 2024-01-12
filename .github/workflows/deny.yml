@@ -35,7 +35,7 @@ jobs:
       with:
         toolchain: "stable"
 
-    - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8 # v2.7.1
+    - uses: Swatinem/rust-cache@a22603398250b864f7190077025cf752307154dc # v2.7.2
 
     - uses: taiki-e/install-action@115b656342518960cf3dbf5c01f62b684985ca11 # v2.23.8
       with:
