@@ -33,7 +33,7 @@ jobs:
 
       - uses: rui314/setup-mold@a06ef6535ccec20261b6f58bbadf24d1ef0e5486 # does not have recent tags
 
-      - uses: Swatinem/rust-cache@a22603398250b864f7190077025cf752307154dc # v2.7.2
+      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84 # v2.7.3
 
       - run: cargo +${{ steps.toolchain.outputs.name }} build --all-targets --all-features --verbose
 
@@ -57,7 +57,7 @@ jobs:
 
       - uses: rui314/setup-mold@a06ef6535ccec20261b6f58bbadf24d1ef0e5486 # does not have recent tags
 
-      - uses: Swatinem/rust-cache@a22603398250b864f7190077025cf752307154dc # v2.7.2
+      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84 # v2.7.3
 
       - uses: taiki-e/install-action@a6173a9cbc8927eb1def26c72d123d297efb1b10 # v2.24.3
         with:
@@ -104,7 +104,7 @@ jobs:
 
       - uses: rui314/setup-mold@a06ef6535ccec20261b6f58bbadf24d1ef0e5486 # does not have recent tags
 
-      - uses: Swatinem/rust-cache@a22603398250b864f7190077025cf752307154dc # v2.7.2
+      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84 # v2.7.3
 
       - uses: taiki-e/install-action@a6173a9cbc8927eb1def26c72d123d297efb1b10 # v2.24.3
         with:
