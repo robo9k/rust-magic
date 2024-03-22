@@ -39,6 +39,6 @@ jobs:
 
     - uses: taiki-e/install-action@3d5321a5e3ceb69232a18ca12966908a643cbce3 # v2.28.14
       with:
-        tool: cargo-deny@0.14.3
+        tool: cargo-deny@0.14.19
 
     - run: cargo +${{ steps.toolchain.outputs.name }} deny --log-level info --all-features check ${{ matrix.checks }}
