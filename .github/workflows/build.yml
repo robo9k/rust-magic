@@ -75,7 +75,7 @@ jobs:
           path: codecov.json
 
       # this will likely fail for forks, maybe adapt bencher.dev workaround with separate workflow for uploaded artifact
-      - uses: codecov/codecov-action@84508663e988701840491b86de86b666e8a86bed # v4.3.0
+      - uses: codecov/codecov-action@6d798873df2b1b8e5846dba6fb86631229fbcb17 # v4.4.0
         with:
           files: codecov.json
           fail_ci_if_error: true
