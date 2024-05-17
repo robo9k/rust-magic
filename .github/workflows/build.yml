@@ -31,7 +31,7 @@ jobs:
           toolchain: "1.56.0" # hardcoded crate MSRV, see rust-toolchain.toml etc.
           # minimal profile includes rustc component which includes cargo and rustdoc
 
-      - uses: rui314/setup-mold@6bebc01caac32fb5251ee64f60cea0322d0e6574 # does not have recent tags
+      - uses: rui314/setup-mold@8de9eea54963d01c1a6c200606257d65bd53bea1 # does not have recent tags
 
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84 # v2.7.3
 
@@ -55,7 +55,7 @@ jobs:
           toolchain: "stable"
           # minimal profile includes rustc component which includes cargo and rustdoc
 
-      - uses: rui314/setup-mold@6bebc01caac32fb5251ee64f60cea0322d0e6574 # does not have recent tags
+      - uses: rui314/setup-mold@8de9eea54963d01c1a6c200606257d65bd53bea1 # does not have recent tags
 
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84 # v2.7.3
 
@@ -102,7 +102,7 @@ jobs:
           # minimal profile includes rustc component which includes cargo and rustdoc
           components: rust-src
 
-      - uses: rui314/setup-mold@6bebc01caac32fb5251ee64f60cea0322d0e6574 # does not have recent tags
+      - uses: rui314/setup-mold@8de9eea54963d01c1a6c200606257d65bd53bea1 # does not have recent tags
 
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84 # v2.7.3
 
