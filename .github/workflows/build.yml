@@ -65,7 +65,7 @@ jobs:
 
       - uses: taiki-e/install-action@0eaa33a7adfb219fec683c2480a4eb8c79bfeff1 # v2.33.20
         with:
-          tool: cargo-careful@0.4.0
+          tool: cargo-careful@0.4.2
 
       - run: cargo +${{ steps.toolchain.outputs.name }} llvm-cov test --codecov --output-path codecov.json --all-targets --all-features --verbose
 
@@ -108,6 +108,6 @@ jobs:
 
       - uses: taiki-e/install-action@0eaa33a7adfb219fec683c2480a4eb8c79bfeff1 # v2.33.20
         with:
-          tool: cargo-careful@0.4.0
+          tool: cargo-careful@0.4.2
 
       - run: cargo +${{ steps.toolchain.outputs.name }} careful test --all-targets --all-features --verbose
