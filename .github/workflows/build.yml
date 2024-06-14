@@ -26,7 +26,7 @@ jobs:
       - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
 
       - id: toolchain
-        uses: dtolnay/rust-toolchain@d8352f6b1d2e870bc5716e7a6d9b65c4cc244a1a # doesn't have usual versioned releases/tags
+        uses: dtolnay/rust-toolchain@21dc36fb71dd22e3317045c0c31a3f4249868b17 # doesn't have usual versioned releases/tags
         with:
           toolchain: "1.56.0" # hardcoded crate MSRV, see rust-toolchain.toml etc.
           # minimal profile includes rustc component which includes cargo and rustdoc
@@ -50,7 +50,7 @@ jobs:
       - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
 
       - id: toolchain
-        uses: dtolnay/rust-toolchain@d8352f6b1d2e870bc5716e7a6d9b65c4cc244a1a # doesn't have usual versioned releases/tags
+        uses: dtolnay/rust-toolchain@21dc36fb71dd22e3317045c0c31a3f4249868b17 # doesn't have usual versioned releases/tags
         with:
           toolchain: "stable"
           # minimal profile includes rustc component which includes cargo and rustdoc
@@ -96,7 +96,7 @@ jobs:
       - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
 
       - id: toolchain
-        uses: dtolnay/rust-toolchain@d8352f6b1d2e870bc5716e7a6d9b65c4cc244a1a # doesn't have usual versioned releases/tags
+        uses: dtolnay/rust-toolchain@21dc36fb71dd22e3317045c0c31a3f4249868b17 # doesn't have usual versioned releases/tags
         with:
           toolchain: "nightly"
           # minimal profile includes rustc component which includes cargo and rustdoc
