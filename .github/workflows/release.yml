@@ -17,7 +17,7 @@ jobs:
           egress-policy: audit
 
       - id: toolchain
-        uses: dtolnay/rust-toolchain@d8352f6b1d2e870bc5716e7a6d9b65c4cc244a1a # doesn't have usual versioned releases/tags
+        uses: dtolnay/rust-toolchain@7b1c307e0dcbda6122208f10795a713336a9b35a # doesn't have usual versioned releases/tags
         with:
           toolchain: "stable"
 
