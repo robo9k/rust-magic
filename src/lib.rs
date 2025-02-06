@@ -160,6 +160,9 @@
 //!
 //! Maybe you want to know if a file contains other, malicious content?
 //! In this case you should use an anti-virus software, e.g. [ClamAV](https://www.clamav.net/), [Virus Total](https://www.virustotal.com/).
+//!
+//! Maybe you need to support platforms that are tricky with the `libmagic` C library, e.g. wasm32?
+//! In this case you could use pure Rust alternatives, e.g. the [`file_type` crate](https://crates.io/crates/file_type).
 
 #![deny(unsafe_code)]
 
