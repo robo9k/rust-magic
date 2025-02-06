@@ -108,6 +108,6 @@ jobs:
 
       - uses: taiki-e/install-action@3eb90b20bc1fe55dfbf30d81d4a7e0ef8dd34caa # v2.36.0
         with:
-          tool: cargo-careful@0.4.2
+          tool: cargo-careful@0.4.3
 
       - run: cargo +${{ steps.toolchain.outputs.name }} careful test --all-targets --all-features --verbose
