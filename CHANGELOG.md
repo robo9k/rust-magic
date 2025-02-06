@@ -6,6 +6,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.3](https://github.com/robo9k/rust-magic/compare/v0.16.2...v0.16.3) - 2025-02-06
+
+### Other
+
+- Link to alternative pure Rust crate
+- *(deps)* Bump thiserror from 1.0.60 to 1.0.61
+- *(deps)* Bump libc from 0.2.154 to 0.2.155
+- *(deps)* Bump thiserror from 1.0.59 to 1.0.60
+- *(deps)* Bump libc from 0.2.153 to 0.2.154
+- *(deps)* Bump thiserror from 1.0.58 to 1.0.59
+- *(deps)* Bump bitflags from 2.4.2 to 2.5.0
+- *(deps)* Bump thiserror from 1.0.57 to 1.0.58
+- *(deps)* Bump thiserror from 1.0.56 to 1.0.57
+- *(deps)* Bump libc from 0.2.152 to 0.2.153
+- *(deps)* Bump bitflags from 2.4.1 to 2.4.2
+- *(deps)* Bump libc from 0.2.151 to 0.2.152
+- *(deps)* Bump thiserror from 1.0.52 to 1.0.56
+- *(deps)* Bump thiserror from 1.0.50 to 1.0.52
+- *(deps)* Bump libc from 0.2.150 to 0.2.151
+- *(deps)* Bump libc from 0.2.149 to 0.2.150
+- *(deps)* Bump bitflags from 2.4.0 to 2.4.1
+- *(deps)* Use precise version for `bitflags`
+- *(deps)* Bump thiserror from 1.0.49 to 1.0.50
+- *(deps)* Bump libc from 0.2.148 to 0.2.149
+
 ## [0.16.2](https://github.com/robo9k/rust-magic/compare/v0.16.1...v0.16.2) - 2023-10-05
 
 ### Added
