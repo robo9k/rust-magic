@@ -24,6 +24,6 @@ jobs:
 
             - uses: taiki-e/install-action@3eb90b20bc1fe55dfbf30d81d4a7e0ef8dd34caa # v2.36.0
               with:
-                tool: cocogitto@5.5.0
+                tool: cocogitto@6.2.0
 
             - run: cog check ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}
