@@ -19,7 +19,6 @@ name = "magic"
 version = "0.16.2"
 dependencies = [
  "bitflags",
- "libc",
  "magic-sys",
  "static_assertions",
  "thiserror",

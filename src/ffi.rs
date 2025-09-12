@@ -7,6 +7,8 @@
 
 #![allow(unsafe_code)]
 
+use core::ffi::{c_int, c_void};
+
 use magic_sys as libmagic;
 
 #[derive(Debug)]
@@ -96,7 +98,7 @@ pub(crate) fn file(
 /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error.
 pub(crate) fn buffer(cookie: &Cookie, buffer: &[u8]) -> Result<std::ffi::CString, CookieError> {
     let buffer_ptr = buffer.as_ptr();
-    let buffer_len = buffer.len() as libc::size_t;
+    let buffer_len = buffer.len();
     let res = unsafe { libmagic::magic_buffer(cookie.0, buffer_ptr, buffer_len) };
 
     if res.is_null() {
@@ -110,7 +112,7 @@ pub(crate) fn buffer(cookie: &Cookie, buffer: &[u8]) -> Result<std::ffi::CString
     }
 }
 
-pub(crate) fn setflags(cookie: &Cookie, flags: libc::c_int) -> Result<(), SetFlagsError> {
+pub(crate) fn setflags(cookie: &Cookie, flags: c_int) -> Result<(), SetFlagsError> {
     let ret = unsafe { libmagic::magic_setflags(cookie.0, flags) };
     match ret {
         -1 => Err(SetFlagsError { flags }),
@@ -121,7 +123,7 @@ pub(crate) fn setflags(cookie: &Cookie, flags: libc::c_int) -> Result<(), SetFla
 #[derive(thiserror::Error, Debug)]
 #[error("could not set magic cookie flags {}", .flags)]
 pub(crate) struct SetFlagsError {
-    flags: libc::c_int,
+    flags: c_int,
 }
 
 /// # Panics
@@ -212,15 +214,15 @@ pub(crate) fn load(cookie: &Cookie, filename: Option<&std::ffi::CStr>) -> Result
 /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
 pub(crate) fn load_buffers(cookie: &Cookie, buffers: &[&[u8]]) -> Result<(), CookieError> {
     let mut ffi_buffers: Vec<*const u8> = Vec::with_capacity(buffers.len());
-    let mut ffi_sizes: Vec<libc::size_t> = Vec::with_capacity(buffers.len());
-    let ffi_nbuffers = buffers.len() as libc::size_t;
+    let mut ffi_sizes = Vec::with_capacity(buffers.len());
+    let ffi_nbuffers = buffers.len();
 
     for slice in buffers {
         ffi_buffers.push((*slice).as_ptr());
-        ffi_sizes.push(slice.len() as libc::size_t);
+        ffi_sizes.push(slice.len());
     }
 
-    let ffi_buffers_ptr = ffi_buffers.as_mut_ptr() as *mut *mut libc::c_void;
+    let ffi_buffers_ptr = ffi_buffers.as_mut_ptr() as *mut *mut c_void;
     let ffi_sizes_ptr = ffi_sizes.as_mut_ptr();
 
     let res = unsafe {
@@ -243,7 +245,7 @@ pub(crate) fn load_buffers(cookie: &Cookie, buffers: &[&[u8]]) -> Result<(), Coo
     }
 }
 
-pub(crate) fn open(flags: libc::c_int) -> Result<Cookie, OpenError> {
+pub(crate) fn open(flags: c_int) -> Result<Cookie, OpenError> {
     let cookie = unsafe { libmagic::magic_open(flags) };
 
     if cookie.is_null() {
@@ -261,7 +263,7 @@ pub(crate) fn open(flags: libc::c_int) -> Result<Cookie, OpenError> {
 #[derive(thiserror::Error, Debug)]
 #[error("could not open magic cookie with flags {}: {}", .flags, .errno)]
 pub(crate) struct OpenError {
-    flags: libc::c_int,
+    flags: c_int,
     errno: std::io::Error,
 }
 
@@ -271,6 +273,6 @@ impl OpenError {
     }
 }
 
-pub(crate) fn version() -> libc::c_int {
+pub(crate) fn version() -> c_int {
     unsafe { libmagic::magic_version() }
 }
