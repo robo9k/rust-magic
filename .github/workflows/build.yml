@@ -5,7 +5,7 @@ permissions: {}
 on:
   # run "test" job on push events as well to get main branch coverage
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
 
 env:
@@ -28,7 +28,7 @@ jobs:
       - id: toolchain
         uses: dtolnay/rust-toolchain@d8352f6b1d2e870bc5716e7a6d9b65c4cc244a1a # doesn't have usual versioned releases/tags
         with:
-          toolchain: "1.56.0" # hardcoded crate MSRV, see rust-toolchain.toml etc.
+          toolchain: "1.64.0" # hardcoded crate MSRV, see rust-toolchain.toml etc.
           # minimal profile includes rustc component which includes cargo and rustdoc
 
       - uses: rui314/setup-mold@8de9eea54963d01c1a6c200606257d65bd53bea1 # does not have recent tags
