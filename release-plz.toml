@@ -1,2 +1,4 @@
 [workspace]
+git_release_type = "auto"
+pr_draft = true
 pr_labels = ["release"]
