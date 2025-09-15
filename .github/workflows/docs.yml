@@ -8,27 +8,64 @@ on:
   push:
     branches: [ "main" ]
 
+env:
+  RUSTFLAGS: "-Dwarnings"
+  CARGO_INCREMENTAL: "false"
+  CARGO_PROFILE_TEST_DEBUG: "false"
+  CARGO_TERM_VERBOSE: "true"
+  CARGO_TERM_COLOR: "always"
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 jobs:
   build-rustdoc:
-    name: "cargo doc"
+    name: "cargo docs-rs"
     permissions:
       contents: read
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
-      - uses: step-security/harden-runner@f086349bfa2bd1361f7909c78558e816508cdc10 # v2.8.0
+      - uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
 
       - id: toolchain
-        uses: dtolnay/rust-toolchain@d8352f6b1d2e870bc5716e7a6d9b65c4cc244a1a # doesn't have usual versioned releases/tags
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # doesn't have usual versioned releases/tags
         with:
-          toolchain: nightly # minimal profile includes rustc component which includes cargo and rustdoc
+          toolchain: nightly
 
-      - run: cargo +${{ steps.toolchain.outputs.name }} doc --verbose --no-deps --all-features
+      - run: echo "RUSTUP_TOOLCHAIN=${RUSTUP_TOOLCHAIN}" >> "${GITHUB_ENV}"
         env:
-          RUSTDOCFLAGS: --crate-version ${{ github.event.pull_request.head.sha || github.sha }} -Z unstable-options --enable-index-page
+          RUSTUP_TOOLCHAIN: ${{ steps.toolchain.outputs.name }}
+
+      - uses: Swatinem/rust-cache@98c8021b550208e191a6a3145459bfc9fb29c4c0 # v2.8.0
+
+      - uses: taiki-e/install-action@849bd009f730a24e9db18262f4e9f062591dee39 # v2.61.5
+        with:
+          # renovate: taiki-e/install-action
+          tool: cargo-docs-rs@0.1.17
+
+      - run: |
+          crate_version=$(cargo metadata --format-version 1 --no-deps | jq --raw-output '.packages[] | select(.name == "magic").version')
+          echo "ver=${crate_version}" >> "${GITHUB_OUTPUT}"
+
+          repo_rev=$(git rev-parse --short=4 "${SHA}")
+          echo "rev=${repo_rev}" >> "${GITHUB_OUTPUT}"
+        id: crate-info
+        env:
+          SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - run: cargo docs-rs --version
+
+      - run: RUSTDOCFLAGS="--crate-version ${VER}+${REV} --enable-index-page" cargo docs-rs --verbose --color always --locked --target-dir 'target/doc'
+        env:
+          VER: ${{ steps.crate-info.outputs.ver }}
+          REV: ${{ steps.crate-info.outputs.rev }}
 
       - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
 
@@ -38,12 +75,12 @@ jobs:
             echo "::warning title=Invalid file permissions automatically fixed::$line"
           done
 
-      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
+      - uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4.0.0
         with:
-          path: target/doc/
+          path: target/doc/x86_64-unknown-linux-gnu/doc/
 
   deploy-pages:
-    name: "deploy GitHub pages"
+    name: "deploy GitHub Pages"
     if: github.event_name == 'push'
     permissions:
       id-token: write
@@ -51,11 +88,12 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: build-rustdoc
     steps:
-      - uses: step-security/harden-runner@f086349bfa2bd1361f7909c78558e816508cdc10 # v2.8.0
+      - uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
         with:
           egress-policy: audit
+
       - id: deployment
         uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
