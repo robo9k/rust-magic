@@ -4,7 +4,7 @@
 [//]: # (The crate has a separate README-crate.md )
 
 rust-magic
-[![maintenance status](https://img.shields.io/maintenance/passively/2023?color=yellow)](https://casuallymaintained.tech/)
+[![maintenance status](https://img.shields.io/maintenance/passively/2025?color=yellow)](https://casuallymaintained.tech/)
 [![build status](https://img.shields.io/github/actions/workflow/status/robo9k/rust-magic/build.yml?logo=githubactions)](https://github.com/robo9k/rust-magic/actions/workflows/build.yml)
 [![Rust safety dance](https://img.shields.io/badge/unsafe-C%20FFI-red?logo=rust)](https://docs.rs/magic/latest/magic/#safety)
 [![crates.io version](https://img.shields.io/crates/v/magic?logo=rust)](https://crates.io/crates/magic)
