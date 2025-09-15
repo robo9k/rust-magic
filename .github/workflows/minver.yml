@@ -1,0 +1,63 @@
+name: "minimal versions"
+
+permissions: {}
+
+on:
+  pull_request:
+
+env:
+  RUSTFLAGS: "-Dwarnings"
+  CARGO_INCREMENTAL: "false"
+  CARGO_PROFILE_TEST_DEBUG: "none"
+  CARGO_TERM_VERBOSE: "true"
+  CARGO_TERM_COLOR: "always"
+
+jobs:
+  build-and-test:
+    name: "cargo minimal-versions build && cargo minimal-versions test"
+    permissions:
+      contents: read
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
+      # install libmagic for dynamic linkage without robo9k/rust-magic-sys/setup-libmagic version
+      - run: sudo apt-get update
+      - run: sudo apt-get install libmagic1 libmagic-dev
+
+      - id: toolchain
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # doesn't have usual versioned releases/tags
+        with:
+          toolchain: "nightly" # https://github.com/taiki-e/cargo-minimal-versions#prerequisites
+
+      - run: echo "RUSTUP_TOOLCHAIN=${RUSTUP_TOOLCHAIN}" >> "${GITHUB_ENV}"
+        env:
+          RUSTUP_TOOLCHAIN: ${{ steps.toolchain.outputs.name }}
+
+      - uses: rui314/setup-mold@725a8794d15fc7563f59595bd9556495c0564878 # does not have recent tags
+
+      - uses: Swatinem/rust-cache@98c8021b550208e191a6a3145459bfc9fb29c4c0 # v2.8.0 
+
+      # https://github.com/taiki-e/cargo-minimal-versions#prerequisites
+      - uses: taiki-e/install-action@849bd009f730a24e9db18262f4e9f062591dee39 # v2.61.5
+        with:
+          # renovate: taiki-e/install-action
+          tool: cargo-hack@0.6.37
+
+      - uses: taiki-e/install-action@849bd009f730a24e9db18262f4e9f062591dee39 # v2.61.5
+        with:
+          # renovate: taiki-e/install-action
+          tool: cargo-minimal-versions@0.1.31
+
+      - run: cargo --verbose --version
+      - run: cargo hack --version
+      - run: cargo minimal-versions --version
+
+      - run: cargo minimal-versions build --verbose --verbose --all-targets --all-features
+      - run: cargo minimal-versions test --all-targets --all-features
