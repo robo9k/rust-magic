@@ -1252,6 +1252,7 @@ mod tests {
     //static_assertions::assert_impl_all!(Cookie<S>: std::fmt::Debug);
 
     #[test]
+    #[ignore] // FIXME: the binary .mgc file depends on libmagic (internal format) version
     fn load_buffers_file() {
         let cookie = Cookie::open(Flags::ERROR).unwrap();
         // file --compile --magic-file data/tests/db-images-png
