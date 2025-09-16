@@ -864,9 +864,7 @@ pub mod cookie {
         ///
         /// If there was an `libmagic` internal error, a [`cookie::Error`](Error) will be returned.
         ///
-        /// # Panics
-        ///
-        /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error.
+        /// If `libmagic` violates its API contract, e.g. by not setting the last error, a [`cookie::Error`](Error) will be returned.
         #[doc(alias = "magic_file")]
         pub fn file<P: AsRef<Path>>(&self, filename: P) -> Result<String, Error> {
             let c_string = CString::new(filename.as_ref().to_string_lossy().into_owned()).unwrap();
@@ -900,9 +898,7 @@ pub mod cookie {
         ///
         /// If there was an `libmagic` internal error, a [`cookie::Error`](Error) will be returned.
         ///
-        /// # Panics
-        ///
-        /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error.
+        /// If `libmagic` violates its API contract, e.g. by not setting the last error, a [`cookie::Error`](Error) will be returned.
         #[doc(alias = "magic_buffer")]
         pub fn buffer(&self, buffer: &[u8]) -> Result<String, Error> {
             match crate::ffi::buffer(&self.cookie, buffer) {
@@ -957,9 +953,7 @@ pub mod cookie {
         /// If there was an `libmagic` internal error, a [`cookie::LoadError`](LoadError) will be returned,
         /// which contains the cookie in its original state.
         ///
-        /// # Panics
-        ///
-        /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
+        /// If `libmagic` violates its API contract, e.g. by not setting the last error, a [`cookie::Error`](Error) will be returned.
         #[doc(alias = "magic_load")]
         #[doc(alias = "--magic-file")]
         pub fn load(self, filenames: &DatabasePaths) -> Result<Cookie<Load>, LoadError<S>> {
@@ -996,9 +990,7 @@ pub mod cookie {
         /// If there was an `libmagic` internal error, a [`cookie::LoadError`](LoadError) will be returned,
         /// which contains the cookie in its original state.
         ///
-        /// # Panics
-        ///
-        /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
+        /// If `libmagic` violates its API contract, e.g. by not setting the last error, a [`cookie::Error`](Error) will be returned.
         #[doc(alias = "magic_load_buffers")]
         pub fn load_buffers(self, buffers: &[&[u8]]) -> Result<Cookie<Load>, LoadError<S>> {
             match crate::ffi::load_buffers(&self.cookie, buffers) {
@@ -1067,9 +1059,7 @@ pub mod cookie {
         ///
         /// If there was an `libmagic` internal error, a [`cookie::Error`](Error) will be returned.
         ///
-        /// # Panics
-        ///
-        /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
+        /// If `libmagic` violates its API contract, e.g. by not setting the last error, a [`cookie::Error`](Error) will be returned.
         #[doc(alias = "magic_compile")]
         #[doc(alias = "--compile")]
         pub fn compile(&self, filenames: &DatabasePaths) -> Result<(), Error> {
@@ -1088,9 +1078,7 @@ pub mod cookie {
         ///
         /// If there was an `libmagic` internal error, a [`cookie::Error`](Error) will be returned.
         ///
-        /// # Panics
-        ///
-        /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
+        /// If `libmagic` violates its API contract, e.g. by not setting the last error, a [`cookie::Error`](Error) will be returned.
         #[doc(alias = "magic_check")]
         pub fn check(&self, filenames: &DatabasePaths) -> Result<(), Error> {
             match crate::ffi::check(&self.cookie, filenames.filenames.as_deref()) {
@@ -1113,9 +1101,7 @@ pub mod cookie {
         ///
         /// If there was an `libmagic` internal error, a [`cookie::Error`](Error) will be returned.
         ///
-        /// # Panics
-        ///
-        /// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
+        /// If `libmagic` violates its API contract, e.g. by not setting the last error, a [`cookie::Error`](Error) will be returned.
         #[doc(alias = "magic_list")]
         #[doc(alias = "--checking-printout")]
         pub fn list(&self, filenames: &DatabasePaths) -> Result<(), Error> {
