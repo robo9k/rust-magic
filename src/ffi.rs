@@ -22,19 +22,39 @@ impl Cookie {
 
 /// Error for opened `magic_t` instance
 #[derive(thiserror::Error, Debug)]
-#[error("magic cookie error ({}): {}",
+pub(crate) enum CookieError {
+    #[error("cookie error: {0}")]
+    Error(#[from] Error),
+    #[error("cookie API violation: {0}")]
+    ApiViolation(#[from] ApiViolation),
+}
+
+/// Combined error value from `magic_erro` and `magic_errno`
+#[derive(thiserror::Error, Debug)]
+#[error("libmagic error ({}): {}",
 match .errno {
     Some(errno) => format!("OS errno: {}", errno),
     None => "no OS errno".to_string(),
 },
 .explanation.to_string_lossy()
 )]
-pub(crate) struct CookieError {
+pub(crate) struct Error {
     explanation: std::ffi::CString,
     errno: Option<std::io::Error>,
 }
 
-fn last_error(cookie: &Cookie) -> Option<CookieError> {
+/// Violation of the documented `libmagic` API
+#[derive(thiserror::Error, Debug)]
+pub(crate) enum ApiViolation {
+    /// `magic_error` returned no error (`NULL`)
+    #[error("{0}")]
+    MissingError(&'static str),
+    /// A `libmagic` function returned an unexpected value
+    #[error("{0}")]
+    UnexpectedReturnValue(String),
+}
+
+fn last_error(cookie: &Cookie) -> Option<Error> {
     let error = unsafe { libmagic::magic_error(cookie.0) };
     let errno = unsafe { libmagic::magic_errno(cookie.0) };
 
@@ -42,7 +62,7 @@ fn last_error(cookie: &Cookie) -> Option<CookieError> {
         None
     } else {
         let c_str = unsafe { std::ffi::CStr::from_ptr(error) };
-        Some(CookieError {
+        Some(Error {
             explanation: c_str.into(),
             errno: match errno {
                 0 => None,
@@ -52,17 +72,10 @@ fn last_error(cookie: &Cookie) -> Option<CookieError> {
     }
 }
 
-fn api_violation(cookie: &Cookie, description: String) -> ! {
-    panic!(
-        "`libmagic` API violation for magic cookie {:?}: {}",
-        cookie, description
-    );
-}
-
-fn expect_error(cookie: &Cookie, description: String) -> CookieError {
+fn expect_error(cookie: &Cookie, description: &'static str) -> CookieError {
     match last_error(cookie) {
-        Some(err) => err,
-        _ => api_violation(cookie, description),
+        Some(error) => error.into(),
+        None => ApiViolation::MissingError(description).into(),
     }
 }
 
@@ -70,9 +83,6 @@ pub(crate) fn close(cookie: &mut Cookie) {
     unsafe { libmagic::magic_close(cookie.0) }
 }
 
-/// # Panics
-///
-/// Panics if `libmagic` violates its API contract, e.g. by not setting the last error.
 pub(crate) fn file(
     cookie: &Cookie,
     filename: &std::ffi::CStr, // TODO: Support NULL
@@ -83,7 +93,7 @@ pub(crate) fn file(
     if res.is_null() {
         Err(expect_error(
             cookie,
-            "`magic_file()` did not set last error".to_string(),
+            "`magic_file()` did not set last error",
         ))
     } else {
         let c_str = unsafe { std::ffi::CStr::from_ptr(res) };
@@ -91,9 +101,6 @@ pub(crate) fn file(
     }
 }
 
-/// # Panics
-///
-/// Panics if `libmagic` violates its API contract, e.g. by not setting the last error.
 pub(crate) fn buffer(cookie: &Cookie, buffer: &[u8]) -> Result<std::ffi::CString, CookieError> {
     let buffer_ptr = buffer.as_ptr();
     let buffer_len = buffer.len() as libc::size_t;
@@ -102,7 +109,7 @@ pub(crate) fn buffer(cookie: &Cookie, buffer: &[u8]) -> Result<std::ffi::CString
     if res.is_null() {
         Err(expect_error(
             cookie,
-            "`magic_buffer()` did not set last error".to_string(),
+            "`magic_buffer()` did not set last error",
         ))
     } else {
         let c_str = unsafe { std::ffi::CStr::from_ptr(res) };
@@ -124,9 +131,6 @@ pub(crate) struct SetFlagsError {
     flags: libc::c_int,
 }
 
-/// # Panics
-///
-/// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
 pub(crate) fn check(cookie: &Cookie, filename: Option<&std::ffi::CStr>) -> Result<(), CookieError> {
     let filename_ptr = filename.map_or_else(std::ptr::null, std::ffi::CStr::as_ptr);
     let res = unsafe { libmagic::magic_check(cookie.0, filename_ptr) };
@@ -135,18 +139,16 @@ pub(crate) fn check(cookie: &Cookie, filename: Option<&std::ffi::CStr>) -> Resul
         0 => Ok(()),
         -1 => Err(expect_error(
             cookie,
-            "`magic_check()` did not set last error".to_string(),
+            "`magic_check()` did not set last error",
         )),
-        res => api_violation(
-            cookie,
-            format!("expected 0 or -1 but `magic_check()` returned {}", res),
-        ),
+        res => Err(ApiViolation::UnexpectedReturnValue(format!(
+            "expected 0 or -1 but `magic_check()` returned {}",
+            res
+        ))
+        .into()),
     }
 }
 
-/// # Panics
-///
-/// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
 pub(crate) fn compile(
     cookie: &Cookie,
     filename: Option<&std::ffi::CStr>,
@@ -158,18 +160,16 @@ pub(crate) fn compile(
         0 => Ok(()),
         -1 => Err(expect_error(
             cookie,
-            "`magic_compile()` did not set last error".to_string(),
+            "`magic_compile()` did not set last error",
         )),
-        res => api_violation(
-            cookie,
-            format!("Expected 0 or -1 but `magic_compile()` returned {}", res),
-        ),
+        res => Err(ApiViolation::UnexpectedReturnValue(format!(
+            "Expected 0 or -1 but `magic_compile()` returned {}",
+            res
+        ))
+        .into()),
     }
 }
 
-/// # Panics
-///
-/// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
 pub(crate) fn list(cookie: &Cookie, filename: Option<&std::ffi::CStr>) -> Result<(), CookieError> {
     let filename_ptr = filename.map_or_else(std::ptr::null, std::ffi::CStr::as_ptr);
     let res = unsafe { libmagic::magic_list(cookie.0, filename_ptr) };
@@ -178,18 +178,16 @@ pub(crate) fn list(cookie: &Cookie, filename: Option<&std::ffi::CStr>) -> Result
         0 => Ok(()),
         -1 => Err(expect_error(
             cookie,
-            "`magic_list()` did not set last error".to_string(),
+            "`magic_list()` did not set last error",
         )),
-        res => api_violation(
-            cookie,
-            format!("Expected 0 or -1 but `magic_list()` returned {}", res),
-        ),
+        res => Err(ApiViolation::UnexpectedReturnValue(format!(
+            "Expected 0 or -1 but `magic_list()` returned {}",
+            res
+        ))
+        .into()),
     }
 }
 
-/// # Panics
-///
-/// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
 pub(crate) fn load(cookie: &Cookie, filename: Option<&std::ffi::CStr>) -> Result<(), CookieError> {
     let filename_ptr = filename.map_or_else(std::ptr::null, std::ffi::CStr::as_ptr);
     let res = unsafe { libmagic::magic_load(cookie.0, filename_ptr) };
@@ -198,18 +196,16 @@ pub(crate) fn load(cookie: &Cookie, filename: Option<&std::ffi::CStr>) -> Result
         0 => Ok(()),
         -1 => Err(expect_error(
             cookie,
-            "`magic_load()` did not set last error".to_string(),
+            "`magic_load()` did not set last error",
         )),
-        res => api_violation(
-            cookie,
-            format!("Expected 0 or -1 but `magic_load()` returned {}", res),
-        ),
+        res => Err(ApiViolation::UnexpectedReturnValue(format!(
+            "Expected 0 or -1 but `magic_load()` returned {}",
+            res
+        ))
+        .into()),
     }
 }
 
-/// # Panics
-///
-/// Panics if `libmagic` violates its API contract, e.g. by not setting the last error or returning undefined data.
 pub(crate) fn load_buffers(cookie: &Cookie, buffers: &[&[u8]]) -> Result<(), CookieError> {
     let mut ffi_buffers: Vec<*const u8> = Vec::with_capacity(buffers.len());
     let mut ffi_sizes: Vec<libc::size_t> = Vec::with_capacity(buffers.len());
@@ -231,15 +227,13 @@ pub(crate) fn load_buffers(cookie: &Cookie, buffers: &[&[u8]]) -> Result<(), Coo
         0 => Ok(()),
         -1 => Err(expect_error(
             cookie,
-            "`magic_load_buffers()` did not set last error".to_string(),
+            "`magic_load_buffers()` did not set last error",
         )),
-        res => api_violation(
-            cookie,
-            format!(
-                "Expected 0 or -1 but `magic_load_buffers()` returned {}",
-                res
-            ),
-        ),
+        res => Err(ApiViolation::UnexpectedReturnValue(format!(
+            "Expected 0 or -1 but `magic_load_buffers()` returned {}",
+            res
+        ))
+        .into()),
     }
 }
 
