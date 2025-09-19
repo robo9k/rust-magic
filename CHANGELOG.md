@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.4](https://github.com/robo9k/rust-magic/compare/v0.16.3...v0.16.4) - 2025-09-19
+
+### Fixed
+
+- Revert to error on `libmagic` API violation instead of `panic!`
+
 ## [0.16.3](https://github.com/robo9k/rust-magic/compare/v0.16.2...v0.16.3) - 2025-09-15
 
 ### Other

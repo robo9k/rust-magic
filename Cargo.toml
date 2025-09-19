@@ -23,7 +23,7 @@ authors = [
 	"Onur Aslan <onur@onur.im>",
 	"robo9k <robo9k@symlink.io>",
 ]
-version = "0.16.3"
+version = "0.16.4"
 include = [
 	"/src/",
 ]
