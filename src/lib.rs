@@ -1158,6 +1158,7 @@ pub use crate::cookie::Cookie;
 #[cfg(test)]
 mod tests {
     use super::cookie::Flags;
+    use super::cookie::{Load, Open};
     use super::Cookie;
     use std::convert::TryInto;
 
@@ -1234,8 +1235,12 @@ mod tests {
         assert!(cookie.load(databases).is_ok());
     }
 
-    // TODO:
-    //static_assertions::assert_impl_all!(Cookie<S>: std::fmt::Debug);
+    #[test]
+    fn impl_debug() {
+        fn assert_debug<T: std::fmt::Debug>() {}
+        assert_debug::<Cookie<Open>>();
+        assert_debug::<Cookie<Load>>();
+    }
 
     #[test]
     #[ignore] // FIXME: the binary .mgc file depends on libmagic (internal format) version
