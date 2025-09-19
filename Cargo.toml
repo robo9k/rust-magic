@@ -48,6 +48,3 @@ thiserror = "1.0.61"
 [dependencies.libc]
 version = "0.2.155"
 default-features = false
-
-[dev-dependencies]
-static_assertions = "1.1.0"
