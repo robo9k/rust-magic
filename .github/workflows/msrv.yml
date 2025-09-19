@@ -30,7 +30,7 @@ jobs:
       # install toolchain/rustup for running `cargo msrv` itself
       # https://github.com/foresterre/cargo-msrv/blob/main/README.md#prerequisites
       - id: toolchain
-        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # doesn't have usual versioned releases/tags
+        uses: dtolnay/rust-toolchain@6d653acede28d24f02e3cd41383119e8b1b35921 # doesn't have usual versioned releases/tags
         with:
           toolchain: "1.89.0" # current pinned stable
 
