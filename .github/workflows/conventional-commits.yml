@@ -23,9 +23,5 @@ jobs:
                 # pick the pr HEAD instead of the merge commit
                 ref: ${{ github.event.pull_request.head.sha }}
 
-            - uses: taiki-e/install-action@849bd009f730a24e9db18262f4e9f062591dee39 # v2.61.5
-              with:
-                # renovate: taiki-e/install-action
-                tool: cocogitto@6.2.0
-
-            - run: cog check ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}
+            - uses: cocogitto/cocogitto-action@c7a74f5406bab86da17da0f0e460a69f8219a68c # v3.11
+              # this action is pinning the version of its binar itself, no configuration possible
