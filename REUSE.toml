@@ -10,7 +10,7 @@ SPDX-FileCopyrightText = "© The `magic` Rust crate authors"
 SPDX-License-Identifier = "MIT OR Apache-2.0"
 
 [[annotations]]
-path = [".github/workflows/**", ".github/ISSUE_TEMPLATE/**", ".github/pull_request_template.md", ".github/dependabot.yml", "clippy.toml", "deny.toml", "release-plz.toml", "rust-toolchain.toml"]
+path = [".github/workflows/**", ".github/ISSUE_TEMPLATE/**", ".github/pull_request_template.md", ".github/renovate.json5", "clippy.toml", "deny.toml", "release-plz.toml", "rust-toolchain.toml"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "© The `magic` Rust crate authors"
 SPDX-License-Identifier = "MIT OR Apache-2.0"
