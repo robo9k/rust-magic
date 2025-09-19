@@ -41,7 +41,7 @@ targets = []
 maintenance = { status = "passively-maintained" }
 
 [dependencies]
-bitflags = "2.5.0"
+bitflags = "2.9.4"
 magic-sys = "0.3.0"
 thiserror = "1.0.61"
 
