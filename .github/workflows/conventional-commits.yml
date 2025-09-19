@@ -23,6 +23,9 @@ jobs:
                 # pick the pr HEAD instead of the merge commit
                 ref: ${{ github.event.pull_request.head.sha }}
 
+            # override toolchain so cargo-binstall doesn't fail due to our old MSRV
+            - run: rustup override set 1.89.0 # current pinned stable
+
             - uses: taiki-e/install-action@849bd009f730a24e9db18262f4e9f062591dee39 # v2.61.5
               with:
                 # renovate: taiki-e/install-action
