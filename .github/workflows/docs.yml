@@ -43,7 +43,7 @@ jobs:
         env:
           RUSTUP_TOOLCHAIN: ${{ steps.toolchain.outputs.name }}
 
-      - uses: Swatinem/rust-cache@98c8021b550208e191a6a3145459bfc9fb29c4c0 # v2.8.0
+      - uses: Swatinem/rust-cache@f13886b937689c021905a6b90929199931d60db1 # v2.8.1
 
       - uses: taiki-e/install-action@056c0cf25f54702ec6dde8b9c8a0387b857627ab # v2.61.11
         with:
