@@ -1,0 +1,26 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  extends: [
+    "config:recommended",
+    ":semanticCommits",
+    "robo9k/renovate-config:crateSemanticCommitTypeFix",
+  ],
+  customManagers: [
+    {
+      description: "Match `tool` version for https://github.com/taiki-e/install-action in GHA workflows",
+      customType: "regex",
+      datasourceTemplate: "crate",
+      versioningTemplate: "cargo",
+      managerFilePatterns: ["/(^|/)\\.github/workflows/.+\\.ya?ml$/"],
+      matchStrings: [
+        /*
+        - uses: taiki-e/install-action@4fd6bded9bf87df7896958594ca6d67b38b5350e # v2.56.15
+          with:
+            # renovate: taiki-e/install-action
+            tool: cargo-vcpkg@0.1.7
+        */
+        "# renovate: taiki-e\\\/install-action\\s+tool: (?<depName>.+?)@(?<currentValue>.+?)\\s",
+      ],
+    },
+  ],
+}
