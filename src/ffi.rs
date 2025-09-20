@@ -21,37 +21,86 @@ impl Cookie {
 }
 
 /// Error for opened `magic_t` instance
-#[derive(thiserror::Error, Debug)]
+#[derive(Debug)]
 pub(crate) enum CookieError {
-    #[error("cookie error: {0}")]
-    Error(#[from] Error),
-    #[error("cookie API violation: {0}")]
-    ApiViolation(#[from] ApiViolation),
+    Error(Error),
+    ApiViolation(ApiViolation),
+}
+
+impl std::error::Error for CookieError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            CookieError::Error(source) => Some(source),
+            CookieError::ApiViolation(source) => Some(source),
+        }
+    }
+}
+
+impl std::fmt::Display for CookieError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            CookieError::Error(err) => write!(f, "cookie error: {0}", err),
+            CookieError::ApiViolation(violation) => {
+                write!(f, "cookie API violation: {0}", violation)
+            }
+        }
+    }
+}
+
+impl std::convert::From<Error> for CookieError {
+    fn from(source: Error) -> Self {
+        CookieError::Error(source)
+    }
+}
+
+impl std::convert::From<ApiViolation> for CookieError {
+    fn from(source: ApiViolation) -> Self {
+        CookieError::ApiViolation(source)
+    }
 }
 
 /// Combined error value from `magic_erro` and `magic_errno`
-#[derive(thiserror::Error, Debug)]
-#[error("libmagic error ({}): {}",
-match .errno {
-    Some(errno) => format!("OS errno: {}", errno),
-    None => "no OS errno".to_string(),
-},
-.explanation.to_string_lossy()
-)]
+#[derive(Debug)]
 pub(crate) struct Error {
     explanation: std::ffi::CString,
     errno: Option<std::io::Error>,
 }
 
+impl std::error::Error for Error {}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let Self { explanation, errno } = self;
+        write!(
+            f,
+            "libmagic error ({0}): {1}",
+            match errno {
+                Some(errno) => format!("OS errno: {0}", errno),
+                None => "no OS errno".to_string(),
+            },
+            explanation.to_string_lossy(),
+        )
+    }
+}
+
 /// Violation of the documented `libmagic` API
-#[derive(thiserror::Error, Debug)]
+#[derive(Debug)]
 pub(crate) enum ApiViolation {
     /// `magic_error` returned no error (`NULL`)
-    #[error("{0}")]
     MissingError(&'static str),
     /// A `libmagic` function returned an unexpected value
-    #[error("{0}")]
     UnexpectedReturnValue(String),
+}
+
+impl std::error::Error for ApiViolation {}
+
+impl std::fmt::Display for ApiViolation {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            ApiViolation::MissingError(e) => write!(f, "{0}", e),
+            ApiViolation::UnexpectedReturnValue(e) => write!(f, "{0}", e),
+        }
+    }
 }
 
 fn last_error(cookie: &Cookie) -> Option<Error> {
@@ -125,10 +174,18 @@ pub(crate) fn setflags(cookie: &Cookie, flags: libc::c_int) -> Result<(), SetFla
     }
 }
 
-#[derive(thiserror::Error, Debug)]
-#[error("could not set magic cookie flags {}", .flags)]
+#[derive(Debug)]
 pub(crate) struct SetFlagsError {
     flags: libc::c_int,
+}
+
+impl std::error::Error for SetFlagsError {}
+
+impl std::fmt::Display for SetFlagsError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let Self { flags } = self;
+        write!(f, "could not set magic cookie flags {0}", flags)
+    }
 }
 
 pub(crate) fn check(cookie: &Cookie, filename: Option<&std::ffi::CStr>) -> Result<(), CookieError> {
@@ -252,11 +309,23 @@ pub(crate) fn open(flags: libc::c_int) -> Result<Cookie, OpenError> {
     }
 }
 
-#[derive(thiserror::Error, Debug)]
-#[error("could not open magic cookie with flags {}: {}", .flags, .errno)]
+#[derive(Debug)]
 pub(crate) struct OpenError {
     flags: libc::c_int,
     errno: std::io::Error,
+}
+
+impl std::error::Error for OpenError {}
+
+impl std::fmt::Display for OpenError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let Self { flags, errno } = self;
+        write!(
+            f,
+            "could not open magic cookie with flags {0}: {1}",
+            flags, errno,
+        )
+    }
 }
 
 impl OpenError {
