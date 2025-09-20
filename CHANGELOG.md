@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.5](https://github.com/robo9k/rust-magic/compare/v0.16.4...v0.16.5) - 2025-09-20
+
+### Other
+
+- Remove internal `thiserror` dependency
+
 ## [0.16.4](https://github.com/robo9k/rust-magic/compare/v0.16.3...v0.16.4) - 2025-09-19
 
 ### Fixed
