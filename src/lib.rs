@@ -1158,9 +1158,14 @@ pub use crate::cookie::Cookie;
 #[cfg(test)]
 mod tests {
     use super::cookie::Flags;
+    use super::cookie::{Error, InvalidDatabasePathError, LoadError, OpenError, SetFlagsError};
     use super::cookie::{Load, Open};
     use super::Cookie;
     use std::convert::TryInto;
+
+    fn assert_impl_debug<T: std::fmt::Debug>() {}
+    fn assert_impl_display<T: std::fmt::Display>() {}
+    fn assert_impl_error<T: std::error::Error>() {}
 
     // Using relative paths to test files should be fine, since cargo doc
     // https://doc.rust-lang.org/cargo/reference/build-scripts.html#inputs-to-the-build-script
@@ -1236,10 +1241,9 @@ mod tests {
     }
 
     #[test]
-    fn impl_debug() {
-        fn assert_debug<T: std::fmt::Debug>() {}
-        assert_debug::<Cookie<Open>>();
-        assert_debug::<Cookie<Load>>();
+    fn cookie_impl_debug() {
+        assert_impl_debug::<Cookie<Open>>();
+        assert_impl_debug::<Cookie<Load>>();
     }
 
     #[test]
@@ -1263,6 +1267,44 @@ mod tests {
         let version = super::libmagic_version();
 
         assert!(version > 500);
+    }
+
+    #[test]
+    fn error_impls() {
+        assert_impl_debug::<Error>();
+        assert_impl_display::<Error>();
+        assert_impl_error::<Error>();
+    }
+
+    #[test]
+    fn invaliddatabasepatherror_impls() {
+        assert_impl_debug::<InvalidDatabasePathError>();
+        assert_impl_display::<InvalidDatabasePathError>();
+        assert_impl_error::<InvalidDatabasePathError>();
+    }
+
+    #[test]
+    fn loaderror_impls() {
+        assert_impl_debug::<LoadError<Open>>();
+        assert_impl_debug::<LoadError<Load>>();
+        assert_impl_display::<LoadError<Open>>();
+        assert_impl_display::<LoadError<Load>>();
+        assert_impl_error::<LoadError<Open>>();
+        assert_impl_error::<LoadError<Load>>();
+    }
+
+    #[test]
+    fn openerror_impls() {
+        assert_impl_debug::<OpenError>();
+        assert_impl_display::<OpenError>();
+        assert_impl_error::<OpenError>();
+    }
+
+    #[test]
+    fn setflagserror_impls() {
+        assert_impl_debug::<SetFlagsError>();
+        assert_impl_display::<SetFlagsError>();
+        assert_impl_error::<SetFlagsError>();
     }
 }
 
