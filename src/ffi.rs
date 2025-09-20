@@ -268,3 +268,47 @@ impl OpenError {
 pub(crate) fn version() -> libc::c_int {
     unsafe { libmagic::magic_version() }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{ApiViolation, CookieError, Error, OpenError, SetFlagsError};
+
+    fn assert_impl_debug<T: std::fmt::Debug>() {}
+    fn assert_impl_display<T: std::fmt::Display>() {}
+    fn assert_impl_error<T: std::error::Error>() {}
+
+    #[test]
+    fn error_impls() {
+        assert_impl_debug::<Error>();
+        assert_impl_display::<Error>();
+        assert_impl_error::<Error>();
+    }
+
+    #[test]
+    fn apiviolation_impls() {
+        assert_impl_debug::<ApiViolation>();
+        assert_impl_display::<ApiViolation>();
+        assert_impl_error::<ApiViolation>();
+    }
+
+    #[test]
+    fn cookieerror_impls() {
+        assert_impl_debug::<CookieError>();
+        assert_impl_display::<CookieError>();
+        assert_impl_error::<CookieError>();
+    }
+
+    #[test]
+    fn openerror_impls() {
+        assert_impl_debug::<OpenError>();
+        assert_impl_display::<OpenError>();
+        assert_impl_error::<OpenError>();
+    }
+
+    #[test]
+    fn setflagserror_impls() {
+        assert_impl_debug::<SetFlagsError>();
+        assert_impl_display::<SetFlagsError>();
+        assert_impl_error::<SetFlagsError>();
+    }
+}
