@@ -486,9 +486,16 @@ pub mod cookie {
     /// Invalid [`DatabasePaths`]
     ///
     /// This is returned from [`DatabasePaths::new()`](DatabasePaths::new)
-    #[derive(thiserror::Error, Debug)]
-    #[error("invalid database files path")]
+    #[derive(Debug)]
     pub struct InvalidDatabasePathError {}
+
+    impl std::error::Error for InvalidDatabasePathError {}
+
+    impl std::fmt::Display for InvalidDatabasePathError {
+        fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+            write!(f, "invalid database files path")
+        }
+    }
 
     /// Magic database file paths
     ///
@@ -670,12 +677,24 @@ pub mod cookie {
     ///
     /// Most functions on a [`Cookie`] can return an error from `libmagic`,
     /// which unfortunately is not very structured.
-    #[derive(thiserror::Error, Debug)]
-    #[error("magic cookie error in `libmagic` function {}", .function)]
+    #[derive(Debug)]
     pub struct Error {
         function: &'static str,
         //#[backtrace]
         source: crate::ffi::CookieError,
+    }
+
+    impl std::error::Error for Error {
+        fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+            Some(&self.source)
+        }
+    }
+
+    impl std::fmt::Display for Error {
+        fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+            let Self { function, .. } = self;
+            write!(f, "magic cookie error in `libmagic` function {0}", function,)
+        }
     }
 
     #[doc(hidden)]
@@ -765,13 +784,28 @@ pub mod cookie {
     /// # Ok(())
     /// # }
     /// ```
-    #[derive(thiserror::Error, Debug)]
-    #[error("magic cookie error in `libmagic` function {}", .function)]
+    #[derive(Debug)]
     pub struct LoadError<S: State> {
         function: &'static str,
         //#[backtrace]
         source: crate::ffi::CookieError,
         cookie: Cookie<S>,
+    }
+
+    impl<S: State> std::error::Error for LoadError<S>
+    where
+        Self: std::fmt::Debug,
+    {
+        fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+            Some(&self.source)
+        }
+    }
+
+    impl<S: State> std::fmt::Display for LoadError<S> {
+        fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+            let Self { function, .. } = self;
+            write!(f, "magic cookie error in `libmagic` function {0}", function,)
+        }
     }
 
     impl<S: State> LoadError<S> {
@@ -1118,18 +1152,32 @@ pub mod cookie {
     /// Error within [`Cookie::open()`](Cookie::open)
     ///
     /// Note that a similar [`cookie::SetFlagsError`](SetFlagsError) can also occur
-    #[derive(thiserror::Error, Debug)]
-    #[error("could not open magic cookie: {}",
-        match .kind {
-            OpenErrorKind::UnsupportedFlags => format!("unsupported flags {}", .flags),
-            OpenErrorKind::Errno => "other error".to_string(),
-        }
-    )]
+    #[derive(Debug)]
     pub struct OpenError {
         flags: Flags,
         kind: OpenErrorKind,
         //#[backtrace]
         source: crate::ffi::OpenError,
+    }
+
+    impl std::error::Error for OpenError {
+        fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+            Some(&self.source)
+        }
+    }
+
+    impl std::fmt::Display for OpenError {
+        fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+            let Self { flags, kind, .. } = self;
+            write!(
+                f,
+                "could not open magic cookie: {0}",
+                match kind {
+                    OpenErrorKind::UnsupportedFlags => format!("unsupported flags {0}", flags),
+                    OpenErrorKind::Errno => "other error".to_string(),
+                }
+            )
+        }
     }
 
     /// Kind of [`OpenError`]
@@ -1144,12 +1192,24 @@ pub mod cookie {
     /// Error within [`Cookie::set_flags()`](Cookie::set_flags)
     ///
     /// Note that a similar [`cookie::OpenError`](OpenError) can also occur
-    #[derive(thiserror::Error, Debug)]
-    #[error("could not set magic cookie flags {}", .flags)]
+    #[derive(Debug)]
     pub struct SetFlagsError {
         flags: Flags,
         //#[backtrace]
         source: crate::ffi::SetFlagsError,
+    }
+
+    impl std::error::Error for SetFlagsError {
+        fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+            Some(&self.source)
+        }
+    }
+
+    impl std::fmt::Display for SetFlagsError {
+        fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+            let Self { flags, .. } = self;
+            write!(f, "could not set magic cookie flags {0}", flags)
+        }
     }
 } // mod cookie
 

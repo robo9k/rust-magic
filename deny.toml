@@ -2,7 +2,6 @@
 allow = [
     "MIT",
     "Apache-2.0",
-    "Unicode-DFS-2016", # see https://github.com/dtolnay/unicode-ident/pull/11#pullrequestreview-1066127930
 ]
 
 [bans]
