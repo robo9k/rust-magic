@@ -4,6 +4,7 @@
     "config:recommended",
     ":semanticCommits",
     "robo9k/renovate-config:crateSemanticCommitTypeFix",
+    "robo9k/renovate-config:crateLockfileSemanticCommitTypeChore",
   ],
   customManagers: [
     {
