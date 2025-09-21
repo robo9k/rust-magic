@@ -19,7 +19,6 @@ name = "magic"
 version = "0.16.5"
 dependencies = [
  "bitflags",
- "libc",
  "magic-sys",
 ]
 

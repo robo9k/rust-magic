@@ -51,7 +51,7 @@ and [discussions](https://github.com/robo9k/rust-magic/discussions).
 
 # MSRV
 
-The Minimum Supported Rust Version (MSRV) is Rust 1.56 or higher.
+The Minimum Supported Rust Version (MSRV) is Rust 1.64 or higher.
 
 This version might be changed in the future, but it will be done with a crate version bump.
 
