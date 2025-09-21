@@ -166,6 +166,8 @@
 
 #![deny(unsafe_code)]
 
+use core::ffi::c_int;
+
 mod ffi;
 
 /// Returns the version of the `libmagic` C library as reported by itself.
@@ -173,14 +175,14 @@ mod ffi;
 /// # Examples
 /// A version of "5.41" is returned as `541`.
 #[doc(alias = "magic_version")]
-pub fn libmagic_version() -> libc::c_int {
+pub fn libmagic_version() -> c_int {
     crate::ffi::version()
 }
 
 /// Functionality for [`Cookie`]
 pub mod cookie {
     use std::convert::TryFrom;
-    use std::ffi::CString;
+    use std::ffi::{c_int, CString};
     use std::path::Path;
 
     use magic_sys as libmagic;
@@ -232,7 +234,7 @@ pub mod cookie {
         /// assert_eq!(default_flags, magic::cookie::Flags::empty());
         /// ```
         #[derive(std::default::Default, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
-        pub struct Flags: libc::c_int {
+        pub struct Flags: c_int {
             // MAGIC_NONE is 0/default, see https://docs.rs/bitflags/latest/bitflags/#zero-bit-flags
 
             // Define unnamed flag for all other bits https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags
