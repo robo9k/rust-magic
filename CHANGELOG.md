@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.7](https://github.com/robo9k/rust-magic/compare/v0.16.6...v0.16.7) - 2025-09-23
+
+### Other
+
+- Document `Status` typestate
+
 ## [0.16.6](https://github.com/robo9k/rust-magic/compare/v0.16.5...v0.16.6) - 2025-09-21
 
 ### Other
