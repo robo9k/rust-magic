@@ -699,11 +699,15 @@ pub mod cookie {
         }
     }
 
-    #[doc(hidden)]
+    /// Typestate marker of opened [`Cookie`]
+    ///
+    /// In this state, a cookie has only been [opened](Cookie::open) but databases are not [loaded](Cookie::load) yet.
     #[derive(Debug)]
     pub enum Open {}
 
-    #[doc(hidden)]
+    /// Typestate marker of loaded [`Cookie`]
+    ///
+    /// In this state, a cookie has both been [opened](Cookie::open) and databases are [loaded](Cookie::load).
     #[derive(Debug)]
     pub enum Load {}
 
@@ -714,7 +718,9 @@ pub mod cookie {
         impl Sealed for super::Load {}
     }
 
-    #[doc(hidden)]
+    /// Typestate marker for [`Cookie`]
+    ///
+    /// A cookie can either be in the [`Open`] or [`Load`] state
     pub trait State: private::Sealed {}
 
     impl State for Open {}
@@ -825,7 +831,7 @@ pub mod cookie {
         }
     }
 
-    /// Operations that are valid in the `Open` state
+    /// Operations that are valid in the [`Open`] state
     ///
     /// A new cookie created with [`Cookie::open`](Cookie::open) does not have any databases [loaded](Cookie::load).
     impl Cookie<Open> {
@@ -876,7 +882,7 @@ pub mod cookie {
         }
     }
 
-    /// Operations that are valid in the `Load` state
+    /// Operations that are valid in the [`Load`] state
     ///
     /// An opened cookie with [loaded](Cookie::load) databases can inspect [files](Cookie::file) and [buffers](Cookie::buffer).
     impl Cookie<Load> {
