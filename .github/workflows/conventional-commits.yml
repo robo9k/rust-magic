@@ -26,7 +26,7 @@ jobs:
             # override toolchain so cargo-binstall doesn't fail due to our old MSRV
             - run: rustup override set 1.89.0 # current pinned stable
 
-            - uses: taiki-e/install-action@0e09747a63ae497bf945b3dcaf38fef0050d0109 # v2.62.0
+            - uses: taiki-e/install-action@00a367b59ffa7299659baf1168279aefe69f5516 # v2.62.10
               with:
                 # renovate: taiki-e/install-action
                 tool: cocogitto@6.2.0
