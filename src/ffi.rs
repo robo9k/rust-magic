@@ -153,7 +153,7 @@ pub(crate) fn file(
 }
 
 pub(crate) fn buffer(cookie: &Cookie, buffer: &[u8]) -> Result<std::ffi::CString, CookieError> {
-    let buffer_ptr = buffer.as_ptr();
+    let buffer_ptr = buffer.as_ptr() as _;
     let buffer_len = buffer.len();
     let res = unsafe { libmagic::magic_buffer(cookie.0, buffer_ptr, buffer_len) };
 

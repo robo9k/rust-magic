@@ -51,6 +51,9 @@ jobs:
           toolchain: stable
           components: clippy # minimal profile does not include it
 
+      - run: sudo apt-get update
+      - run: sudo apt-get install libmagic1 libmagic-dev
+
       - run: cargo +${{ steps.toolchain.outputs.name }} clippy --all-targets --all-features
 
   cargo-rustdoc-clippy:
@@ -76,7 +79,7 @@ jobs:
       # dependency of cargo-rustdoc-clippy
       - run: |
           sudo apt-get update
-          sudo apt-get install zsh
+          sudo apt-get install zsh libmagic1 libmagic-dev
 
       # https://github.com/rust-lang/rust/issues/56232#issuecomment-1248359946
       - run: |

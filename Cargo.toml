@@ -34,7 +34,7 @@ rust-version = "1.64"
 msrv = "1.64.0"
 
 [package.metadata.docs.rs]
-all-features = true
+features = ["libmagic+v5-45"]
 targets = []
 
 [badges]
@@ -42,4 +42,12 @@ maintenance = { status = "passively-maintained" }
 
 [dependencies]
 bitflags = "2.5.0"
-magic-sys = "0.3.0"
+magic-sys = "0.4.0"
+
+[features]
+## Enable `libmagic` v5.40 API
+"libmagic+v5-40" = ["magic-sys/v5-40"]
+## Enable `libmagic` v5.44 API
+"libmagic+v5-44" = ["libmagic+v5-40", "magic-sys/v5-44"]
+## Enable `libmagic` v5.45 API
+"libmagic+v5-45" = ["libmagic+v5-44", "magic-sys/v5-45"]
