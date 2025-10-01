@@ -508,7 +508,7 @@ pub mod cookie {
     /// Those operations are [`Cookie::load()`](Cookie::load), [`Cookie::compile()`](Cookie::compile), [`Cookie::check()`](Cookie::check), [`Cookie::list()`](Cookie::list).\
     /// [`Cookie::file()`](Cookie::file) does not take database file paths but the single file to inspect instead.
     ///
-    /// The default unnamed database can be constructed with [`Default::default()`](DatabasePaths::default).  
+    /// The default unnamed database can be constructed with [`Default::default()`](DatabasePaths::default).
     /// Explicit paths can be constructed manually with [`new()`](DatabasePaths::new) or by fallible conversion from an array, slice or Vec
     /// containing something convertible as [`std::path::Path`], or a single something.
     ///
