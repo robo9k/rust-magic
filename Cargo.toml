@@ -27,7 +27,7 @@ version = "0.16.7"
 include = [
 	"/src/",
 ]
-edition = "2018"
+edition = "2021"
 rust-version = "1.64"
 
 [package.metadata]
