@@ -464,8 +464,23 @@ pub mod cookie {
             #[doc(alias = "--exclude json")]
             const NO_CHECK_JSON     = libmagic::MAGIC_NO_CHECK_JSON;
 
+            #[cfg(feature = "libmagic+v5-44")]
+            /// Don't allow decompressors that use fork
+            ///
+            /// The enabled-by-default sandboxing of the `file` CLI implicitly activates this flag if available.
+            #[doc(alias = "MAGIC_NO_COMPRESS_FORK")]
+            const NO_COMPRESS_FORK  = libmagic::MAGIC_NO_COMPRESS_FORK;
+
+            #[cfg(feature = "libmagic+v5-45")]
+            ///  Don't examine SIMH tape files
+            ///
+            /// This is equivalent to the `file` CLI option `--exclude simh`.
+            #[doc(alias = "MAGIC_NO_CHECK_SIMH")]
+            const NO_CHECK_SIMH     = libmagic::MAGIC_NO_CHECK_SIMH;
+
             /// No built-in tests; only consult the magic file
             #[doc(alias = "MAGIC_NO_CHECK_BUILTIN")]
+            #[cfg(not(feature = "libmagic+v5-45"))]
             const NO_CHECK_BUILTIN  = Self::NO_CHECK_COMPRESS.bits()
                                     | Self::NO_CHECK_TAR.bits()
                                     | Self::NO_CHECK_APPTYPE.bits()
@@ -476,6 +491,18 @@ pub mod cookie {
                                     | Self::NO_CHECK_TOKENS.bits()
                                     | Self::NO_CHECK_ENCODING.bits()
                                     | Self::NO_CHECK_JSON.bits();
+            #[cfg(feature = "libmagic+v5-45")]
+            const NO_CHECK_BUILTIN  = Self::NO_CHECK_COMPRESS.bits()
+                                    | Self::NO_CHECK_TAR.bits()
+                                    | Self::NO_CHECK_APPTYPE.bits()
+                                    | Self::NO_CHECK_ELF.bits()
+                                    | Self::NO_CHECK_TEXT.bits()
+                                    | Self::NO_CHECK_CSV.bits()
+                                    | Self::NO_CHECK_CDF.bits()
+                                    | Self::NO_CHECK_TOKENS.bits()
+                                    | Self::NO_CHECK_ENCODING.bits()
+                                    | Self::NO_CHECK_JSON.bits()
+                                    | Self::NO_CHECK_SIMH.bits();
         }
     }
 
