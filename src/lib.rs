@@ -133,6 +133,13 @@
 //!
 //! Check the [crate README](https://crates.io/crates/magic) for required dependencies and MSRV.
 //!
+//! # Features
+//!
+//! ## `libmagic` API features
+//! - `libmagic+v5-40` — Enable `libmagic` v5.40 API
+//! - `libmagic+v5-44` — Enable `libmagic` v5.44 API
+//! - `libmagic+v5-45` — Enable `libmagic` v5.45 API
+//!
 //! # Safety
 //!
 //! This crate is a binding to the `libmagic` C library and as such subject to its security problems.
@@ -164,6 +171,8 @@
 //! Maybe you need to support platforms that are tricky with the `libmagic` C library, e.g. wasm32?
 //! In this case you could use pure Rust alternatives, e.g. the [`file_type` crate](https://crates.io/crates/file_type).
 
+#![cfg_attr(docsrs, feature(doc_cfg))]
+#![cfg_attr(docsrs, doc(auto_cfg(hide(docsrs))))]
 #![deny(unsafe_code)]
 
 use core::ffi::c_int;
@@ -465,6 +474,7 @@ pub mod cookie {
             const NO_CHECK_JSON     = libmagic::MAGIC_NO_CHECK_JSON;
 
             #[cfg(feature = "libmagic+v5-44")]
+            #[cfg_attr(docsrs, doc(cfg(feature = "libmagic+v5-44")))]
             /// Don't allow decompressors that use fork
             ///
             /// The enabled-by-default sandboxing of the `file` CLI implicitly activates this flag if available.
@@ -472,6 +482,7 @@ pub mod cookie {
             const NO_COMPRESS_FORK  = libmagic::MAGIC_NO_COMPRESS_FORK;
 
             #[cfg(feature = "libmagic+v5-45")]
+            #[cfg_attr(docsrs, doc(cfg(feature = "libmagic+v5-45")))]
             ///  Don't examine SIMH tape files
             ///
             /// This is equivalent to the `file` CLI option `--exclude simh`.
@@ -481,6 +492,7 @@ pub mod cookie {
             /// No built-in tests; only consult the magic file
             #[doc(alias = "MAGIC_NO_CHECK_BUILTIN")]
             #[cfg(not(feature = "libmagic+v5-45"))]
+            #[cfg_attr(docsrs, doc(auto_cfg = false))]
             const NO_CHECK_BUILTIN  = Self::NO_CHECK_COMPRESS.bits()
                                     | Self::NO_CHECK_TAR.bits()
                                     | Self::NO_CHECK_APPTYPE.bits()
@@ -491,7 +503,9 @@ pub mod cookie {
                                     | Self::NO_CHECK_TOKENS.bits()
                                     | Self::NO_CHECK_ENCODING.bits()
                                     | Self::NO_CHECK_JSON.bits();
+            /// No built-in tests; only consult the magic file
             #[cfg(feature = "libmagic+v5-45")]
+            #[cfg_attr(docsrs, doc(auto_cfg = false))]
             const NO_CHECK_BUILTIN  = Self::NO_CHECK_COMPRESS.bits()
                                     | Self::NO_CHECK_TAR.bits()
                                     | Self::NO_CHECK_APPTYPE.bits()

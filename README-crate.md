@@ -72,5 +72,15 @@ $ cargo install cargo-vcpkg
 $ cargo vcpkg build
 ```
 
+The `magic-sys` crate has [features for API changes in `libmagic`](https://docs.rs/magic-sys/~0.4/magic_sys/#libmagic-api-features),
+so if you use e.g. `libmagic` v5.45 you need to enable the matching [`magic` crate feature](https://docs.rs/magic/~0.16/magic/#libmagic-api-features) - "libmagic+v5-45" in this example:
+```terminal
+$ cargo add magic --features libmagic+v5-45
+```
+```toml
+[dependencies]
+magic = { version = "0.16", features = ["libmagic+v5-45"] }
+```
+
 If you're cross-compiling, or need more control over which library is selected,
 see [how to build `magic-sys`](https://crates.io/crates/magic-sys#building).
