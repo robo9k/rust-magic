@@ -9,7 +9,9 @@ wildcards = "deny"
 #external-default-features = "deny"
 
 [bans.build]
-#allow-build-scripts = []
+allow-build-scripts = [
+    { name = "magic-sys", version = "0.4" },
+]
 
 [sources]
 unknown-registry = "deny"
