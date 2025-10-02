@@ -48,7 +48,7 @@ jobs:
       - uses: taiki-e/install-action@7fe7b8c79a3c5569643cf27dfc32456883a4cd4d # v2.62.16
         with:
           # renovate: taiki-e/install-action
-          tool: cargo-docs-rs@0.1.17
+          tool: cargo-docs-rs@1.0.0
 
       - run: |
           crate_version=$(cargo metadata --format-version 1 --no-deps | jq --raw-output '.packages[] | select(.name == "magic").version')
