@@ -6,6 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.8](https://github.com/robo9k/rust-magic/compare/v0.16.7...v0.16.8) - 2025-10-17
+
+### Added
+
+- Add missing `cookie::Flags` for supported `libmagic` versions
+
+### Other
+
+- *(deps)* Update Rust crate magic-sys to v0.4.2
+- Document `libmagic` version crate features
+- *(deps)* Upgrade magic-sys up to 0.4
+- *(edition)* Upgrade edition up to 2021
+
 ## [0.16.7](https://github.com/robo9k/rust-magic/compare/v0.16.6...v0.16.7) - 2025-09-23
 
 ### Other
