@@ -32,7 +32,7 @@ jobs:
           persist-credentials: false
 
       - id: toolchain
-        uses: dtolnay/rust-toolchain@6d653acede28d24f02e3cd41383119e8b1b35921 # doesn't have usual versioned releases/tags
+        uses: dtolnay/rust-toolchain@0b1efabc08b657293548b77fb76cc02d26091c7e # doesn't have usual versioned releases/tags
         with:
           toolchain: "1.89.0" # current pinned stable
           # minimal profile includes rustc component which includes cargo and rustdoc
@@ -84,7 +84,7 @@ jobs:
           persist-credentials: false
 
       - id: toolchain
-        uses: dtolnay/rust-toolchain@6d653acede28d24f02e3cd41383119e8b1b35921 # doesn't have usual versioned releases/tags
+        uses: dtolnay/rust-toolchain@0b1efabc08b657293548b77fb76cc02d26091c7e # doesn't have usual versioned releases/tags
         with:
           toolchain: "nightly" # required for cargo-careful, not pinned
           # minimal profile includes rustc component which includes cargo and rustdoc
