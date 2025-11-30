@@ -44,7 +44,7 @@ jobs:
       - run: sudo apt-get update
       - run: sudo apt-get install libmagic1 libmagic-dev
 
-      - uses: taiki-e/install-action@7fe7b8c79a3c5569643cf27dfc32456883a4cd4d # v2.62.16
+      - uses: taiki-e/install-action@3575e532701a5fc614b0c842e4119af4cc5fd16d # v2.62.60
         with:
           # renovate: taiki-e/install-action
           tool: cargo-msrv@0.18.4
