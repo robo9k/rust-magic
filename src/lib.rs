@@ -1325,6 +1325,19 @@ pub mod cookie {
         }
     }
 
+    // Re-export `magic-sys` parameter constants for direct use with `set_param`/`get_param`
+    pub use magic_sys::{
+        MAGIC_PARAM_INDIR_MAX, MAGIC_PARAM_NAME_MAX, MAGIC_PARAM_ELF_PHNUM_MAX,
+        MAGIC_PARAM_ELF_SHNUM_MAX, MAGIC_PARAM_ELF_NOTES_MAX, MAGIC_PARAM_REGEX_MAX,
+        MAGIC_PARAM_BYTES_MAX,
+    };
+
+    #[cfg(feature = "libmagic+v5-40")]
+    pub use magic_sys::MAGIC_PARAM_ENCODING_MAX;
+
+    #[cfg(feature = "libmagic+v5-45")]
+    pub use magic_sys::MAGIC_PARAM_ELF_SHSIZE_MAX;
+
     /// Parameter types for [`Cookie::set_param()`](Cookie::set_param)
     ///
     /// Parameters control various limits of the `libmagic` detection.
