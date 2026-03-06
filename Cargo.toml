@@ -42,7 +42,7 @@ maintenance = { status = "passively-maintained" }
 
 [dependencies]
 bitflags = "2.5.0"
-magic-sys = "0.4.0"
+magic-sys = "0.4.2"
 
 [features]
 ## Enable `libmagic` v5.40 API

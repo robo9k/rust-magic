@@ -336,6 +336,43 @@ impl OpenError {
     }
 }
 
+pub(crate) fn getparam(cookie: &Cookie, param: c_int) -> Result<c_int, CookieError> {
+    let mut value: c_int = 0;
+    let value_ptr = &mut value as *mut c_int as *mut c_void;
+    let ret = unsafe { libmagic::magic_getparam(cookie.0, param, value_ptr) };
+
+    match ret {
+        0 => Ok(value),
+        -1 => Err(expect_error(
+            cookie,
+            "`magic_getparam()` did not set last error",
+        )),
+        ret => Err(ApiViolation::UnexpectedReturnValue(format!(
+            "expected 0 or -1 but `magic_getparam()` returned {}",
+            ret
+        ))
+        .into()),
+    }
+}
+
+pub(crate) fn setparam(cookie: &Cookie, param: c_int, value: &c_int) -> Result<(), CookieError> {
+    let value_ptr = value as *const c_int as *const c_void;
+    let ret = unsafe { libmagic::magic_setparam(cookie.0, param, value_ptr) };
+
+    match ret {
+        0 => Ok(()),
+        -1 => Err(expect_error(
+            cookie,
+            "`magic_setparam()` did not set last error",
+        )),
+        ret => Err(ApiViolation::UnexpectedReturnValue(format!(
+            "expected 0 or -1 but `magic_setparam()` returned {}",
+            ret
+        ))
+        .into()),
+    }
+}
+
 pub(crate) fn version() -> c_int {
     unsafe { libmagic::magic_version() }
 }
