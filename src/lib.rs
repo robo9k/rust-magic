@@ -602,6 +602,24 @@ pub mod cookie {
         filenames: Option<CString>,
     }
 
+    impl std::fmt::Debug for DatabasePaths {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            let mut list = f.debug_list();
+
+            if let Some(cstr) = &self.filenames {
+                cstr.as_bytes().split(|&b| b == b':').for_each(|filename| {
+                    if let Ok(s) = std::str::from_utf8(filename) {
+                        list.entry(&s as _);
+                    } else {
+                        list.entry(&"<non utf8 string>" as _);
+                    }
+                });
+            }
+
+            list.finish()
+        }
+    }
+
     const DATABASE_FILENAME_SEPARATOR: &str = ":";
 
     impl DatabasePaths {
