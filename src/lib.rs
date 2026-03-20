@@ -597,6 +597,7 @@ pub mod cookie {
     /// # Ok(())
     /// # }
     /// ```
+    #[derive(Clone)]
     pub struct DatabasePaths {
         filenames: Option<CString>,
     }
