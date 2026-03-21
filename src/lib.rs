@@ -614,13 +614,15 @@ pub mod cookie {
             let mut list = f.debug_list();
 
             if let Some(cstr) = &self.filenames {
-                cstr.as_bytes().split(|&b| b == b':').for_each(|filename| {
-                    if let Ok(s) = std::str::from_utf8(filename) {
-                        list.entry(&s as _);
-                    } else {
-                        list.entry(&"<non utf8 string>" as _);
-                    }
-                });
+                cstr.as_bytes()
+                    .split(|&b| b == DATABASE_FILENAME_SEPARATOR_U8)
+                    .for_each(|filename| {
+                        if let Ok(s) = std::str::from_utf8(filename) {
+                            list.entry(&s as _);
+                        } else {
+                            list.entry(&"<non utf8 string>" as _);
+                        }
+                    });
             }
 
             list.finish()
@@ -628,6 +630,7 @@ pub mod cookie {
     }
 
     const DATABASE_FILENAME_SEPARATOR: &str = ":";
+    const DATABASE_FILENAME_SEPARATOR_U8: u8 = b':';
 
     impl DatabasePaths {
         /// Create a new database paths instance
