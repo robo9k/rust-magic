@@ -597,6 +597,13 @@ pub mod cookie {
     /// # Ok(())
     /// # }
     /// ```
+    ///
+    /// ```
+    /// # use magic::cookie::DatabasePaths;
+    /// // can also be cloned
+    /// let database: DatabasePaths = Default::default();
+    /// let another_database = database.clone();
+    /// ```
     #[derive(Clone)]
     pub struct DatabasePaths {
         filenames: Option<CString>,
@@ -1286,7 +1293,9 @@ pub use crate::cookie::Cookie;
 #[cfg(test)]
 mod tests {
     use super::cookie::Flags;
-    use super::cookie::{Error, InvalidDatabasePathError, LoadError, OpenError, SetFlagsError};
+    use super::cookie::{
+        DatabasePaths, Error, InvalidDatabasePathError, LoadError, OpenError, SetFlagsError,
+    };
     use super::cookie::{Load, Open};
     use super::Cookie;
     use std::convert::TryInto;
@@ -1402,6 +1411,11 @@ mod tests {
         assert_impl_debug::<Error>();
         assert_impl_display::<Error>();
         assert_impl_error::<Error>();
+    }
+
+    #[test]
+    fn databasepath_impls() {
+        assert_impl_debug::<DatabasePaths>();
     }
 
     #[test]
