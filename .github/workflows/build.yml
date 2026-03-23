@@ -59,7 +59,7 @@ jobs:
       - run: cargo build --locked --all-targets --all-features
       - run: cargo llvm-cov test --codecov --output-path codecov.json --locked --all-targets --all-features
 
-      - uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
+      - uses: codecov/codecov-action@1af58845a975a7985b0beb0cbe6fbbb71a41dbad # v5.5.3
         with:
           disable_search: true
           files: codecov.json
