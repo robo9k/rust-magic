@@ -34,7 +34,7 @@ jobs:
           persist-credentials: true
           fetch-depth: 0
 
-      - uses: dtolnay/rust-toolchain@6d653acede28d24f02e3cd41383119e8b1b35921 # doesn't have usual versioned releases/tags
+      - uses: dtolnay/rust-toolchain@efa25f7f19611383d5b0ccf2d1c8914531636bf9 # doesn't have usual versioned releases/tags
         with:
           toolchain: "1.88.0" # current pinned stable
 
@@ -75,7 +75,7 @@ jobs:
           persist-credentials: true
           fetch-depth: 0
 
-      - uses: dtolnay/rust-toolchain@6d653acede28d24f02e3cd41383119e8b1b35921 # doesn't have usual versioned releases/tags
+      - uses: dtolnay/rust-toolchain@efa25f7f19611383d5b0ccf2d1c8914531636bf9 # doesn't have usual versioned releases/tags
         with:
           toolchain: "1.88.0" # current pinned stable
 
