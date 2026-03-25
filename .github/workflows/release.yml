@@ -12,6 +12,8 @@ jobs:
     name: "release-plz release"
     runs-on: ubuntu-24.04
     permissions:
+      contents: write
+      pull-requests: read
       id-token: write
     environment:
       name: crates.io
@@ -28,30 +30,29 @@ jobs:
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
           permission-contents: write
 
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           token: ${{ steps.generate-token.outputs.token }}
-          persist-credentials: true
+          persist-credentials: false
           fetch-depth: 0
 
       - uses: dtolnay/rust-toolchain@efa25f7f19611383d5b0ccf2d1c8914531636bf9 # doesn't have usual versioned releases/tags
         with:
           toolchain: "1.88.0" # current pinned stable
 
-      - id: auth
-        uses: rust-lang/crates-io-auth-action@bbd81622f20ce9e2dd9622e3218b975523e45bbe # v1.0.4
-
       - uses: release-plz/action@1528104d2ca23787631a1c1f022abb64b34c1e11 # v0.5.128
         with:
           command: release
-          version: "0.3.147"
+          version: "0.3.157"
           verbose: true
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
 
   release-plz-pr:
     name: "release-plz pr"
+    permissions:
+      contents: write
+      pull-requests: write
     concurrency:
       group: release-plz-${{ github.ref }}
       cancel-in-progress: false
@@ -69,10 +70,10 @@ jobs:
           permission-contents: write
           permission-pull-requests: write
 
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           token: ${{ steps.generate-token.outputs.token }}
-          persist-credentials: true
+          persist-credentials: false
           fetch-depth: 0
 
       - uses: dtolnay/rust-toolchain@efa25f7f19611383d5b0ccf2d1c8914531636bf9 # doesn't have usual versioned releases/tags
@@ -82,7 +83,7 @@ jobs:
       - uses: release-plz/action@1528104d2ca23787631a1c1f022abb64b34c1e11 # v0.5.128
         with:
           command: release-pr
-          version: "0.3.147"
+          version: "0.3.157"
           verbose: true
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
