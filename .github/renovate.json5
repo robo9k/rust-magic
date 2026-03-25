@@ -1,7 +1,9 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   extends: [
-    "config:recommended",
+    "config:best-practices",
+    ":label(dependency)",
+    ":enableVulnerabilityAlertsWithAdditionalLabel(vulnerability)",
     ":semanticCommits",
     "robo9k/renovate-config:crateSemanticCommitTypeFix",
     "robo9k/renovate-config:crateLockfileSemanticCommitTypeChore",
@@ -24,4 +26,12 @@
       ],
     },
   ],
+  dependencyDashboardLabels: ["dependency"],
+  major: {
+    draftPR: true,
+    prBodyNotes: ":warning: MAJOR update; might require additional testing or planning to use new features",
+  },
+  prConcurrentLimit: 3,
+  minimumReleaseAge: "14d",
+  internalChecksFilter: "strict",
 }
