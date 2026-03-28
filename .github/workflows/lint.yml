@@ -83,7 +83,9 @@ jobs:
 
       # https://github.com/rust-lang/rust/issues/56232#issuecomment-1248359946
       - run: |
-          curl --output ~/.cargo/bin/cargo-rustdoc-clippy https://raw.githubusercontent.com/Nemo157/dotfiles/e6daf083068ff17d14b19dc2569ae62ea86bf23c/bin/cargo-rustdoc-clippy
+          curl --output ~/.cargo/bin/cargo-rustdoc-clippy https://raw.githubusercontent.com/Nemo157/dotfiles/f48d173c0f2cdc8537eccdf44412639127a822e4/packages/cargo-rustdoc-clippy.sh
+          echo '#!/usr/bin/env zsh' | cat - ~/.cargo/bin/cargo-rustdoc-clippy > temp && mv temp ~/.cargo/bin/cargo-rustdoc-clippy
+          sed -i 's/nocapture/no-capture/g' ~/.cargo/bin/cargo-rustdoc-clippy
           chmod +x ~/.cargo/bin/cargo-rustdoc-clippy
 
       - run: cargo +${{ steps.toolchain.outputs.name }} rustdoc-clippy --all-features
