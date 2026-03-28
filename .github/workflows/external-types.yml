@@ -24,7 +24,7 @@ jobs:
           persist-credentials: false
 
       - id: toolchain
-        uses: dtolnay/rust-toolchain@efa25f7f19611383d5b0ccf2d1c8914531636bf9 # doesn't have usual versioned releases/tags
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9 # doesn't have usual versioned releases/tags
         with:
           toolchain: stable
 
