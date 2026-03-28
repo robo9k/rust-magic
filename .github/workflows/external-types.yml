@@ -41,4 +41,4 @@ jobs:
       - run: sudo apt-get update
       - run: sudo apt-get install libmagic1 libmagic-dev
 
-      - run: cargo +nightly-2025-10-18 check-external-types --all-features --verbose
+      - run: cargo +nightly-2025-10-18 check-external-types --all-features --verbose --config external-types.toml

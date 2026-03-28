@@ -1,0 +1,4 @@
+# config for https://github.com/awslabs/cargo-check-external-types
+allowed_external_types = [
+    "bitflags::*",
+]
