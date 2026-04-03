@@ -336,13 +336,80 @@ impl OpenError {
     }
 }
 
+pub(crate) type ParamKind = c_int;
+
+#[derive(Debug)]
+enum ParamOp {
+    Get,
+    Set,
+}
+
+#[derive(Debug)]
+pub(crate) struct ParamError {
+    op: ParamOp,
+    errno: std::io::Error,
+}
+
+impl std::error::Error for ParamError {}
+
+impl std::fmt::Display for ParamError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let Self { op, errno } = self;
+        let op = match op {
+            ParamOp::Get => "get",
+            ParamOp::Set => "set",
+        };
+        write!(f, "could not {0} magic cookie param: {1}", op, errno,)
+    }
+}
+
+impl ParamError {
+    pub fn errno(&self) -> &std::io::Error {
+        &self.errno
+    }
+}
+
+pub(crate) unsafe fn getparam(
+    cookie: &Cookie,
+    kind: ParamKind,
+    value: *mut c_void,
+) -> Result<(), ParamError> {
+    let ret = libmagic::magic_getparam(cookie.0, kind, value);
+
+    match ret {
+        0 => Ok(()),
+        -1 => Err(ParamError {
+            op: ParamOp::Get,
+            errno: std::io::Error::last_os_error(),
+        }),
+        res => panic!("Expected 0 or -1 but `magic_getparam()` returned {}", res),
+    }
+}
+
+pub(crate) unsafe fn setparam(
+    cookie: &Cookie,
+    kind: ParamKind,
+    value: *const c_void,
+) -> Result<(), ParamError> {
+    let ret = libmagic::magic_setparam(cookie.0, kind, value);
+
+    match ret {
+        0 => Ok(()),
+        -1 => Err(ParamError {
+            op: ParamOp::Set,
+            errno: std::io::Error::last_os_error(),
+        }),
+        res => panic!("Expected 0 or -1 but `magic_setparam()` returned {}", res),
+    }
+}
+
 pub(crate) fn version() -> c_int {
     unsafe { libmagic::magic_version() }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{ApiViolation, CookieError, Error, OpenError, SetFlagsError};
+    use super::{ApiViolation, CookieError, Error, OpenError, ParamError, SetFlagsError};
 
     fn assert_impl_debug<T: std::fmt::Debug>() {}
     fn assert_impl_display<T: std::fmt::Display>() {}
@@ -381,5 +448,12 @@ mod tests {
         assert_impl_debug::<SetFlagsError>();
         assert_impl_display::<SetFlagsError>();
         assert_impl_error::<SetFlagsError>();
+    }
+
+    #[test]
+    fn paramerror_impls() {
+        assert_impl_debug::<ParamError>();
+        assert_impl_display::<ParamError>();
+        assert_impl_error::<ParamError>();
     }
 }

@@ -125,6 +125,7 @@
 //!     * [`Flags::EXTENSION`](crate::cookie::Flags::EXTENSION)
 //!     * [`Flags::CONTINUE`](crate::cookie::Flags::CONTINUE)
 //!     * [`Flags::NO_CHECK_BUILTIN`](crate::cookie::Flags::NO_CHECK_BUILTIN)
+//! * cookie [`Param`s](crate::cookie::param::Param)
 //! * [`Cookie::load()`](Cookie::load), [`Cookie::load_buffers()`](Cookie::load_buffers)
 //! * [`Cookie::file()`](Cookie::file), [`Cookie::buffer()`](Cookie::buffer)
 //!
@@ -177,6 +178,8 @@
 
 use core::ffi::c_int;
 
+use usize as size_t; // core::ffi::c_size_t is unstable, but "is currently always usize"
+
 mod ffi;
 
 /// Returns the version of the `libmagic` C library as reported by itself.
@@ -214,6 +217,8 @@ pub mod cookie {
         /// - [`EXTENSION`](Flags::EXTENSION)
         /// - [`CONTINUE`](Flags::CONTINUE)
         /// - [`NO_CHECK_BUILTIN`](Flags::NO_CHECK_BUILTIN)
+        ///
+        /// See [`Param`](crate::cookie::param::Param) for other configuration.
         ///
         /// # Examples
         ///
@@ -526,6 +531,210 @@ pub mod cookie {
         }
     }
 
+    /// Configuration values for [`Cookie`]
+    ///
+    /// Parameters allow getting and setting various `libmagic` limits which influence functions such as [`Cookie::file()`](Cookie::file).
+    ///
+    /// They are given an initial default value by `libmagic` and can be overwritten with [`Cookie::set_param`].
+    ///
+    /// NOTE: The parameter descriptions are mostly copied from `man libmagic 3`.
+    ///
+    /// See [`Flags`] for other configuration.
+    pub mod param {
+        use super::libmagic;
+        use crate::ffi::ParamKind;
+        use crate::size_t;
+
+        mod private {
+            pub trait Sealed {}
+
+            impl<T: super::Param> Sealed for T {}
+        }
+
+        /// Sealed trait for param impls
+        ///
+        /// Param impls are used in [`Cookie::get_param()`](crate::Cookie::get_param) and [`Cookie::set_param()`](crate::Cookie::set_param).
+        ///
+        /// Note that you do not need to implement this yourself, use the provided implementors such as [`IndirMax`].
+        ///
+        // # Safety
+        //
+        // `Self::Value` must match the type `libmagic` is expecting for `Self::KIND`
+        #[allow(clippy::missing_safety_doc)]
+        #[allow(unsafe_code)]
+        pub unsafe trait Param: private::Sealed {
+            #[doc(hidden)]
+            type Value;
+            #[doc(hidden)]
+            const KIND: ParamKind;
+
+            #[doc(hidden)]
+            fn from_value(value: Self::Value) -> Self;
+
+            #[doc(hidden)]
+            fn as_ptr(&self) -> *const Self::Value;
+        }
+
+        // TODO: From<Param> for size_t ?
+        macro_rules! size_t_param_impl {
+            ($t:ty, $k:expr) => {
+                #[allow(unsafe_code)]
+                unsafe impl Param for $t {
+                    type Value = size_t;
+                    const KIND: ParamKind = $k;
+
+                    fn from_value(value: Self::Value) -> Self {
+                        Self(value)
+                    }
+
+                    fn as_ptr(&self) -> *const Self::Value {
+                        std::ptr::addr_of!(self.0)
+                    }
+                }
+            };
+        }
+
+        // TODO: Param newtypes should also derive Copy, Clone, Eq, PartialEq, Hash
+
+        /// Param for maximum recursion depth for indirect magic entries
+        #[doc(alias = "MAGIC_PARAM_INDIR_MAX")]
+        #[derive(Debug)]
+        pub struct IndirMax(pub size_t);
+
+        size_t_param_impl!(IndirMax, libmagic::MAGIC_PARAM_INDIR_MAX);
+
+        /// Param for the maximum number of calls for name/use
+        #[doc(alias = "MAGIC_PARAM_NAME_MAX")]
+        #[derive(Debug)]
+        pub struct NameMax(pub size_t);
+
+        size_t_param_impl!(NameMax, libmagic::MAGIC_PARAM_NAME_MAX);
+
+        /// Param for how many ELF program sections will be processed
+        #[doc(alias = "MAGIC_PARAM_ELF_PHNUM_MAX")]
+        #[derive(Debug)]
+        pub struct ElfPhnumMax(pub size_t);
+
+        size_t_param_impl!(ElfPhnumMax, libmagic::MAGIC_PARAM_ELF_PHNUM_MAX);
+
+        /// Param for how many ELF sections will be processed
+        #[doc(alias = "MAGIC_PARAM_ELF_SHNUM_MAX")]
+        #[derive(Debug)]
+        pub struct ElfShnumMax(pub size_t);
+
+        size_t_param_impl!(ElfShnumMax, libmagic::MAGIC_PARAM_ELF_SHNUM_MAX);
+
+        /// Param for how many ELF notes will be processed
+        #[doc(alias = "MAGIC_PARAM_ELF_NOTES_MAX")]
+        #[derive(Debug)]
+        pub struct ElfNotesMax(pub size_t);
+
+        size_t_param_impl!(ElfNotesMax, libmagic::MAGIC_PARAM_ELF_NOTES_MAX);
+
+        /// Param for the maximum length for regex searches
+        #[doc(alias = "MAGIC_PARAM_REGEX_MAX")]
+        #[derive(Debug)]
+        pub struct RegexMax(pub size_t);
+
+        size_t_param_impl!(RegexMax, libmagic::MAGIC_PARAM_REGEX_MAX);
+
+        /// Param for the maximum number of bytes to look inside a file
+        #[doc(alias = "MAGIC_PARAM_BYTES_MAX")]
+        #[derive(Debug)]
+        pub struct BytesMax(pub size_t);
+
+        size_t_param_impl!(BytesMax, libmagic::MAGIC_PARAM_BYTES_MAX);
+
+        /// Param for the maximum number of bytes to scan for encoding detection
+        #[doc(alias = "MAGIC_PARAM_ENCODING_MAX")]
+        #[cfg(feature = "libmagic+v5-40")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "libmagic+v5-40")))]
+        #[derive(Debug)]
+        pub struct EncodingMax(pub size_t);
+
+        #[cfg(feature = "libmagic+v5-40")]
+        size_t_param_impl!(EncodingMax, libmagic::MAGIC_PARAM_ENCODING_MAX);
+
+        /// Param for the maximum number of bytes in an ELF section
+        #[doc(alias = "MAGIC_PARAM_ELF_SHSIZE_MAX")]
+        #[cfg(feature = "libmagic+v5-45")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "libmagic+v5-45")))]
+        #[derive(Debug)]
+        pub struct ElfShsizeMax(pub size_t);
+
+        #[cfg(feature = "libmagic+v5-45")]
+        size_t_param_impl!(ElfShsizeMax, libmagic::MAGIC_PARAM_ELF_SHSIZE_MAX);
+
+        // TODO: MagwarnMax MAGIC_PARAM_MAGWARN_MAX for libmagic+v5-46
+
+        /// Kind of param error
+        #[derive(Debug)]
+        pub(crate) enum ParamErrorKind {
+            /// Unsupported param given
+            UnsupportedParam,
+            /// Other kind
+            Errno,
+        }
+
+        /// Error within [`Cookie::get_param()`](crate::Cookie::get_param)
+        #[derive(Debug)]
+        pub struct GetParamError {
+            pub(crate) param: ParamKind,
+            pub(crate) kind: ParamErrorKind,
+            //#[backtrace]
+            pub(crate) source: crate::ffi::ParamError,
+        }
+
+        impl std::error::Error for GetParamError {
+            fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+                Some(&self.source)
+            }
+        }
+
+        impl std::fmt::Display for GetParamError {
+            fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+                let Self { param, kind, .. } = self;
+                write!(
+                    f,
+                    "could not get magic cookie param: {0}",
+                    match kind {
+                        ParamErrorKind::UnsupportedParam => format!("unsupported param {0}", param),
+                        ParamErrorKind::Errno => "other error".to_string(),
+                    }
+                )
+            }
+        }
+
+        /// Error within [`Cookie::set_param()`](crate::Cookie::set_param)
+        #[derive(Debug)]
+        pub struct SetParamError {
+            pub(crate) param: ParamKind,
+            pub(crate) kind: ParamErrorKind,
+            //#[backtrace]
+            pub(crate) source: crate::ffi::ParamError,
+        }
+
+        impl std::error::Error for SetParamError {
+            fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+                Some(&self.source)
+            }
+        }
+
+        impl std::fmt::Display for SetParamError {
+            fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+                let Self { param, kind, .. } = self;
+                write!(
+                    f,
+                    "could not set magic cookie param: {0}",
+                    match kind {
+                        ParamErrorKind::UnsupportedParam => format!("unsupported param {0}", param),
+                        ParamErrorKind::Errno => "other error".to_string(),
+                    }
+                )
+            }
+        }
+    } // mod param
+
     /// Invalid [`DatabasePaths`]
     ///
     /// This is returned from [`DatabasePaths::new()`](DatabasePaths::new)
@@ -799,8 +1008,8 @@ pub mod cookie {
     /// Combined configuration of [`Flags`], parameters and databases
     ///
     /// A "cookie" is `libmagic` lingo for a combined configuration of
-    /// - [`cookie::Flags`](crate::cookie::Flags)
-    /// - parameters (not implemented yet)
+    /// - [`Flags`]
+    /// - [`Param`s](crate::cookie::param::Param)
     /// - loaded datbases, e.g. [`cookie::DatabasePaths`](crate::cookie::DatabasePaths)
     ///
     /// A cookie advances through 2 states: opened, then loaded.
@@ -819,6 +1028,7 @@ pub mod cookie {
     /// already loaded magic databases:
     /// - [`Cookie::load()`](Cookie::load), [`Cookie::load_buffers()`](Cookie::load_buffers) to load databases and transition into the loaded state
     /// - [`Cookie::set_flags()`](Cookie::set_flags) to overwrite the initial flags given in [`Cookie::open()`](Cookie::open)
+    /// - [`Cookie::get_param()`], [`Cookie::set_param()`] to get and set parameters (their initial defaults are set by `libmagic`)
     /// - [`Cookie::compile()`](Cookie::compile), [`Cookie::check()`](Cookie::check), [`Cookie::list()`](Cookie::list) to operate on magic database files
     ///
     /// Once in the loaded state, you can perform magic "queries":
@@ -1156,6 +1366,101 @@ pub mod cookie {
             }
         }
 
+        /// Gets a configuration parameter value
+        ///
+        /// Also see [`Cookie::set_param()`].
+        ///
+        /// # Examples
+        /// ```rust
+        /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+        /// // open a new cookie with default flags
+        /// let cookie = magic::Cookie::open(Default::default())?;
+        ///
+        /// // get the maximum indirection parameter
+        /// let indir_max = cookie.get_param::<magic::cookie::param::IndirMax>()?;
+        /// # Ok(())
+        /// # }
+        /// ```
+        ///
+        /// # Errors
+        ///
+        /// If there was an `libmagic` internal error, a [`GetParamError`](param::GetParamError) will be returned.
+        ///
+        /// # Panics
+        ///
+        /// If `libmagic` violates its API contract, e.g. by returning unexpected values.
+        #[allow(unsafe_code)]
+        pub fn get_param<P: param::Param>(&self) -> Result<P, param::GetParamError> {
+            let mut value = core::mem::MaybeUninit::<P::Value>::uninit();
+            let ptr = value.as_mut_ptr().cast();
+
+            let res = unsafe { crate::ffi::getparam(&self.cookie, P::KIND, ptr) };
+
+            match res {
+                Err(err) => Err(param::GetParamError {
+                    param: P::KIND,
+                    kind: match err.errno().kind() {
+                        std::io::ErrorKind::InvalidInput => param::ParamErrorKind::UnsupportedParam,
+                        _ => param::ParamErrorKind::Errno,
+                    },
+                    source: err,
+                }),
+                Ok(()) => {
+                    let value = unsafe { value.assume_init() };
+
+                    let param = P::from_value(value);
+                    Ok(param)
+                }
+            }
+        }
+
+        /// Sets a configuration parameter value
+        ///
+        /// Also see [`Cookie::get_param()`].
+        ///
+        /// # Examples
+        /// ```rust
+        /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+        /// // open a new cookie with default flags
+        /// let cookie = magic::Cookie::open(Default::default())?;
+        ///
+        /// // set the maximum indirection parameter
+        /// cookie.set_param(&magic::cookie::param::IndirMax(50))?;
+        /// # Ok(())
+        /// # }
+        /// ```
+        ///
+        /// This is equivalent to the using the `file` CLI:
+        /// ```shell
+        /// $ file --parameter indir=50 data/tests/rust-logo-128x128-blk.png
+        /// ```
+        ///
+        /// # Errors
+        ///
+        /// If there was an `libmagic` internal error, a [`SetParamError`](param::SetParamError) will be returned.
+        ///
+        /// # Panics
+        ///
+        /// If `libmagic` violates its API contract, e.g. by returning unexpected values.
+        #[allow(unsafe_code)]
+        pub fn set_param<P: param::Param>(&self, param: &P) -> Result<(), param::SetParamError> {
+            let ptr = param.as_ptr().cast();
+
+            let res = unsafe { crate::ffi::setparam(&self.cookie, P::KIND, ptr) };
+
+            match res {
+                Err(err) => Err(param::SetParamError {
+                    param: P::KIND,
+                    kind: match err.errno().kind() {
+                        std::io::ErrorKind::InvalidInput => param::ParamErrorKind::UnsupportedParam,
+                        _ => param::ParamErrorKind::Errno,
+                    },
+                    source: err,
+                }),
+                Ok(()) => Ok(()),
+            }
+        }
+
         // TODO: check, compile, list and load mostly do the same, refactor!
 
         /// Compiles the given database files `filenames` for faster access
@@ -1295,6 +1600,8 @@ pub use crate::cookie::Cookie;
 
 #[cfg(test)]
 mod tests {
+    use super::cookie::param;
+    use super::cookie::param::{GetParamError, SetParamError};
     use super::cookie::Flags;
     use super::cookie::{
         DatabasePaths, Error, InvalidDatabasePathError, LoadError, OpenError, SetFlagsError,
@@ -1450,6 +1757,87 @@ mod tests {
         assert_impl_debug::<SetFlagsError>();
         assert_impl_display::<SetFlagsError>();
         assert_impl_error::<SetFlagsError>();
+    }
+
+    #[test]
+    fn setparamerror_impls() {
+        assert_impl_debug::<SetParamError>();
+        assert_impl_display::<SetParamError>();
+        assert_impl_error::<SetParamError>();
+    }
+
+    #[test]
+    fn param_impls() {
+        assert_impl_debug::<param::IndirMax>();
+        assert_impl_debug::<param::NameMax>();
+        assert_impl_debug::<param::ElfPhnumMax>();
+        assert_impl_debug::<param::ElfShnumMax>();
+        assert_impl_debug::<param::ElfNotesMax>();
+        assert_impl_debug::<param::RegexMax>();
+        assert_impl_debug::<param::BytesMax>();
+        #[cfg(feature = "libmagic+v5-40")]
+        assert_impl_debug::<param::EncodingMax>();
+        #[cfg(feature = "libmagic+v5-45")]
+        assert_impl_debug::<param::ElfShsizeMax>();
+        //assert_impl_debug::<param::MagwarnMax>();
+    }
+
+    #[test]
+    fn getparamerror_impls() {
+        assert_impl_debug::<GetParamError>();
+        assert_impl_display::<GetParamError>();
+        assert_impl_error::<GetParamError>();
+    }
+
+    #[test]
+    #[cfg_attr(miri, ignore)]
+    fn set_param() -> Result<(), Box<dyn std::error::Error>> {
+        let cookie = Cookie::open(Flags::ERROR)?;
+
+        cookie.set_param(&param::IndirMax(50))?;
+        cookie.set_param(&param::NameMax(100))?;
+        cookie.set_param(&param::ElfPhnumMax(256))?;
+        cookie.set_param(&param::ElfShnumMax(1024))?;
+        cookie.set_param(&param::ElfNotesMax(256))?;
+        cookie.set_param(&param::RegexMax(8192))?;
+        cookie.set_param(&param::BytesMax(1024 * 1024))?;
+        #[cfg(feature = "libmagic+v5-40")]
+        cookie.set_param(&param::EncodingMax(1048576))?;
+        #[cfg(feature = "libmagic+v5-45")]
+        cookie.set_param(&param::ElfShsizeMax(134217728))?;
+        //cookie.set_param(&param::MagwarnMax(64))?;
+
+        Ok(())
+    }
+
+    #[test]
+    #[cfg_attr(miri, ignore)]
+    fn get_param() -> Result<(), Box<dyn std::error::Error>> {
+        let cookie = Cookie::open(Flags::ERROR)?;
+
+        // get default value
+        let default_indir_max = cookie.get_param::<param::IndirMax>()?;
+        assert!(default_indir_max.0 > 0);
+
+        // set then get to verify round-trip
+        cookie.set_param(&param::IndirMax(42))?;
+        let indir_max = cookie.get_param::<param::IndirMax>()?;
+        assert_eq!(indir_max.0, 42);
+
+        cookie.get_param::<param::IndirMax>()?;
+        cookie.get_param::<param::NameMax>()?;
+        cookie.get_param::<param::ElfPhnumMax>()?;
+        cookie.get_param::<param::ElfShnumMax>()?;
+        cookie.get_param::<param::ElfNotesMax>()?;
+        cookie.get_param::<param::RegexMax>()?;
+        cookie.get_param::<param::BytesMax>()?;
+        #[cfg(feature = "libmagic+v5-40")]
+        cookie.get_param::<param::EncodingMax>()?;
+        #[cfg(feature = "libmagic+v5-45")]
+        cookie.get_param::<param::ElfShsizeMax>()?;
+        //cookie.get_param::<param::MagwarnMax>()?;
+
+        Ok(())
     }
 }
 
