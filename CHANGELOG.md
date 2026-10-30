@@ -6,6 +6,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.0](https://github.com/robo9k/rust-magic/compare/v0.16.7...v0.17.0) - 2026-10-30
+
+This version updates the `magic-sys` crate dependency to major version 0.4,
+which is a breaking change under certain conditions.
+
+Check the [`magic-sys` v0.4 changelog](https://github.com/robo9k/rust-magic-sys/blob/main/CHANGELOG.md#040---2025-07-31)
+for details about differences, e.g. the build requiring `libmagic` v5.39+ with `pkg-config` or `vcpkg`
+and changes to supported environment variables.
+
+This `magic` crate now also has `libmagic` API version features you need to enable for correctness,
+matching your targeted `libmagic` version, e.g. `libmagic+v5-45`.
+The implicit default is still the v5.38 `libmagic` API.
+
+### Changed
+
+- *(deps)* [**breaking**] Update to `magic-sys` v0.4
+
+### Added
+
+- Add `impl Clone` and `Debug` for `cookie::DatabasePaths`
+- *(docs)* Mention related, unaffiliated [`pure-magic` crate](https://crates.io/crates/pure-magic)
+
+### Fixed
+
+- Add missing `NO_COMPRESS_FORK` and `NO_CHECK_SIMH` to `cookie::Flags`
+
 ## [0.16.7](https://github.com/robo9k/rust-magic/compare/v0.16.6...v0.16.7) - 2025-09-23
 
 ### Other
