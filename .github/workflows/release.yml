@@ -45,6 +45,10 @@ jobs:
         env:
           RUSTUP_TOOLCHAIN: ${{ steps.toolchain.outputs.name }}
 
+      # install libmagic for dynamic linkage without robo9k/rust-magic-sys/setup-libmagic version
+      - run: sudo apt-get update
+      - run: sudo apt-get install libmagic1 libmagic-dev
+
       - uses: release-plz/action@f67a7e724bdad4a0f6875f186060a0ca2770d76c # v0.5.147
         with:
           command: release
