@@ -25,7 +25,7 @@ A clear and concise description of what you expected to happen.
 If applicable, add screenshots to help explain your problem.
 
 **Environment (please complete the following information):**
- - `magic` crate version: [e.g. v0.16.1]
+ - `magic` crate version: [e.g. v0.17.0]
  - `libmagic` version [e.g. 5.41]
  - Operating System [e.g. Ubuntu 22.04 x64]
 
