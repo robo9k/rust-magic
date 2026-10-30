@@ -18,9 +18,9 @@ dependencies = [
 
 [[package]]
 name = "magic-sys"
-version = "0.4.2"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "82b275c342ee5dd5b19e51905dcc092b8fd1bb1187abbc600ac8910bbb15840e"
+checksum = "9a7813c89073ddea0d1979d29786cfb5bd5c8bfe19fdede15a9e6e27fe919b23"
 dependencies = [
  "pkg-config",
  "vcpkg",
