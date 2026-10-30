@@ -36,9 +36,14 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
-      - uses: dtolnay/rust-toolchain@efa25f7f19611383d5b0ccf2d1c8914531636bf9 # doesn't have usual versioned releases/tags
+      - id: toolchain
+        uses: dtolnay/rust-toolchain@efa25f7f19611383d5b0ccf2d1c8914531636bf9 # doesn't have usual versioned releases/tags
         with:
           toolchain: "1.88.0" # current pinned stable
+
+      - run: echo "RUSTUP_TOOLCHAIN=${RUSTUP_TOOLCHAIN}" >> "${GITHUB_ENV}"
+        env:
+          RUSTUP_TOOLCHAIN: ${{ steps.toolchain.outputs.name }}
 
       - uses: release-plz/action@f67a7e724bdad4a0f6875f186060a0ca2770d76c # v0.5.147
         with:
@@ -75,9 +80,14 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
-      - uses: dtolnay/rust-toolchain@efa25f7f19611383d5b0ccf2d1c8914531636bf9 # doesn't have usual versioned releases/tags
+      - id: toolchain
+        uses: dtolnay/rust-toolchain@efa25f7f19611383d5b0ccf2d1c8914531636bf9 # doesn't have usual versioned releases/tags
         with:
           toolchain: "1.88.0" # current pinned stable
+
+      - run: echo "RUSTUP_TOOLCHAIN=${RUSTUP_TOOLCHAIN}" >> "${GITHUB_ENV}"
+        env:
+          RUSTUP_TOOLCHAIN: ${{ steps.toolchain.outputs.name }}
 
       - uses: release-plz/action@f67a7e724bdad4a0f6875f186060a0ca2770d76c # v0.5.147
         with:
