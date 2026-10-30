@@ -169,7 +169,10 @@
 //! In this case you should use an anti-virus software, e.g. [ClamAV](https://www.clamav.net/), [Virus Total](https://www.virustotal.com/).
 //!
 //! Maybe you need to support platforms that are tricky with the `libmagic` C library, e.g. wasm32?
-//! In this case you could use pure Rust alternatives, e.g. the [`file_type` crate](https://crates.io/crates/file_type).
+//! In this case you could use alternative Rust implementations, e.g. the [`file_type` crate](https://crates.io/crates/file_type).
+//!
+//! Maybe you want to use the `libmagic` database files without the C library, i.e. pure Rust?
+//! In this case you could use alternative Rust re-implementations, e.g. the [`pure-magic` crate](https://crates.io/crates/pure-magic).
 
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![cfg_attr(docsrs, doc(auto_cfg(hide(docsrs))))]
