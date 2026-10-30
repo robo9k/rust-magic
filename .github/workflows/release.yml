@@ -40,10 +40,9 @@ jobs:
         with:
           toolchain: "1.88.0" # current pinned stable
 
-      - uses: release-plz/action@1528104d2ca23787631a1c1f022abb64b34c1e11 # v0.5.128
+      - uses: release-plz/action@8921286633dfa0c4020f7f30bd1c14fe19cbb10e # v0.5.142
         with:
           command: release
-          version: "0.3.157"
           verbose: true
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
@@ -80,10 +79,9 @@ jobs:
         with:
           toolchain: "1.88.0" # current pinned stable
 
-      - uses: release-plz/action@1528104d2ca23787631a1c1f022abb64b34c1e11 # v0.5.128
+      - uses: release-plz/action@8921286633dfa0c4020f7f30bd1c14fe19cbb10e # v0.5.142
         with:
           command: release-pr
-          version: "0.3.157"
           verbose: true
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
