@@ -1,37 +1,37 @@
 {
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
   extends: [
-    "config:best-practices",
-    ":label(dependency)",
-    ":enableVulnerabilityAlertsWithAdditionalLabel(vulnerability)",
-    ":semanticCommits",
-    "robo9k/renovate-config:crateSemanticCommitTypeFix",
-    "robo9k/renovate-config:crateLockfileSemanticCommitTypeChore",
+    'config:best-practices',
+    ':label(dependency)',
+    ':enableVulnerabilityAlertsWithAdditionalLabel(vulnerability)',
+    ':semanticCommits',
+    'robo9k/renovate-config:crateSemanticCommitTypeFix',
+    'robo9k/renovate-config:crateLockfileSemanticCommitTypeChore',
   ],
   customManagers: [
     {
-      description: "Match `tool` version for https://github.com/taiki-e/install-action in GHA workflows",
-      customType: "regex",
-      datasourceTemplate: "crate",
-      versioningTemplate: "cargo",
-      managerFilePatterns: ["/(^|/)\\.github/workflows/.+\\.ya?ml$/"],
+      description: 'Match `tool` version for https://github.com/taiki-e/install-action in GHA workflows',
+      customType: 'regex',
+      datasourceTemplate: 'crate',
+      versioningTemplate: 'cargo',
+      managerFilePatterns: [
+        '/(^|/)\\.github/workflows/.+\\.ya?ml$/',
+      ],
       matchStrings: [
-        /*
-        - uses: taiki-e/install-action@4fd6bded9bf87df7896958594ca6d67b38b5350e # v2.56.15
-          with:
-            # renovate: taiki-e/install-action
-            tool: cargo-vcpkg@0.1.7
-        */
-        "# renovate: taiki-e\\\/install-action\\s+tool: (?<depName>.+?)@(?<currentValue>.+?)\\s",
+        '# renovate: taiki-e\\/install-action\\s+tool: (?<depName>.+?)@(?<currentValue>.+?)\\s',
       ],
     },
   ],
-  dependencyDashboardLabels: ["dependency"],
+  dependencyDashboard: {
+    labels: [
+      'dependency',
+    ],
+  },
   major: {
     draftPR: true,
-    prBodyNotes: ":warning: MAJOR update; might require additional testing or planning to use new features",
+    prBodyNotes: ':warning: MAJOR update; might require additional testing or planning to use new features',
   },
   prConcurrentLimit: 3,
-  minimumReleaseAge: "14d",
-  internalChecksFilter: "strict",
+  minimumReleaseAge: '14d',
+  internalChecksFilter: 'strict',
 }
