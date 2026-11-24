@@ -265,17 +265,18 @@ pub(crate) fn load(cookie: &Cookie, filename: Option<&std::ffi::CStr>) -> Result
     }
 }
 
-pub(crate) fn load_buffers(cookie: &Cookie, buffers: &[&[u8]]) -> Result<(), CookieError> {
-    let mut ffi_buffers: Vec<*const u8> = Vec::with_capacity(buffers.len());
-    let mut ffi_sizes = Vec::with_capacity(buffers.len());
+pub(crate) fn load_buffers(
+    cookie: &Cookie,
+    buffers: &mut [Vec<u8>],
+) -> Result<(), CookieError> {
+    let mut ffi_buffers: Vec<*mut c_void> = buffers
+        .iter_mut()
+        .map(|buffer| buffer.as_mut_ptr() as *mut c_void)
+        .collect();
+    let mut ffi_sizes: Vec<usize> = buffers.iter().map(Vec::len).collect();
     let ffi_nbuffers = buffers.len();
 
-    for slice in buffers {
-        ffi_buffers.push((*slice).as_ptr());
-        ffi_sizes.push(slice.len());
-    }
-
-    let ffi_buffers_ptr = ffi_buffers.as_mut_ptr() as *mut *mut c_void;
+    let ffi_buffers_ptr = ffi_buffers.as_mut_ptr();
     let ffi_sizes_ptr = ffi_sizes.as_mut_ptr();
 
     let res = unsafe {
