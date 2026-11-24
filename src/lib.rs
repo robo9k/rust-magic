@@ -826,11 +826,26 @@ pub mod cookie {
     ///
     /// Once in the loaded state, you can perform magic "queries":
     /// - [`Cookie::file()`](Cookie::file), [`Cookie::buffer()`](Cookie::buffer)
+    #[derive(Default)]
+    struct LoadedBuffers(Vec<Vec<u8>>);
+
+    impl std::fmt::Debug for LoadedBuffers {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            f.debug_struct("LoadedBuffers")
+                .field("count", &self.0.len())
+                .finish()
+        }
+    }
+
     #[derive(Debug)]
     #[doc(alias = "magic_t")]
     #[doc(alias = "magic_set")]
     pub struct Cookie<S: State> {
         cookie: crate::ffi::Cookie,
+        // Compiled magic databases passed to magic_load_buffers. libmagic
+        // keeps pointers into these buffers and may byte-swap them in place,
+        // so the cookie owns writable copies for as long as it is alive.
+        buffers: LoadedBuffers,
         marker: std::marker::PhantomData<S>,
     }
 
@@ -947,6 +962,7 @@ pub mod cookie {
                 Ok(cookie) => {
                     let cookie = Cookie {
                         cookie,
+                        buffers: LoadedBuffers::default(),
                         marker: std::marker::PhantomData,
                     };
                     Ok(cookie)
@@ -1080,11 +1096,14 @@ pub mod cookie {
                 }),
                 Ok(_) => {
                     let mut cookie = std::mem::ManuallyDrop::new(self);
+                    let old_buffers = std::mem::take(&mut cookie.buffers);
 
                     let cookie = Cookie {
                         cookie: crate::ffi::Cookie::new(&mut cookie.cookie),
+                        buffers: LoadedBuffers::default(),
                         marker: std::marker::PhantomData,
                     };
+                    drop(old_buffers);
                     Ok(cookie)
                 }
             }
@@ -1098,6 +1117,10 @@ pub mod cookie {
         /// not have direct access to the filesystem, but can access the magic
         /// database via shared memory or other IPC means.
         ///
+        /// The buffers are copied into the cookie. The caller may release the
+        /// original slices after this call; libmagic keeps using the cookie's
+        /// writable copies for later queries (and may byte-swap them in place).
+        ///
         /// Calling `load_buffers()` or [`load()`](Cookie::load) replaces the previously loaded database/s.
         ///
         /// # Errors
@@ -1108,7 +1131,10 @@ pub mod cookie {
         /// If `libmagic` violates its API contract, e.g. by not setting the last error, a [`cookie::Error`](Error) will be returned.
         #[doc(alias = "magic_load_buffers")]
         pub fn load_buffers(self, buffers: &[&[u8]]) -> Result<Cookie<Load>, LoadError<S>> {
-            match crate::ffi::load_buffers(&self.cookie, buffers) {
+            let mut owned_buffers: Vec<Vec<u8>> =
+                buffers.iter().map(|buffer| buffer.to_vec()).collect();
+
+            match crate::ffi::load_buffers(&self.cookie, &mut owned_buffers) {
                 Err(err) => Err(LoadError {
                     function: "magic_load_buffers",
                     source: err,
@@ -1116,11 +1142,14 @@ pub mod cookie {
                 }),
                 Ok(_) => {
                     let mut cookie = std::mem::ManuallyDrop::new(self);
+                    let old_buffers = std::mem::take(&mut cookie.buffers);
 
                     let cookie = Cookie {
                         cookie: crate::ffi::Cookie::new(&mut cookie.cookie),
+                        buffers: LoadedBuffers(owned_buffers),
                         marker: std::marker::PhantomData,
                     };
+                    drop(old_buffers);
                     Ok(cookie)
                 }
             }
